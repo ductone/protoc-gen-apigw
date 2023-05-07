@@ -1,0 +1,65 @@
+name: main ci
+on:
+  push:
+    branches:
+      - main
+jobs:
+  go-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.20.x
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Run linters
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+  go-test:
+    strategy:
+      matrix:
+        go-version: [1.20.x]
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Install Go
+        if: success()
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Postgres Server for Tests
+        run: sudo apt install -y postgresql
+      - name: go tests
+        run: go test -v -covermode=count -json ./... > test.json
+      - name: annotate go tests
+        if: always()
+        uses: guyarb/golang-test-annotations@v0.5.1
+        with:
+          test-results: test.json
+  docker-image:
+    name: Build docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: v1.20
+      - uses: imjasonh/setup-ko@v0.6
+      - run: ko publish --bare ./ --platform linux/amd64,linux/arm64 -t $(git rev-parse --short "$GITHUB_SHA")
+  lint-and-breaking-change-detection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup
+        uses: bufbuild/buf-setup-action@v1.14.0
+      - name: Lint
+        uses: bufbuild/buf-lint-action@v1
+      - name: Breaking change detection against `main`
+        uses: bufbuild/buf-breaking-action@v1
+        with:
+          against: "https://github.com/ductone/protoc-gen-pgdb.git#branch=main,ref=HEAD~1"
