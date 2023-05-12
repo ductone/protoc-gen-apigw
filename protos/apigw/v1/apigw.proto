@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package pgdb.v1;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/ductone/protoc-gen-apigw/apigw/v1";
+
+// TODO(pquerna): register here
+// https://github.com/protocolbuffers/protobuf/blob/master/docs/options.md
+extend google.protobuf.ServiceOptions {
+  ServiceOptions service = 7650;
+}
+
+extend google.protobuf.MethodOptions {
+  MethodOptions method = 7651;
+}
+
+extend google.protobuf.MessageOptions {
+  MessageOptions msg = 7652;
+}
+
+enum Stability {
+  STABILITY_UNSPECIFIED = 0;
+  STABILITY_STABLE = 1;
+  STABILITY_EXPERIMENTAL = 2;
+  STABILITY_DEPRECATED = 3;
+}
+
+message MethodOptions {
+  repeated Operation operations = 1;
+}
+
+message ServiceOptions {
+  Service service = 1;
+}
+
+message Service {
+  Stability stability = 1;
+  string docs_path = 2;
+}
+
+message Operation {
+  stirng method = 1;
+  string route = 2;
+  Stability stability = 3;
+  string docs_path = 4;
+  repeated RequestExample request_examples = 5;
+  repeated ResponseExample response_examples = 6;
+}
+
+message RequestExample {
+  string name = 1;
+  string path = 2;
+}
+
+message ResponseExample {
+  string name = 1;
+  string path = 2;
+}
