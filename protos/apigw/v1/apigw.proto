@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package pgdb.v1;
+package apigw.v1;
 
 import "google/protobuf/descriptor.proto";
 
@@ -14,10 +14,6 @@ extend google.protobuf.ServiceOptions {
 
 extend google.protobuf.MethodOptions {
   MethodOptions method = 7651;
-}
-
-extend google.protobuf.MessageOptions {
-  MessageOptions msg = 7652;
 }
 
 enum Stability {
@@ -41,7 +37,7 @@ message Service {
 }
 
 message Operation {
-  stirng method = 1;
+  string method = 1;
   string route = 2;
   Stability stability = 3;
   string docs_path = 4;

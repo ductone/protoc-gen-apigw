@@ -8,7 +8,7 @@ build:
 
 .PHONY: generate
 generate:
-	buf generate proto
+	buf generate protos
 
 .PHONY: test
 test:
@@ -24,7 +24,7 @@ fmt:
 
 .PHONY: lint
 lint:
-	buf lint ./proto
+	buf lint ./protos
 
 .PHONY: adddep
 adddep:
