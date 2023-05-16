@@ -1,0 +1,207 @@
+syntax = "proto3";
+
+package bookstore.v1;
+
+import "apigw/v1/apigw.proto";
+
+option go_package = "github.com/ductone/protoc-gen-apigw/example/bookstore/v1";
+
+// A simple Bookstore API.
+//
+// The API manages shelves and books resources. Shelves contain books.
+service BookstoreService {
+  // Returns a list of all shelves in the bookstore.
+  rpc ListShelves(ListShelvesRequest) returns (ListShelvesResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/shelves"
+    };
+  }
+  // Creates a new shelf in the bookstore.
+  rpc CreateShelf(CreateShelfRequest) returns (CreateShelfResponse) {
+    option (apigw.v1.method).operations = {
+      method: "POST"
+      route: "/shelf"
+    };
+  }
+
+  // Deletes a shelf, including all books that are stored on the shelf.
+  rpc DeleteShelf(DeleteShelfRequest) returns (DeleteShelfResponse) {
+    option (apigw.v1.method).operations = {
+      method: "DELETE"
+      route: "/shelves/{shelf}"
+    };
+  }
+
+  // Creates a new book.
+  rpc CreateBook(CreateBookRequest) returns (CreateBookResponse) {
+    option (apigw.v1.method).operations = {
+      method: "POST"
+      route: "/shelves/{shelf}/books"
+    };
+  }
+
+  // Returns a specific book.
+  rpc GetBook(GetBookRequest) returns (GetBookResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/shelves/{shelf}/books/{book}"
+    };
+  }
+  // Deletes a book from a shelf.
+  rpc DeleteBook(DeleteBookRequest) returns (DeleteBookResponse) {
+    option (apigw.v1.method).operations = {
+      method: "DELETE"
+      route: "/shelves/{shelf}/books/{book}"
+    };
+  }
+
+  rpc UpdateBook(UpdateBookRequest) returns (UpdateBookResponse) {
+    option (apigw.v1.method).operations = {
+      method: "PATCH"
+      route: "/shelves/{shelf}/books/{book.id}"
+    };
+  }
+
+  // Returns a specific author.
+  rpc GetAuthor(GetAuthorRequest) returns (GetAuthorResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/authors/{author}"
+    };
+  }
+}
+
+message DeleteShelfResponse {}
+
+message ListShelvesRequest {}
+
+message DeleteBookResponse {}
+
+message CreateShelfResponse {
+  Shelf shelf = 1;
+}
+
+message CreateBookResponse {
+  Book book = 1;
+}
+
+message GetBookResponse {
+  Book book = 1;
+}
+
+message UpdateBookResponse {
+  Book book = 1;
+}
+
+message GetAuthorResponse {
+  Author author = 1;
+}
+
+// A shelf resource.
+message Shelf {
+  // A unique shelf id.
+  int64 id = 1;
+  // A theme of the shelf (fiction, poetry, etc).
+  string theme = 2;
+
+  // To test json name is percentage decoded
+  string search_decoded = 3 [json_name = "search[decoded]"];
+
+  // To test json name is percentage encoded
+  string search_encoded = 4 [json_name = "search%5Bencoded%5D"];
+}
+
+// A book resource.
+message Book {
+  // A unique book id.
+  int64 id = 1;
+  // An author of the book.
+  string author = 2;
+  // A book title.
+  string title = 3;
+  // Quotes from the book.
+  repeated string quotes = 4;
+}
+
+// An author resource.
+message Author {
+  // A unique author id.
+  int64 id = 1;
+  enum Gender {
+    GENDER_UNSPECIFIED = 0;
+    GENDER_MALE = 1;
+    GENDER_FEMALE = 2;
+  }
+  Gender gender = 2;
+  string first_name = 3;
+  string last_name = 4 [json_name = "lname"];
+}
+
+// Response to ListShelves call.
+message ListShelvesResponse {
+  // Shelves in the bookstore.
+  repeated Shelf shelves = 1;
+}
+
+// Request message for CreateShelf method.
+message CreateShelfRequest {
+  // The shelf resource to create.
+  Shelf shelf = 1;
+}
+
+// Request message for GetShelf method.
+message GetShelfRequest {
+  // The ID of the shelf resource to retrieve.
+  int64 shelf = 1;
+}
+
+// Request message for DeleteShelf method.
+message DeleteShelfRequest {
+  // The ID of the shelf to delete.
+  int64 shelf = 1;
+}
+
+// Request message for ListBooks method.
+message ListBooksRequest {
+  // ID of the shelf which books to list.
+  int64 shelf = 1;
+}
+
+// Request message for CreateBook method.
+message CreateBookRequest {
+  // The ID of the shelf on which to create a book.
+  int64 shelf = 1;
+  // A book resource to create on the shelf.
+  Book book = 2;
+}
+
+// Request message for GetBook method.
+message GetBookRequest {
+  // The ID of the shelf from which to retrieve a book.
+  int64 shelf = 1;
+  // The ID of the book to retrieve.
+  int64 book = 2;
+}
+
+// Request message for UpdateBook method
+message UpdateBookRequest {
+  // The ID of the shelf from which to retrieve a book.
+  int64 shelf = 1;
+  // A book resource to update on the shelf.
+  Book book = 2;
+}
+
+// Request message for DeleteBook method.
+message DeleteBookRequest {
+  // The ID of the shelf from which to delete a book.
+  int64 shelf = 1;
+  // The ID of the book to delete.
+  int64 book = 2;
+}
+
+// Request message for GetAuthor method.
+message GetAuthorRequest {
+  // The ID of the author resource to retrieve.
+  int64 author = 1;
+}

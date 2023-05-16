@@ -13,7 +13,8 @@ import (
     {{ .Alias }}  "{{ .Import }}"
 {{ end }}
 
-{{ if .Imports.PGDBV1 }} pgdb_v1 "github.com/ductone/protoc-gen-pgdb/pgdb/v1" {{ end }}
+{{ if .Imports.APIGWV1 }} apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1" {{ end }}
+{{ if .Imports.Ogen }} apigw_v1 "github.com/ogen-go/ogen" {{ end }}
 {{ if .Imports.ProtobufProto }} "google.golang.org/protobuf/proto" {{ end }}
 {{ if .Imports.ProtobufEncodingJSON }}"google.golang.org/protobuf/encoding/protojson" {{ end }}
 )

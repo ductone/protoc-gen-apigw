@@ -16,7 +16,7 @@ test:
 
 .PHONY: example
 example: build
-	buf --debug generate --template buf.example.gen.yaml --path example/models
+	buf --debug generate --template buf.example.gen.yaml --path example/bookstore
 
 .PHONY: fmt
 fmt:
