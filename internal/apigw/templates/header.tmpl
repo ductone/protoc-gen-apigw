@@ -4,7 +4,6 @@ package {{.PackageName}}
 import (
 {{ if .Imports.Bytes }} "bytes" {{ end }}
 {{ if .Imports.Fmt }} "fmt" {{ end }}
-{{ if .Imports.JSON }} "encoding/json" {{ end }}
 {{ if .Imports.Strings }} "strings" {{ end }}
 {{ if .Imports.Strconv }} "strconv" {{ end }}
 {{ if .Imports.Time }} "time" {{ end }}
@@ -15,6 +14,7 @@ import (
 
 {{ if .Imports.APIGWV1 }} apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1" {{ end }}
 {{ if .Imports.Ogen }} apigw_v1 "github.com/ogen-go/ogen" {{ end }}
+{{ if .Imports.GRPC }} "google.golang.org/grpc" {{ end }}
 {{ if .Imports.ProtobufProto }} "google.golang.org/protobuf/proto" {{ end }}
 {{ if .Imports.ProtobufEncodingJSON }}"google.golang.org/protobuf/encoding/protojson" {{ end }}
 )

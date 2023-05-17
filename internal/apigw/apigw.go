@@ -37,6 +37,7 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Package) []pgs.Artifact {
+	moduleAdded := make(map[string]struct{})
 	for _, f := range targets {
 		services := f.Services()
 		if n := len(services); n == 0 {
@@ -44,8 +45,26 @@ func (m *Module) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Packag
 			continue
 		}
 		m.processFile(m.ctx, f)
+		moduleFileName := m.ctx.OutputPath(f).Dir().Push("apigw.registry-pb.go").String()
+		if _, ok := moduleAdded[moduleFileName]; ok {
+			continue
+		}
+		m.processModule(m.ctx, moduleFileName, f)
+		moduleAdded[moduleFileName] = struct{}{}
+
 	}
 	return m.Artifacts()
+}
+
+func (m *Module) processModule(ctx pgsgo.Context, initFile string, f pgs.File) {
+	out := bytes.Buffer{}
+	err := m.renderModule(ctx, &out, f)
+	if err != nil {
+		m.Logf("couldn't apply template: %s", err)
+		m.Fail("code generation failed")
+		return
+	}
+	m.AddGeneratorFile(initFile, out.String())
 }
 
 func (m *Module) processFile(ctx pgsgo.Context, f pgs.File) {
@@ -54,14 +73,14 @@ func (m *Module) processFile(ctx pgsgo.Context, f pgs.File) {
 	if err != nil {
 		m.Logf("couldn't apply template: %s", err)
 		m.Fail("code generation failed")
-	} else {
-		generatedFileName := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.go", moduleName)).String()
-		if ok, _ := strconv.ParseBool(os.Getenv("APIGW_DEBUG_FILE_RAW")); ok {
-			spew.Fdump(os.Stderr, out.String())
-			_, _ = fmt.Fprintf(os.Stderr, "\n%s\n", out.String())
-		}
-		m.AddGeneratorFile(generatedFileName, out.String())
+		return
 	}
+	generatedFileName := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.go", moduleName)).String()
+	if ok, _ := strconv.ParseBool(os.Getenv("APIGW_DEBUG_FILE_RAW")); ok {
+		spew.Fdump(os.Stderr, out.String())
+		_, _ = fmt.Fprintf(os.Stderr, "\n%s\n", out.String())
+	}
+	m.AddGeneratorFile(generatedFileName, out.String())
 }
 
 func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) error {
@@ -72,6 +91,14 @@ func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) e
 	}
 	headerBuf := &bytes.Buffer{}
 	bodyBuf := &bytes.Buffer{}
+
+	services := f.Services()
+	for _, service := range services {
+		err := m.renderService(ctx, bodyBuf, f, service, ix)
+		if err != nil {
+			return err
+		}
+	}
 
 	err := m.renderHeader(ctx, headerBuf, f, ix)
 	if err != nil {

@@ -1,0 +1,18 @@
+
+func RegisterGateway{{- .ServerName -}}(s apigw_v1.ServiceRegistrar, srv {{ .ServerName -}}) {
+	s.RegisterService(&apigw_desc_{{- .ServerName -}}, srv)
+}
+
+
+var apigw_desc_{{- .ServerName -}} = apigw_v1.ServiceDesc{
+	Name: "{{ .FullyQualifiedName -}}",
+	HandlerType: (*{{- .ServerName -}})(nil),
+	Methods: []apigw_v1.MethodDesc{
+		{{- range .Methods }}
+		{
+			Name: "{{- .Name -}}",
+			Route: "{{- .Route -}}",
+		},
+		{{- end }}
+	},
+}
