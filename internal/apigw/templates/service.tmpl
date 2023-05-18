@@ -6,7 +6,7 @@ func RegisterGateway{{- .ServerName -}}(s apigw_v1.ServiceRegistrar, srv {{ .Ser
 var apigw_desc_{{- .ServerName -}} = apigw_v1.ServiceDesc{
 	Name: "{{ .FullyQualifiedName -}}",
 	HandlerType: (*{{- .ServerName -}})(nil),
-	Methods: []apigw_v1.MethodDesc{
+	Methods: []*apigw_v1.MethodDesc{
 		{{- range .Methods }}
 		{
 			Name: "{{- .Name -}}",
@@ -19,7 +19,12 @@ var apigw_desc_{{- .ServerName -}} = apigw_v1.ServiceDesc{
 }
 
 {{ range .Methods }}
-func {{ .DecoderHandlerName -}}(ctx context.Context, input apigw_v1.DecoderInput, out interface{}) error {
+
+func {{ .MethodHandlerName -}}(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
+	return nil, nil
+}
+
+func {{ .DecoderHandlerName -}}(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
 	return nil
 }
 {{ end }}

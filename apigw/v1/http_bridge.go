@@ -26,14 +26,14 @@ func MetadataForRequest(req *http.Request, methodFulLName string) metadata.MD {
 	return rv
 }
 
-func PeerForRequest(req *http.Request) peer.Peer {
+func PeerForRequest(req *http.Request) *peer.Peer {
 	// TODO(pquerna): grpc-server uses a raw conn address here.
-	return peer.Peer{
+	return &peer.Peer{
 		Addr: strAddr(req.RemoteAddr),
 	}
 }
 
-func TimeoutForRequest(req http.Request) (time.Duration, bool) {
+func TimeoutForRequest(req *http.Request) (time.Duration, bool) {
 	// TODO(pquerna): supporty grpc-timeout
 	// if hdr := req.Header.Get("grpc-timeout"); hdr != "" {
 	// 	return

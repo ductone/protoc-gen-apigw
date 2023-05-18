@@ -20,17 +20,19 @@ type methodTemplateContext struct {
 }
 
 func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, service pgs.Service, method pgs.Method, ix *importTracker) (*methodTemplateContext, error) {
+	ix.ProtobufProto = true
+
 	//TODO(pquerna): this is like the Service raw name, but translate to Go-safe letters.
 	serviceShortName := strings.TrimSuffix(ctx.Name(service).String(), "Server")
 
 	rv := &methodTemplateContext{
 		Name: method.FullyQualifiedName(),
-		MethodHandlerName: fmt.Sprintf("_%s_%s_Handler",
+		MethodHandlerName: fmt.Sprintf("_%s_%s_APIGW_Handler",
 			//TODO(pquerna): this is like the Service raw name, but translate to Go-safe letters.
 			serviceShortName,
 			ctx.Name(method).String(),
 		),
-		DecoderHandlerName: fmt.Sprintf("_%s_%s_Decoder",
+		DecoderHandlerName: fmt.Sprintf("_%s_%s_APIGW_Decoder",
 			//TODO(pquerna): this is like the Service raw name, but translate to Go-safe letters.
 			serviceShortName,
 			ctx.Name(method).String(),

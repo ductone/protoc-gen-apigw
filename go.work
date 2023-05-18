@@ -2,5 +2,7 @@ go 1.20
 
 use (
 	.
+	./apigw
 	./example
+	./routers/ginapi
 )

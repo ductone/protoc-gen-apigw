@@ -1,4 +1,4 @@
-module github.com/ductone/protoc-gen-apigw/example
+module github.com/ductone/protoc-gen-apigw/apigw
 
 go 1.20
 

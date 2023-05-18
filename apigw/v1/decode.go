@@ -8,5 +8,5 @@ import (
 type DecoderInput interface {
 	Body() io.Reader
 	Query() url.Values
-	RouteParam(name string) string
+	PathParam(name string) string
 }
