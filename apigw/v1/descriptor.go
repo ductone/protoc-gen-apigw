@@ -2,7 +2,6 @@ package v1
 
 import (
 	"context"
-	"net/http"
 
 	"google.golang.org/grpc"
 )
@@ -17,12 +16,12 @@ type ServiceDesc struct {
 }
 
 type methodHandler func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error)
-
+type decoderHandler func(ctx context.Context, input DecoderInput, out interface{}) error
 type MethodDesc struct {
 	Name    string
 	Route   string
 	Handler methodHandler
-	Decoder func(req http.Request, out interface{}) error
+	Decoder decoderHandler
 	Spec    *Operation
 }
 

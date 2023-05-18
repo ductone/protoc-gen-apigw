@@ -2,6 +2,8 @@
 package v1
 
 import (
+	"context"
+
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 )
 
@@ -14,36 +16,84 @@ var apigw_desc_BookstoreServiceServer = apigw_v1.ServiceDesc{
 	HandlerType: (*BookstoreServiceServer)(nil),
 	Methods: []apigw_v1.MethodDesc{
 		{
-			Name:  ".bookstore.v1.BookstoreService.ListShelves",
-			Route: "",
+			Name:    ".bookstore.v1.BookstoreService.ListShelves",
+			Route:   "",
+			Handler: _BookstoreService_ListShelves_Handler,
+			Decoder: _BookstoreService_ListShelves_Decoder,
 		},
 		{
-			Name:  ".bookstore.v1.BookstoreService.CreateShelf",
-			Route: "",
+			Name:    ".bookstore.v1.BookstoreService.CreateShelf",
+			Route:   "",
+			Handler: _BookstoreService_CreateShelf_Handler,
+			Decoder: _BookstoreService_CreateShelf_Decoder,
 		},
 		{
-			Name:  ".bookstore.v1.BookstoreService.DeleteShelf",
-			Route: "",
+			Name:    ".bookstore.v1.BookstoreService.DeleteShelf",
+			Route:   "",
+			Handler: _BookstoreService_DeleteShelf_Handler,
+			Decoder: _BookstoreService_DeleteShelf_Decoder,
 		},
 		{
-			Name:  ".bookstore.v1.BookstoreService.CreateBook",
-			Route: "",
+			Name:    ".bookstore.v1.BookstoreService.CreateBook",
+			Route:   "",
+			Handler: _BookstoreService_CreateBook_Handler,
+			Decoder: _BookstoreService_CreateBook_Decoder,
 		},
 		{
-			Name:  ".bookstore.v1.BookstoreService.GetBook",
-			Route: "",
+			Name:    ".bookstore.v1.BookstoreService.GetBook",
+			Route:   "",
+			Handler: _BookstoreService_GetBook_Handler,
+			Decoder: _BookstoreService_GetBook_Decoder,
 		},
 		{
-			Name:  ".bookstore.v1.BookstoreService.DeleteBook",
-			Route: "",
+			Name:    ".bookstore.v1.BookstoreService.DeleteBook",
+			Route:   "",
+			Handler: _BookstoreService_DeleteBook_Handler,
+			Decoder: _BookstoreService_DeleteBook_Decoder,
 		},
 		{
-			Name:  ".bookstore.v1.BookstoreService.UpdateBook",
-			Route: "",
+			Name:    ".bookstore.v1.BookstoreService.UpdateBook",
+			Route:   "",
+			Handler: _BookstoreService_UpdateBook_Handler,
+			Decoder: _BookstoreService_UpdateBook_Decoder,
 		},
 		{
-			Name:  ".bookstore.v1.BookstoreService.GetAuthor",
-			Route: "",
+			Name:    ".bookstore.v1.BookstoreService.GetAuthor",
+			Route:   "",
+			Handler: _BookstoreService_GetAuthor_Handler,
+			Decoder: _BookstoreService_GetAuthor_Decoder,
 		},
 	},
+}
+
+func _BookstoreService_ListShelves_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out interface{}) error {
+	return nil
+}
+
+func _BookstoreService_CreateShelf_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out interface{}) error {
+	return nil
+}
+
+func _BookstoreService_DeleteShelf_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out interface{}) error {
+	return nil
+}
+
+func _BookstoreService_CreateBook_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out interface{}) error {
+	return nil
+}
+
+func _BookstoreService_GetBook_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out interface{}) error {
+	return nil
+}
+
+func _BookstoreService_DeleteBook_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out interface{}) error {
+	return nil
+}
+
+func _BookstoreService_UpdateBook_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out interface{}) error {
+	return nil
+}
+
+func _BookstoreService_GetAuthor_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out interface{}) error {
+	return nil
 }
