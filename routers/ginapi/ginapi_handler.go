@@ -2,6 +2,7 @@ package ginapi
 
 import (
 	"context"
+	"net/http"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 
@@ -36,7 +37,8 @@ func Handler(srv interface{}, method *apigw_v1.MethodDesc, interceptor grpc.Unar
 
 		ctx = peer.NewContext(ctx, p)
 		ctx = metadata.NewIncomingContext(ctx, md)
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &ginTransportStream{ctx: c})
+		stream := &ginTransportStream{ctx: c}
+		ctx = grpc.NewContextWithServerTransportStream(ctx, stream)
 
 		resp, err := method.Handler(
 			srv,
@@ -59,13 +61,38 @@ func Handler(srv interface{}, method *apigw_v1.MethodDesc, interceptor grpc.Unar
 			return
 		}
 		c.Header("Content-Type", "application/json")
-		c.Writer.Write(data)
+
+		err = stream.writeHeader()
+		if err != nil {
+			// TODO(pquerna): statuspb mapping, hard error.
+			c.Error(err)
+			return
+		}
+
+		_, err = c.Writer.Write(data)
+		if err != nil {
+			// TODO(pquerna): statuspb mapping, hard error.
+			c.Error(err)
+			return
+		}
+
+		if len(stream.trailers) > 0 {
+			err = stream.writeTrailer()
+			if err != nil {
+				// TODO(pquerna): statuspb mapping, hard error.
+				c.Error(err)
+				return
+			}
+		}
+		// all done!
 	}
 }
 
 type ginTransportStream struct {
-	ctx    *gin.Context
-	method *apigw_v1.MethodDesc
+	ctx      *gin.Context
+	method   *apigw_v1.MethodDesc
+	headers  metadata.MD
+	trailers metadata.MD
 }
 
 func (g *ginTransportStream) Method() string {
@@ -73,14 +100,41 @@ func (g *ginTransportStream) Method() string {
 }
 
 func (g *ginTransportStream) SetHeader(md metadata.MD) error {
+	for k, v := range md {
+		g.headers.Set(k, v...)
+	}
 	return nil
 }
 
 func (g *ginTransportStream) SendHeader(md metadata.MD) error {
+	for k, v := range md {
+		g.headers.Set(k, v...)
+	}
+	return g.writeHeader()
+}
+
+func (g *ginTransportStream) writeHeader() error {
+	for k, v := range g.headers {
+		for _, vv := range v {
+			g.ctx.Writer.Header().Add(k, vv)
+		}
+	}
+	g.ctx.Writer.WriteHeader(http.StatusOK)
 	return nil
 }
 
 func (g *ginTransportStream) SetTrailer(md metadata.MD) error {
+	for k, v := range md {
+		g.trailers.Set(http.TrailerPrefix+k, v...)
+	}
 	return nil
+}
 
+func (g *ginTransportStream) writeTrailer() error {
+	for k, v := range g.trailers {
+		for _, vv := range v {
+			g.ctx.Writer.Header().Add(k, vv)
+		}
+	}
+	return nil
 }
