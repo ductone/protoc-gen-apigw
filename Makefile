@@ -26,14 +26,29 @@ fmt:
 lint:
 	buf lint ./protos
 
-.PHONY: adddep
-adddep:
-	go mod tidy -v
+GOMOD_DIRS := . ./example ./apigw ./routers/ginapi
+ADDDEP_TARGET := $(addprefix adddep_, $(GOMOD_DIRS))
+UPDATEDEP_TARGET := $(addprefix updatedep_, $(GOMOD_DIRS))
+
+${ADDDEP_TARGET}:
+	cd $(@:adddep_%=%) && go mod tidy -v
+
+${UPDATEDEP_TARGET}:
+	cd $(@:updatedep_%=%) && go get -d -u ./...
+	cd $(@:updatedep_%=%) && go mod tidy -v
+
+
+.PHONY: $(ADDDEP_TARGET)
+adddep: $(ADDDEP_TARGET)
 	go mod vendor
 
-.PHONY: updatedeps
-updatedeps:
-	go get -d -u ./...
-	go mod tidy -v
+
+# .PHONY: adddep
+# adddep:
+# 	go mod tidy -v
+# 	go mod vendor
+
+.PHONY: ${UPDATEDEP_TARGET}
+updatedeps: ${UPDATEDEP_TARGET}
 	go mod vendor
 

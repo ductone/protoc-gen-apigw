@@ -1,15 +1,20 @@
 package ginapi
 
 import (
+	"bytes"
 	"context"
+	"errors"
+	"io"
 	"net/http"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -19,6 +24,13 @@ var jsonMarshaler = protojson.MarshalOptions{
 	UseProtoNames:   true,
 	EmitUnpopulated: true,
 }
+
+const (
+	// 4 megabytes.  This isn't science, since JSON reperesentation of a proto
+	// could be much larger, but this is an order of mangitude we want to reject.
+	// TODO(pquerna): consider a server option to control this.
+	maxRequestBody = 4 * 1024 * 1024
+)
 
 func Handler(srv interface{}, method *apigw_v1.MethodDesc, interceptor grpc.UnaryServerInterceptor) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -40,6 +52,19 @@ func Handler(srv interface{}, method *apigw_v1.MethodDesc, interceptor grpc.Unar
 		stream := &ginTransportStream{ctx: c}
 		ctx = grpc.NewContextWithServerTransportStream(ctx, stream)
 
+		bytesBody, err := io.ReadAll(http.MaxBytesReader(c.Writer, c.Request.Body, maxRequestBody))
+		if err != nil {
+			targetErr := &http.MaxBytesError{}
+			if errors.Is(err, targetErr) {
+				ErrorResponse(c, status.Error(codes.InvalidArgument, "request body too large"))
+				return
+			}
+			ErrorResponse(c, err)
+			return
+		}
+
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(bytesBody))
+
 		resp, err := method.Handler(
 			srv,
 			ctx,
@@ -49,38 +74,33 @@ func Handler(srv interface{}, method *apigw_v1.MethodDesc, interceptor grpc.Unar
 			interceptor,
 		)
 		if err != nil {
-			// TODO(pquerna): statuspb mapping
-			c.Error(err)
+			ErrorResponse(c, err)
 			return
 		}
 
 		data, err := jsonMarshaler.Marshal(resp)
 		if err != nil {
-			// TODO(pquerna): statuspb mapping, hard error.
-			c.Error(err)
+			ErrorResponse(c, err)
 			return
 		}
 		c.Header("Content-Type", "application/json")
 
 		err = stream.writeHeader()
 		if err != nil {
-			// TODO(pquerna): statuspb mapping, hard error.
-			c.Error(err)
+			ErrorResponse(c, err)
 			return
 		}
 
 		_, err = c.Writer.Write(data)
 		if err != nil {
-			// TODO(pquerna): statuspb mapping, hard error.
-			c.Error(err)
+			ErrorResponse(c, err)
 			return
 		}
 
 		if len(stream.trailers) > 0 {
 			err = stream.writeTrailer()
 			if err != nil {
-				// TODO(pquerna): statuspb mapping, hard error.
-				c.Error(err)
+				ErrorResponse(c, err)
 				return
 			}
 		}
