@@ -19,49 +19,49 @@ var apigw_desc_BookstoreServiceServer = apigw_v1.ServiceDesc{
 	HandlerType: (*BookstoreServiceServer)(nil),
 	Methods: []*apigw_v1.MethodDesc{
 		{
-			Name:    ".bookstore.v1.BookstoreService.ListShelves",
+			Name:    BookstoreService_ListShelves_FullMethodName,
 			Route:   "",
 			Handler: _BookstoreService_ListShelves_APIGW_Handler,
 			Decoder: _BookstoreService_ListShelves_APIGW_Decoder,
 		},
 		{
-			Name:    ".bookstore.v1.BookstoreService.CreateShelf",
+			Name:    BookstoreService_CreateShelf_FullMethodName,
 			Route:   "",
 			Handler: _BookstoreService_CreateShelf_APIGW_Handler,
 			Decoder: _BookstoreService_CreateShelf_APIGW_Decoder,
 		},
 		{
-			Name:    ".bookstore.v1.BookstoreService.DeleteShelf",
+			Name:    BookstoreService_DeleteShelf_FullMethodName,
 			Route:   "",
 			Handler: _BookstoreService_DeleteShelf_APIGW_Handler,
 			Decoder: _BookstoreService_DeleteShelf_APIGW_Decoder,
 		},
 		{
-			Name:    ".bookstore.v1.BookstoreService.CreateBook",
+			Name:    BookstoreService_CreateBook_FullMethodName,
 			Route:   "",
 			Handler: _BookstoreService_CreateBook_APIGW_Handler,
 			Decoder: _BookstoreService_CreateBook_APIGW_Decoder,
 		},
 		{
-			Name:    ".bookstore.v1.BookstoreService.GetBook",
+			Name:    BookstoreService_GetBook_FullMethodName,
 			Route:   "",
 			Handler: _BookstoreService_GetBook_APIGW_Handler,
 			Decoder: _BookstoreService_GetBook_APIGW_Decoder,
 		},
 		{
-			Name:    ".bookstore.v1.BookstoreService.DeleteBook",
+			Name:    BookstoreService_DeleteBook_FullMethodName,
 			Route:   "",
 			Handler: _BookstoreService_DeleteBook_APIGW_Handler,
 			Decoder: _BookstoreService_DeleteBook_APIGW_Decoder,
 		},
 		{
-			Name:    ".bookstore.v1.BookstoreService.UpdateBook",
+			Name:    BookstoreService_UpdateBook_FullMethodName,
 			Route:   "",
 			Handler: _BookstoreService_UpdateBook_APIGW_Handler,
 			Decoder: _BookstoreService_UpdateBook_APIGW_Decoder,
 		},
 		{
-			Name:    ".bookstore.v1.BookstoreService.GetAuthor",
+			Name:    BookstoreService_GetAuthor_FullMethodName,
 			Route:   "",
 			Handler: _BookstoreService_GetAuthor_APIGW_Handler,
 			Decoder: _BookstoreService_GetAuthor_APIGW_Decoder,
@@ -70,7 +70,26 @@ var apigw_desc_BookstoreServiceServer = apigw_v1.ServiceDesc{
 }
 
 func _BookstoreService_ListShelves_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
-	return nil, nil
+	in := new(ListShelvesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).ListShelves(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_ListShelves_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).ListShelves(ctx, req.(*ListShelvesRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
 }
 
 func _BookstoreService_ListShelves_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
@@ -78,7 +97,26 @@ func _BookstoreService_ListShelves_APIGW_Decoder(ctx context.Context, input apig
 }
 
 func _BookstoreService_CreateShelf_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
-	return nil, nil
+	in := new(CreateShelfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).CreateShelf(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_CreateShelf_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).CreateShelf(ctx, req.(*CreateShelfRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
 }
 
 func _BookstoreService_CreateShelf_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
@@ -86,7 +124,26 @@ func _BookstoreService_CreateShelf_APIGW_Decoder(ctx context.Context, input apig
 }
 
 func _BookstoreService_DeleteShelf_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
-	return nil, nil
+	in := new(DeleteShelfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).DeleteShelf(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_DeleteShelf_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).DeleteShelf(ctx, req.(*DeleteShelfRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
 }
 
 func _BookstoreService_DeleteShelf_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
@@ -94,7 +151,26 @@ func _BookstoreService_DeleteShelf_APIGW_Decoder(ctx context.Context, input apig
 }
 
 func _BookstoreService_CreateBook_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
-	return nil, nil
+	in := new(CreateBookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).CreateBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_CreateBook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).CreateBook(ctx, req.(*CreateBookRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
 }
 
 func _BookstoreService_CreateBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
@@ -102,7 +178,26 @@ func _BookstoreService_CreateBook_APIGW_Decoder(ctx context.Context, input apigw
 }
 
 func _BookstoreService_GetBook_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
-	return nil, nil
+	in := new(GetBookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).GetBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_GetBook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).GetBook(ctx, req.(*GetBookRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
 }
 
 func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
@@ -110,7 +205,26 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 }
 
 func _BookstoreService_DeleteBook_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
-	return nil, nil
+	in := new(DeleteBookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).DeleteBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_DeleteBook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).DeleteBook(ctx, req.(*DeleteBookRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
 }
 
 func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
@@ -118,7 +232,26 @@ func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw
 }
 
 func _BookstoreService_UpdateBook_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
-	return nil, nil
+	in := new(UpdateBookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).UpdateBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_UpdateBook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).UpdateBook(ctx, req.(*UpdateBookRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
 }
 
 func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
@@ -126,7 +259,26 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 }
 
 func _BookstoreService_GetAuthor_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
-	return nil, nil
+	in := new(GetAuthorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).GetAuthor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_GetAuthor_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).GetAuthor(ctx, req.(*GetAuthorRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
 }
 
 func _BookstoreService_GetAuthor_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {

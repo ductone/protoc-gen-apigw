@@ -9,7 +9,7 @@ var apigw_desc_{{- .ServerName -}} = apigw_v1.ServiceDesc{
 	Methods: []*apigw_v1.MethodDesc{
 		{{- range .Methods }}
 		{
-			Name: "{{- .Name -}}",
+			Name: {{ .FullMethodName -}},
 			Route: "{{- .Route -}}",
 			Handler: {{ .MethodHandlerName -}},
 			Decoder: {{ .DecoderHandlerName -}},
@@ -21,7 +21,26 @@ var apigw_desc_{{- .ServerName -}} = apigw_v1.ServiceDesc{
 {{ range .Methods }}
 
 func {{ .MethodHandlerName -}}(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
-	return nil, nil
+	in := new({{- .RequestType -}})
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.({{- .ServerName -}}).{{- .MethodName -}}(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: {{ .FullMethodName -}},
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.({{- .ServerName -}}).{{- .MethodName -}}(ctx, req.(*{{- .RequestType -}}))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
 }
 
 func {{ .DecoderHandlerName -}}(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
