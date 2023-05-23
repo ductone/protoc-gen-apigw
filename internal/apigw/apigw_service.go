@@ -26,7 +26,7 @@ func (module *Module) renderService(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 	for _, method := range in.Methods() {
 		methodCtx, err := module.methodContext(ctx, w, f, in, method, ix)
 		if err != nil {
-			return fmt.Errorf("method generation failed [%st: %v", method.FullyQualifiedName(), err)
+			return fmt.Errorf("method generation failed [%st: %w", method.FullyQualifiedName(), err)
 		}
 		if methodCtx == nil {
 			continue

@@ -37,7 +37,6 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Package) []pgs.Artifact {
-	moduleAdded := make(map[string]struct{})
 	for _, f := range targets {
 		services := f.Services()
 		if n := len(services); n == 0 {
@@ -45,26 +44,8 @@ func (m *Module) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Packag
 			continue
 		}
 		m.processFile(m.ctx, f)
-		moduleFileName := m.ctx.OutputPath(f).Dir().Push("apigw.registry-pb.go").String()
-		if _, ok := moduleAdded[moduleFileName]; ok {
-			continue
-		}
-		m.processModule(m.ctx, moduleFileName, f)
-		moduleAdded[moduleFileName] = struct{}{}
-
 	}
 	return m.Artifacts()
-}
-
-func (m *Module) processModule(ctx pgsgo.Context, initFile string, f pgs.File) {
-	out := bytes.Buffer{}
-	err := m.renderModule(ctx, &out, f)
-	if err != nil {
-		m.Logf("couldn't apply template: %s", err)
-		m.Fail("code generation failed")
-		return
-	}
-	m.AddGeneratorFile(initFile, out.String())
 }
 
 func (m *Module) processFile(ctx pgsgo.Context, f pgs.File) {
