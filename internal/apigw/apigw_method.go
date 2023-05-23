@@ -74,7 +74,6 @@ func isInt(pt pgs.ProtoType) bool {
 	default:
 		return false
 	}
-
 }
 
 func isUint(pt pgs.ProtoType) bool {
