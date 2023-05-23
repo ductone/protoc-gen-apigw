@@ -3,6 +3,7 @@ package apigw
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"strings"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
@@ -70,18 +71,19 @@ func isInt(pt pgs.ProtoType) bool {
 	switch pt {
 	case pgs.Int64T, pgs.SFixed64, pgs.SInt64, pgs.Int32T, pgs.SFixed32, pgs.SInt32, pgs.EnumT:
 		return true
+	default:
+		return false
 	}
 
-	return false
 }
 
 func isUint(pt pgs.ProtoType) bool {
 	switch pt {
 	case pgs.UInt64T, pgs.Fixed64T, pgs.UInt32T, pgs.Fixed32T:
 		return true
+	default:
+		return false
 	}
-
-	return false
 }
 
 func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, service pgs.Service, method pgs.Method, ix *importTracker) (*methodTemplateContext, error) {
@@ -108,7 +110,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 	ix.ProtobufProto = true
 	ix.NetHTTP = true
 
-	//TODO(pquerna): this is like the Service raw name, but translate to Go-safe letters.
+	// TODO(pquerna): this is like the Service raw name, but translate to Go-safe letters.
 	serviceShortName := strings.TrimSuffix(ctx.Name(service).String(), "Server")
 
 	parts, err := apigw_v1.ParseRoute(operation.Route)
@@ -187,17 +189,17 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 
 	var httpMethod string
 	switch operation.Method {
-	case "GET":
+	case http.MethodGet:
 		httpMethod = "http.MethodGet"
-	case "HEAD":
+	case http.MethodHead:
 		httpMethod = "http.MethodHead"
-	case "POST":
+	case http.MethodPost:
 		httpMethod = "http.MethodPost"
-	case "PUT":
+	case http.MethodPut:
 		httpMethod = "http.MethodPut"
-	case "PATCH":
+	case http.MethodPatch:
 		httpMethod = "http.MethodPatch"
-	case "DELETE":
+	case http.MethodDelete:
 		httpMethod = "http.MethodDelete"
 	default:
 		return nil, fmt.Errorf("apigw: methodContext: operation.Method invalid '%s': %s", method.FullyQualifiedName(), operation.Method)
