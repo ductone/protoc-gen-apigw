@@ -18,14 +18,14 @@ type methodTemplateContext struct {
 	MethodHandlerName  string
 	DecoderHandlerName string
 	HasBody            bool
-	QueryParams        map[string]msgPackerContext
-	RouteParams        []routeParamContext
+	QueryParams        []*paramContext
+	RouteParams        []*paramContext
 	ServerName         string
 	RequestType        string
 	MethodName         string
 }
 
-type routeParamContext struct {
+type paramContext struct {
 	ParamName           string
 	Converter           string
 	ConverterOutputName string
@@ -49,7 +49,7 @@ func (module *Module) path2fieldNumbers(path []string, msg pgs.Message) ([]proto
 	next := path[0]
 	deeper := path[1:]
 	for _, f := range msg.Fields() {
-		if next == jsonName(f) {
+		if next == jsonName(f) || next == f.Name().String() {
 			lasField = f
 			rv = append(rv, protopack.Number(f.Descriptor().GetNumber()))
 			if len(deeper) >= 1 {
@@ -118,7 +118,8 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 	if err != nil {
 		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid '%s': %w", method.FullyQualifiedName(), err)
 	}
-	rpc := make([]routeParamContext, 0)
+
+	rpc := make([]*paramContext, 0)
 	for _, part := range parts {
 		if !part.IsParam {
 			continue
@@ -150,83 +151,41 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		outName := vn.String()
 		vn = vn.Next()
 
-		switch {
-		case edgeField.Type().IsRepeated():
-			return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is repeatd '%s': %w", method.FullyQualifiedName(), err)
-		case edgeField.Type().IsMap():
-			return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is map '%s': %w", method.FullyQualifiedName(), err)
-		case isInt(edgeField.Type().ProtoType()):
-			ix.Strconv = true
-			converter, err := templateExecToString("field_int.tmpl", &intFieldContext{
-				FieldName:  jsonName(edgeField),
-				Getter:     routeGetter,
-				InputName:  paramValueName,
-				OutputName: outName,
-				Tag:        nums[0],
-			})
-			if err != nil {
-				panic(err)
-			}
-			rpc = append(rpc, routeParamContext{
-				ParamName:           part.ParamName,
-				ConverterOutputName: outName,
-				Converter:           converter,
-			})
-		case isUint(edgeField.Type().ProtoType()):
-			ix.Strconv = true
-			converter, err := templateExecToString("field_uint.tmpl", &uintFieldContext{
-				FieldName:  jsonName(edgeField),
-				Getter:     routeGetter,
-				InputName:  paramValueName,
-				OutputName: outName,
-				Tag:        nums[0],
-			})
-			if err != nil {
-				panic(err)
-			}
-			rpc = append(rpc, routeParamContext{
-				ParamName:           part.ParamName,
-				ConverterOutputName: outName,
-				Converter:           converter,
-			})
-		case edgeField.Type().ProtoType() == pgs.StringT:
-			converter, err := templateExecToString("field_string.tmpl", &stringFieldContext{
-				FieldName:  jsonName(edgeField),
-				Getter:     routeGetter,
-				InputName:  paramValueName,
-				OutputName: outName,
-				Tag:        nums[0],
-			})
-			if err != nil {
-				panic(err)
-			}
-			rpc = append(rpc, routeParamContext{
-				ParamName:           part.ParamName,
-				ConverterOutputName: outName,
-				Converter:           converter,
-			})
-		case edgeField.Type().ProtoType() == pgs.BoolT:
-			ix.Strconv = true
-			converter, err := templateExecToString("field_bool.tmpl", &boolFieldContext{
-				FieldName:  jsonName(edgeField),
-				Getter:     routeGetter,
-				InputName:  paramValueName,
-				OutputName: outName,
-				Tag:        nums[0],
-			})
-			if err != nil {
-				panic(err)
-			}
-			rpc = append(rpc, routeParamContext{
-				ParamName:           part.ParamName,
-				ConverterOutputName: outName,
-				Converter:           converter,
-			})
-		case edgeField.Type().ProtoType() == pgs.BytesT:
-			return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is bytes '%s': %w", method.FullyQualifiedName(), err)
-		default:
-			return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is unknown '%s': %w", method.FullyQualifiedName(), err)
+		fc, err := module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outName)
+		if err != nil {
+			panic(err)
 		}
+		fc.ParamName = part.ParamName
+		rpc = append(rpc, fc)
+	}
+
+	qpc := make([]*paramContext, 0)
+	for k, v := range operation.Query {
+		// TODO: support nested fields
+		nums, edgeField := module.path2fieldNumbers([]string{v}, method.Input())
+		if len(nums) != 1 {
+			return nil, fmt.Errorf("apigw: methodContext: operation.Query invalid: target is nested (unsupported right now) '%s': %w", method.FullyQualifiedName(), err)
+		}
+		paramValueName := vn.String()
+		vn = vn.Next()
+
+		ix.ProtobufProtoPack = true
+		routeGetter, err := templateExecToString("query_get_param.tmpl", &routeParseContext{
+			ParamName:  k,
+			OutputName: paramValueName,
+		})
+		if err != nil {
+			panic(err)
+		}
+		outName := vn.String()
+		vn = vn.Next()
+
+		fc, err := module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outName)
+		if err != nil {
+			panic(err)
+		}
+		fc.ParamName = k
+		qpc = append(qpc, fc)
 	}
 
 	rv := &methodTemplateContext{
@@ -251,6 +210,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		MethodName:  ctx.Name(method).String(),
 
 		RouteParams: rpc,
+		QueryParams: qpc,
 	}
 	if rv.HasBody {
 		ix.GRPCCodes = true
@@ -258,6 +218,87 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		ix.ProtobufEncodingJSON = true
 	}
 	return rv, nil
+}
+
+func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber protopack.Number, edgeField pgs.Field,
+	ix *importTracker,
+	valueGetter string,
+	inputName string,
+	outputName string,
+) (*paramContext, error) {
+	switch {
+	case edgeField.Type().IsRepeated():
+		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is repeatd '%s'", method.FullyQualifiedName())
+	case edgeField.Type().IsMap():
+		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is map '%s'", method.FullyQualifiedName())
+	case isInt(edgeField.Type().ProtoType()):
+		ix.Strconv = true
+		converter, err := templateExecToString("field_int.tmpl", &intFieldContext{
+			FieldName:  jsonName(edgeField),
+			Getter:     valueGetter,
+			InputName:  inputName,
+			OutputName: outputName,
+			Tag:        edgeNumber,
+		})
+		if err != nil {
+			panic(err)
+		}
+		return &paramContext{
+			ConverterOutputName: outputName,
+			Converter:           converter,
+		}, nil
+	case isUint(edgeField.Type().ProtoType()):
+		ix.Strconv = true
+		converter, err := templateExecToString("field_uint.tmpl", &uintFieldContext{
+			FieldName:  jsonName(edgeField),
+			Getter:     valueGetter,
+			InputName:  inputName,
+			OutputName: outputName,
+			Tag:        edgeNumber,
+		})
+		if err != nil {
+			panic(err)
+		}
+		return &paramContext{
+			ConverterOutputName: outputName,
+			Converter:           converter,
+		}, nil
+	case edgeField.Type().ProtoType() == pgs.StringT:
+		converter, err := templateExecToString("field_string.tmpl", &stringFieldContext{
+			FieldName:  jsonName(edgeField),
+			Getter:     valueGetter,
+			InputName:  inputName,
+			OutputName: outputName,
+			Tag:        edgeNumber,
+		})
+		if err != nil {
+			panic(err)
+		}
+		return &paramContext{
+			ConverterOutputName: outputName,
+			Converter:           converter,
+		}, nil
+	case edgeField.Type().ProtoType() == pgs.BoolT:
+		ix.Strconv = true
+		converter, err := templateExecToString("field_bool.tmpl", &boolFieldContext{
+			FieldName:  jsonName(edgeField),
+			Getter:     valueGetter,
+			InputName:  inputName,
+			OutputName: outputName,
+			Tag:        edgeNumber,
+		})
+		if err != nil {
+			panic(err)
+		}
+		return &paramContext{
+			ConverterOutputName: outputName,
+			Converter:           converter,
+		}, nil
+	case edgeField.Type().ProtoType() == pgs.BytesT:
+		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is bytes '%s'", method.FullyQualifiedName())
+	default:
+		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is unknown '%s'", method.FullyQualifiedName())
+	}
 }
 
 type boolFieldContext struct {

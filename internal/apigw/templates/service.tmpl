@@ -44,14 +44,6 @@ func {{ .MethodHandlerName -}}(srv interface{}, ctx context.Context, dec func(pr
 }
 
 func {{ .DecoderHandlerName -}}(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
-	{{ range .RouteParams }}
-		{{.Converter}}
-
-		err = proto.Unmarshal({{.ConverterOutputName}}.Marshal(), out)
-		if err != nil {
-			return err
-		}
-	{{ end }}
 	{{ if .HasBody }}
 		bodyData, err := io.ReadAll(input.Body())
 		if err != nil {
@@ -60,6 +52,24 @@ func {{ .DecoderHandlerName -}}(ctx context.Context, input apigw_v1.DecoderInput
 		err = protojson.Unmarshal(bodyData, out)
 		if err != nil {
 			return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+		}
+	{{ end }}
+
+	{{ range .QueryParams }}
+		{{.Converter}}
+
+		err = proto.Unmarshal({{.ConverterOutputName}}.Marshal(), out)
+		if err != nil {
+			return err
+		}
+	{{ end }}
+
+	{{ range .RouteParams }}
+		{{.Converter}}
+
+		err = proto.Unmarshal({{.ConverterOutputName}}.Marshal(), out)
+		if err != nil {
+			return err
 		}
 	{{ end }}
 	return nil

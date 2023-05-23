@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"strconv"
+	"strings"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 
@@ -165,6 +166,15 @@ func _BookstoreService_DeleteShelf_APIGW_Handler(srv interface{}, ctx context.Co
 
 func _BookstoreService_DeleteShelf_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
 
+	bodyData, err := io.ReadAll(input.Body())
+	if err != nil {
+		return err
+	}
+	err = protojson.Unmarshal(bodyData, out)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+	}
+
 	vn0 := input.PathParam("shelf")
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
@@ -180,15 +190,6 @@ func _BookstoreService_DeleteShelf_APIGW_Decoder(ctx context.Context, input apig
 	err = proto.Unmarshal(vn1.Marshal(), out)
 	if err != nil {
 		return err
-	}
-
-	bodyData, err := io.ReadAll(input.Body())
-	if err != nil {
-		return err
-	}
-	err = protojson.Unmarshal(bodyData, out)
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
 	}
 
 	return nil
@@ -219,6 +220,15 @@ func _BookstoreService_CreateBook_APIGW_Handler(srv interface{}, ctx context.Con
 
 func _BookstoreService_CreateBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
 
+	bodyData, err := io.ReadAll(input.Body())
+	if err != nil {
+		return err
+	}
+	err = protojson.Unmarshal(bodyData, out)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+	}
+
 	vn0 := input.PathParam("shelf")
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
@@ -234,15 +244,6 @@ func _BookstoreService_CreateBook_APIGW_Decoder(ctx context.Context, input apigw
 	err = proto.Unmarshal(vn1.Marshal(), out)
 	if err != nil {
 		return err
-	}
-
-	bodyData, err := io.ReadAll(input.Body())
-	if err != nil {
-		return err
-	}
-	err = protojson.Unmarshal(bodyData, out)
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
 	}
 
 	return nil
@@ -272,6 +273,23 @@ func _BookstoreService_GetBook_APIGW_Handler(srv interface{}, ctx context.Contex
 }
 
 func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+
+	vn4 := input.Query().Get("author")
+
+	vn5tmp, err := strconv.ParseBool(strings.ToLower(vn4))
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "includeAuthor is not a valid bool: %s", err)
+	}
+
+	vn5 := protopack.Message{
+		protopack.Tag{Number: 3, Type: protopack.VarintType},
+		protopack.Bool(vn5tmp),
+	}
+
+	err = proto.Unmarshal(vn5.Marshal(), out)
+	if err != nil {
+		return err
+	}
 
 	vn0 := input.PathParam("shelf")
 
@@ -335,6 +353,15 @@ func _BookstoreService_DeleteBook_APIGW_Handler(srv interface{}, ctx context.Con
 
 func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
 
+	bodyData, err := io.ReadAll(input.Body())
+	if err != nil {
+		return err
+	}
+	err = protojson.Unmarshal(bodyData, out)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+	}
+
 	vn0 := input.PathParam("shelf")
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
@@ -369,15 +396,6 @@ func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw
 		return err
 	}
 
-	bodyData, err := io.ReadAll(input.Body())
-	if err != nil {
-		return err
-	}
-	err = protojson.Unmarshal(bodyData, out)
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
-	}
-
 	return nil
 }
 
@@ -406,6 +424,15 @@ func _BookstoreService_UpdateBook_APIGW_Handler(srv interface{}, ctx context.Con
 
 func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
 
+	bodyData, err := io.ReadAll(input.Body())
+	if err != nil {
+		return err
+	}
+	err = protojson.Unmarshal(bodyData, out)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+	}
+
 	vn0 := input.PathParam("shelf")
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
@@ -421,15 +448,6 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 	err = proto.Unmarshal(vn1.Marshal(), out)
 	if err != nil {
 		return err
-	}
-
-	bodyData, err := io.ReadAll(input.Body())
-	if err != nil {
-		return err
-	}
-	err = protojson.Unmarshal(bodyData, out)
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
 	}
 
 	return nil

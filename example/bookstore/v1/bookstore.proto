@@ -46,6 +46,12 @@ service BookstoreService {
     option (apigw.v1.method).operations = {
       method: "GET"
       route: "/shelves/{shelf}/books/{book}"
+      query: [
+        {
+          key: "author",
+          value: "include_author"
+        }
+      ];
     };
   }
   // Deletes a book from a shelf.
@@ -182,6 +188,7 @@ message GetBookRequest {
   int64 shelf = 1;
   // The ID of the book to retrieve.
   int64 book = 2;
+  bool include_author = 3;
 }
 
 // Request message for UpdateBook method

@@ -39,10 +39,11 @@ message Service {
 message Operation {
   string method = 1;
   string route = 2;
-  Stability stability = 3;
-  string docs_path = 4;
-  repeated RequestExample request_examples = 5;
-  repeated ResponseExample response_examples = 6;
+  map<string, string> query = 3;
+  Stability stability = 4;
+  string docs_path = 5;
+  repeated RequestExample request_examples = 6;
+  repeated ResponseExample response_examples = 7;
 }
 
 message RequestExample {
