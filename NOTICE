@@ -8,6 +8,9 @@ apigw/v1/grpc_internals.go:
     Portions based on <https://github.com/grpc/grpc-go/blob/v1.55.0/internal/transport/handler_server.go>
     Copyright 2016 gRPC authors.
 
+    Portions based on <https://github.com/grpc/grpc-go/blob/v1.55.0/server.go>
+    Copyright 2016 gRPC authors.
+
     Portions based on <https://github.com/grpc-ecosystem/grpc-gateway/blob/main/runtime/errors.go>
     Copyright (c) 2015, Gengo, Inc.
 
