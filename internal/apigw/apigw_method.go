@@ -107,7 +107,9 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 	}
 
 	ix.ProtobufProto = true
+	ix.APIGWV1 = true
 	ix.NetHTTP = true
+	ix.GRPC = true
 
 	// TODO(pquerna): this is like the Service raw name, but translate to Go-safe letters.
 	serviceShortName := strings.TrimSuffix(ctx.Name(service).String(), "Server")
@@ -229,6 +231,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		QueryParams: qpc,
 	}
 	if rv.HasBody {
+		ix.Io = true
 		ix.GRPCCodes = true
 		ix.GRPCStatus = true
 		ix.ProtobufEncodingJSON = true
