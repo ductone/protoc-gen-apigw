@@ -3,11 +3,17 @@ package v1
 
 import (
 	"context"
+	"io"
+	"strconv"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/testing/protopack"
 )
 
 func RegisterGatewayBookstoreServiceServer(s apigw_v1.ServiceRegistrar, srv BookstoreServiceServer) {
@@ -20,49 +26,49 @@ var apigw_desc_BookstoreServiceServer = apigw_v1.ServiceDesc{
 	Methods: []*apigw_v1.MethodDesc{
 		{
 			Name:    BookstoreService_ListShelves_FullMethodName,
-			Route:   "",
+			Route:   "/shelves",
 			Handler: _BookstoreService_ListShelves_APIGW_Handler,
 			Decoder: _BookstoreService_ListShelves_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_CreateShelf_FullMethodName,
-			Route:   "",
+			Route:   "/shelf",
 			Handler: _BookstoreService_CreateShelf_APIGW_Handler,
 			Decoder: _BookstoreService_CreateShelf_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_DeleteShelf_FullMethodName,
-			Route:   "",
+			Route:   "/shelves/{shelf}",
 			Handler: _BookstoreService_DeleteShelf_APIGW_Handler,
 			Decoder: _BookstoreService_DeleteShelf_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_CreateBook_FullMethodName,
-			Route:   "",
+			Route:   "/shelves/{shelf}/books",
 			Handler: _BookstoreService_CreateBook_APIGW_Handler,
 			Decoder: _BookstoreService_CreateBook_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_GetBook_FullMethodName,
-			Route:   "",
+			Route:   "/shelves/{shelf}/books/{book}",
 			Handler: _BookstoreService_GetBook_APIGW_Handler,
 			Decoder: _BookstoreService_GetBook_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_DeleteBook_FullMethodName,
-			Route:   "",
+			Route:   "/shelves/{shelf}/books/{book}",
 			Handler: _BookstoreService_DeleteBook_APIGW_Handler,
 			Decoder: _BookstoreService_DeleteBook_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_UpdateBook_FullMethodName,
-			Route:   "",
+			Route:   "/shelves/{shelf}/books/{book.id}",
 			Handler: _BookstoreService_UpdateBook_APIGW_Handler,
 			Decoder: _BookstoreService_UpdateBook_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_GetAuthor_FullMethodName,
-			Route:   "",
+			Route:   "/authors/{author}",
 			Handler: _BookstoreService_GetAuthor_APIGW_Handler,
 			Decoder: _BookstoreService_GetAuthor_APIGW_Decoder,
 		},
@@ -93,6 +99,7 @@ func _BookstoreService_ListShelves_APIGW_Handler(srv interface{}, ctx context.Co
 }
 
 func _BookstoreService_ListShelves_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+
 	return nil
 }
 
@@ -120,6 +127,16 @@ func _BookstoreService_CreateShelf_APIGW_Handler(srv interface{}, ctx context.Co
 }
 
 func _BookstoreService_CreateShelf_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+
+	bodyData, err := io.ReadAll(input.Body())
+	if err != nil {
+		return err
+	}
+	err = protojson.Unmarshal(bodyData, out)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+	}
+
 	return nil
 }
 
@@ -147,6 +164,33 @@ func _BookstoreService_DeleteShelf_APIGW_Handler(srv interface{}, ctx context.Co
 }
 
 func _BookstoreService_DeleteShelf_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+
+	vn0 := input.PathParam("shelf")
+
+	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "shelf is not a valid int: %s", err)
+	}
+
+	vn1 := protopack.Message{
+		protopack.Tag{Number: 1, Type: protopack.VarintType},
+		protopack.Svarint(vn1tmp),
+	}
+
+	err = proto.Unmarshal(vn1.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
+	bodyData, err := io.ReadAll(input.Body())
+	if err != nil {
+		return err
+	}
+	err = protojson.Unmarshal(bodyData, out)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+	}
+
 	return nil
 }
 
@@ -174,6 +218,33 @@ func _BookstoreService_CreateBook_APIGW_Handler(srv interface{}, ctx context.Con
 }
 
 func _BookstoreService_CreateBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+
+	vn0 := input.PathParam("shelf")
+
+	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "shelf is not a valid int: %s", err)
+	}
+
+	vn1 := protopack.Message{
+		protopack.Tag{Number: 1, Type: protopack.VarintType},
+		protopack.Svarint(vn1tmp),
+	}
+
+	err = proto.Unmarshal(vn1.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
+	bodyData, err := io.ReadAll(input.Body())
+	if err != nil {
+		return err
+	}
+	err = protojson.Unmarshal(bodyData, out)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+	}
+
 	return nil
 }
 
@@ -201,6 +272,41 @@ func _BookstoreService_GetBook_APIGW_Handler(srv interface{}, ctx context.Contex
 }
 
 func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+
+	vn0 := input.PathParam("shelf")
+
+	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "shelf is not a valid int: %s", err)
+	}
+
+	vn1 := protopack.Message{
+		protopack.Tag{Number: 1, Type: protopack.VarintType},
+		protopack.Svarint(vn1tmp),
+	}
+
+	err = proto.Unmarshal(vn1.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
+	vn2 := input.PathParam("book")
+
+	vn3tmp, err := strconv.ParseInt(vn2, 10, 64)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "book is not a valid int: %s", err)
+	}
+
+	vn3 := protopack.Message{
+		protopack.Tag{Number: 2, Type: protopack.VarintType},
+		protopack.Svarint(vn3tmp),
+	}
+
+	err = proto.Unmarshal(vn3.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -228,6 +334,50 @@ func _BookstoreService_DeleteBook_APIGW_Handler(srv interface{}, ctx context.Con
 }
 
 func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+
+	vn0 := input.PathParam("shelf")
+
+	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "shelf is not a valid int: %s", err)
+	}
+
+	vn1 := protopack.Message{
+		protopack.Tag{Number: 1, Type: protopack.VarintType},
+		protopack.Svarint(vn1tmp),
+	}
+
+	err = proto.Unmarshal(vn1.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
+	vn2 := input.PathParam("book")
+
+	vn3tmp, err := strconv.ParseInt(vn2, 10, 64)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "book is not a valid int: %s", err)
+	}
+
+	vn3 := protopack.Message{
+		protopack.Tag{Number: 2, Type: protopack.VarintType},
+		protopack.Svarint(vn3tmp),
+	}
+
+	err = proto.Unmarshal(vn3.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
+	bodyData, err := io.ReadAll(input.Body())
+	if err != nil {
+		return err
+	}
+	err = protojson.Unmarshal(bodyData, out)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+	}
+
 	return nil
 }
 
@@ -255,6 +405,33 @@ func _BookstoreService_UpdateBook_APIGW_Handler(srv interface{}, ctx context.Con
 }
 
 func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+
+	vn0 := input.PathParam("shelf")
+
+	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "shelf is not a valid int: %s", err)
+	}
+
+	vn1 := protopack.Message{
+		protopack.Tag{Number: 1, Type: protopack.VarintType},
+		protopack.Svarint(vn1tmp),
+	}
+
+	err = proto.Unmarshal(vn1.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
+	bodyData, err := io.ReadAll(input.Body())
+	if err != nil {
+		return err
+	}
+	err = protojson.Unmarshal(bodyData, out)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+	}
+
 	return nil
 }
 
@@ -282,5 +459,23 @@ func _BookstoreService_GetAuthor_APIGW_Handler(srv interface{}, ctx context.Cont
 }
 
 func _BookstoreService_GetAuthor_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+
+	vn0 := input.PathParam("author")
+
+	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "author is not a valid int: %s", err)
+	}
+
+	vn1 := protopack.Message{
+		protopack.Tag{Number: 1, Type: protopack.VarintType},
+		protopack.Svarint(vn1tmp),
+	}
+
+	err = proto.Unmarshal(vn1.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

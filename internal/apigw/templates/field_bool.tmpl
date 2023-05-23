@@ -1,0 +1,11 @@
+{{ .Getter }}
+
+{{.OutputName}}tmp, err := strconv.ParseBool(strings.ToLower({{.InputName}}))
+if err != nil {
+    return status.Errorf(codes.InvalidArgument, "{{.FieldName}} is not a valid bool: %s", err)
+}
+
+{{.OutputName}} := protopack.Message{
+        protopack.Tag{Number: {{- .Tag -}}, Type: protopack.VarintType},
+	    protopack.Bool({{.OutputName}}tmp),
+    }

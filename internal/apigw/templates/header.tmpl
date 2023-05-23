@@ -15,6 +15,9 @@ import (
 {{ if .Imports.APIGWV1 }} apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1" {{ end }}
 {{ if .Imports.Ogen }} apigw_v1 "github.com/ogen-go/ogen" {{ end }}
 {{ if .Imports.GRPC }} "google.golang.org/grpc" {{ end }}
+{{ if .Imports.GRPCCodes }} "google.golang.org/grpc/codes" {{ end }}
+{{ if .Imports.GRPCStatus }} "google.golang.org/grpc/status" {{ end }}
 {{ if .Imports.ProtobufProto }} "google.golang.org/protobuf/proto" {{ end }}
+{{ if .Imports.ProtobufProtoPack }} "google.golang.org/protobuf/testing/protopack" {{ end }}
 {{ if .Imports.ProtobufEncodingJSON }}"google.golang.org/protobuf/encoding/protojson" {{ end }}
 )

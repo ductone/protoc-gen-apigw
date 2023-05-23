@@ -1,0 +1,12 @@
+{{ .Getter }}
+
+{{.OutputName}}tmp, err := strconv.ParseInt({{.InputName}}, 10, 64)
+if err != nil {
+    return status.Errorf(codes.InvalidArgument, "{{.FieldName}} is not a valid int: %s", err)
+}
+
+{{.OutputName}} := protopack.Message{
+        protopack.Tag{Number: {{- .Tag -}}, Type: protopack.VarintType},
+		protopack.Svarint({{.OutputName}}tmp),
+    }
+

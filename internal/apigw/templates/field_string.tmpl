@@ -1,0 +1,6 @@
+{{ .Getter }}
+
+{{.OutputName}} := protopack.Message{
+        protopack.Tag{Number: {{- .Tag -}}, Type: protopack.BytesType},
+		protopack.String({{.InputName}}),
+    }

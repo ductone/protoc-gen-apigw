@@ -53,3 +53,16 @@ func loadTemplates() error {
 	}
 	return nil
 }
+
+type varNamer struct {
+	prefix string
+	offset int
+}
+
+func (fn *varNamer) Next() *varNamer {
+	return &varNamer{offset: fn.offset + 1, prefix: fn.prefix}
+}
+
+func (fn *varNamer) String() string {
+	return fmt.Sprintf("%s%d", fn.prefix, fn.offset)
+}

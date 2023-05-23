@@ -1,0 +1,11 @@
+{{ .Getter }}
+
+{{.OutputName}}tmp, ok := {{.EnumValueMap}}[{{.InputVar}}]
+if !ok {
+    return status.Error(codes.InvalidArgument, "{{.InputName}} is not valid. Must be one of "+ apigw_v1.EnumValuesAsString({{.EnumValueMap}}))
+}
+
+{{.OutputName}} := protopack.Message{
+        protopack.Tag{Number: {{- .Tag -}}, Type: protopack.VarintType},
+		protopack.Varint({{.OutputName}}tmp),
+    }

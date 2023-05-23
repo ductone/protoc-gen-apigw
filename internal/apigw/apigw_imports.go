@@ -15,6 +15,8 @@ type importTracker struct {
 	typeMapper           map[pgs.Name]pgs.FilePath
 	APIGWV1              bool
 	GRPC                 bool
+	GRPCCodes            bool
+	GRPCStatus           bool
 	Ogen                 bool
 	Bytes                bool
 	Fmt                  bool
@@ -23,6 +25,7 @@ type importTracker struct {
 	Strings              bool
 	Strconv              bool
 	Time                 bool
+	ProtobufProtoPack    bool
 }
 
 type ImportAlias struct {
