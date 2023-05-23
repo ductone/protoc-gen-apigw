@@ -7,6 +7,7 @@ import (
 {{ if .Imports.Strings }} "strings" {{ end }}
 {{ if .Imports.Strconv }} "strconv" {{ end }}
 {{ if .Imports.Time }} "time" {{ end }}
+{{ if .Imports.NetHTTP }} "net/http" {{ end }}
 
 {{ range .Imports.ProtoImports }}
     {{ .Alias }}  "{{ .Import }}"

@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
+	"path"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 
@@ -157,4 +159,20 @@ func (g *ginTransportStream) writeTrailer() error {
 		}
 	}
 	return nil
+}
+
+func ConvertRoute(r string) (string, error) {
+	rv := []string{"/"}
+	tkn, err := apigw_v1.ParseRoute(r)
+	if err != nil {
+		return "", err
+	}
+	for _, t := range tkn {
+		if t.IsParam {
+			rv = append(rv, fmt.Sprintf(":%s", t.ParamName))
+		} else {
+			rv = append(rv, t.Value)
+		}
+	}
+	return path.Join(rv...), nil
 }

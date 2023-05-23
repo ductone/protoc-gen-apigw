@@ -22,6 +22,7 @@ type importTracker struct {
 	Fmt                  bool
 	ProtobufEncodingJSON bool
 	ProtobufProto        bool
+	NetHTTP              bool
 	Strings              bool
 	Strconv              bool
 	Time                 bool

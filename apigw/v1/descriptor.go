@@ -21,6 +21,7 @@ type decoderHandler func(ctx context.Context, input DecoderInput, out proto.Mess
 
 type MethodDesc struct {
 	Name    string
+	Method  string
 	Route   string
 	Handler methodHandler
 	Decoder decoderHandler

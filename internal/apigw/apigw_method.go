@@ -13,6 +13,7 @@ import (
 
 type methodTemplateContext struct {
 	Name               string
+	HTTPMethod         string
 	Route              string
 	FullMethodName     string
 	MethodHandlerName  string
@@ -29,11 +30,6 @@ type paramContext struct {
 	ParamName           string
 	Converter           string
 	ConverterOutputName string
-}
-
-type msgPackerContext struct {
-	FieldNumbers []int // field path
-	WireType     protopack.Type
 }
 
 func jsonName(f pgs.Field) string {
@@ -110,6 +106,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 	}
 
 	ix.ProtobufProto = true
+	ix.NetHTTP = true
 
 	//TODO(pquerna): this is like the Service raw name, but translate to Go-safe letters.
 	serviceShortName := strings.TrimSuffix(ctx.Name(service).String(), "Server")
@@ -188,9 +185,27 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		qpc = append(qpc, fc)
 	}
 
+	var httpMethod string
+	switch operation.Method {
+	case "GET":
+		httpMethod = "http.MethodGet"
+	case "HEAD":
+		httpMethod = "http.MethodHead"
+	case "POST":
+		httpMethod = "http.MethodPost"
+	case "PUT":
+		httpMethod = "http.MethodPut"
+	case "PATCH":
+		httpMethod = "http.MethodPatch"
+	case "DELETE":
+		httpMethod = "http.MethodDelete"
+	default:
+		return nil, fmt.Errorf("apigw: methodContext: operation.Method invalid '%s': %s", method.FullyQualifiedName(), operation.Method)
+	}
 	rv := &methodTemplateContext{
-		Name:  method.FullyQualifiedName(),
-		Route: operation.Route,
+		Name:       method.FullyQualifiedName(),
+		Route:      operation.Route,
+		HTTPMethod: httpMethod,
 		FullMethodName: fmt.Sprintf("%s_%s_FullMethodName",
 			serviceShortName,
 			ctx.Name(method).String(),

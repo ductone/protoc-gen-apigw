@@ -10,6 +10,7 @@ var apigw_desc_{{- .ServerName -}} = apigw_v1.ServiceDesc{
 		{{- range .Methods }}
 		{
 			Name: {{ .FullMethodName -}},
+			Method: {{ .HTTPMethod -}},
 			Route: "{{- .Route -}}",
 			Handler: {{ .MethodHandlerName -}},
 			Decoder: {{ .DecoderHandlerName -}},

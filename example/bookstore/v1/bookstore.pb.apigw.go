@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"net/http"
+
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 
 	"google.golang.org/grpc"
@@ -27,48 +29,56 @@ var apigw_desc_BookstoreServiceServer = apigw_v1.ServiceDesc{
 	Methods: []*apigw_v1.MethodDesc{
 		{
 			Name:    BookstoreService_ListShelves_FullMethodName,
+			Method:  http.MethodGet,
 			Route:   "/shelves",
 			Handler: _BookstoreService_ListShelves_APIGW_Handler,
 			Decoder: _BookstoreService_ListShelves_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_CreateShelf_FullMethodName,
+			Method:  http.MethodPost,
 			Route:   "/shelf",
 			Handler: _BookstoreService_CreateShelf_APIGW_Handler,
 			Decoder: _BookstoreService_CreateShelf_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_DeleteShelf_FullMethodName,
+			Method:  http.MethodDelete,
 			Route:   "/shelves/{shelf}",
 			Handler: _BookstoreService_DeleteShelf_APIGW_Handler,
 			Decoder: _BookstoreService_DeleteShelf_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_CreateBook_FullMethodName,
+			Method:  http.MethodPost,
 			Route:   "/shelves/{shelf}/books",
 			Handler: _BookstoreService_CreateBook_APIGW_Handler,
 			Decoder: _BookstoreService_CreateBook_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_GetBook_FullMethodName,
+			Method:  http.MethodGet,
 			Route:   "/shelves/{shelf}/books/{book}",
 			Handler: _BookstoreService_GetBook_APIGW_Handler,
 			Decoder: _BookstoreService_GetBook_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_DeleteBook_FullMethodName,
+			Method:  http.MethodDelete,
 			Route:   "/shelves/{shelf}/books/{book}",
 			Handler: _BookstoreService_DeleteBook_APIGW_Handler,
 			Decoder: _BookstoreService_DeleteBook_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_UpdateBook_FullMethodName,
+			Method:  http.MethodPatch,
 			Route:   "/shelves/{shelf}/books/{book.id}",
 			Handler: _BookstoreService_UpdateBook_APIGW_Handler,
 			Decoder: _BookstoreService_UpdateBook_APIGW_Decoder,
 		},
 		{
 			Name:    BookstoreService_GetAuthor_FullMethodName,
+			Method:  http.MethodGet,
 			Route:   "/authors/{author}",
 			Handler: _BookstoreService_GetAuthor_APIGW_Handler,
 			Decoder: _BookstoreService_GetAuthor_APIGW_Decoder,
