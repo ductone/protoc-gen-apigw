@@ -14,19 +14,20 @@ type importTracker struct {
 	input                pgs.File
 	typeMapper           map[pgs.Name]pgs.FilePath
 	APIGWV1              bool
+	Bytes                bool
+	Fmt                  bool
 	GRPC                 bool
 	GRPCCodes            bool
 	GRPCStatus           bool
+	Io                   bool
+	NetHTTP              bool
 	Ogen                 bool
-	Bytes                bool
-	Fmt                  bool
 	ProtobufEncodingJSON bool
 	ProtobufProto        bool
-	NetHTTP              bool
-	Strings              bool
-	Strconv              bool
-	Time                 bool
 	ProtobufProtoPack    bool
+	Strconv              bool
+	Strings              bool
+	Time                 bool
 }
 
 type ImportAlias struct {

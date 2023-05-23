@@ -4,10 +4,9 @@ package v1
 import (
 	"context"
 	"io"
+	"net/http"
 	"strconv"
 	"strings"
-
-	"net/http"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 
