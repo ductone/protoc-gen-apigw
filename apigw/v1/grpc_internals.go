@@ -1,8 +1,10 @@
 package v1
 
 import (
+	"context"
 	"net/http"
 
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 )
@@ -75,5 +77,23 @@ func HTTPStatusFromCode(code codes.Code) int {
 	default:
 		grpclog.Infof("Unknown gRPC error code: %v", code)
 		return http.StatusInternalServerError
+	}
+}
+
+// based on https://github.com/grpc/grpc-go/blob/v1.55.0/server.go
+//
+// ChainUnaryInterceptors chains multiple unary interceptors into a single interceptor.
+func ChainUnaryInterceptors(interceptors []grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		return interceptors[0](ctx, req, info, getChainUnaryHandler(interceptors, 0, info, handler))
+	}
+}
+
+func getChainUnaryHandler(interceptors []grpc.UnaryServerInterceptor, curr int, info *grpc.UnaryServerInfo, finalHandler grpc.UnaryHandler) grpc.UnaryHandler {
+	if curr == len(interceptors)-1 {
+		return finalHandler
+	}
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		return interceptors[curr+1](ctx, req, info, getChainUnaryHandler(interceptors, curr+1, info, finalHandler))
 	}
 }
