@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 )
@@ -30,9 +31,13 @@ func MetadataForRequest(req *http.Request, methodFulLName string) metadata.MD {
 
 func PeerForRequest(req *http.Request) *peer.Peer {
 	// TODO(pquerna): grpc-server uses a raw conn address here.
-	return &peer.Peer{
+	pr := &peer.Peer{
 		Addr: strAddr(req.RemoteAddr),
 	}
+	if req.TLS != nil {
+		pr.AuthInfo = credentials.TLSInfo{State: *req.TLS, CommonAuthInfo: credentials.CommonAuthInfo{SecurityLevel: credentials.PrivacyAndIntegrity}}
+	}
+	return pr
 }
 
 func TimeoutForRequest(req *http.Request) (time.Duration, bool) {
