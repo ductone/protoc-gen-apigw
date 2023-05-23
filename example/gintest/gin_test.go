@@ -27,11 +27,11 @@ func TestGinRouter(t *testing.T) {
 	// TODO(pquerna): table tests for a bunch of different methods and behavoirs
 
 	w := httptest.NewRecorder()
-	engine.ServeHTTP(w, httptest.NewRequest("GET", "/shelves", nil))
+	engine.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/shelves", nil))
 	require.Equal(t, http.StatusNotImplemented, w.Code)
 
 	w = httptest.NewRecorder()
-	engine.ServeHTTP(w, httptest.NewRequest("POST", "/shelf", jsonify(t, map[string]interface{}{
+	engine.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/shelf", jsonify(t, map[string]interface{}{
 		"shelf": map[string]interface{}{
 			"id":                  123,
 			"theme":               "test",
@@ -44,6 +44,11 @@ func TestGinRouter(t *testing.T) {
 	err := protojson.Unmarshal(w.Body.Bytes(), rb)
 	require.NoError(t, err)
 	require.True(t, proto.Equal(&bookstore_v1.Shelf{Id: 123, Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"}, rb.Shelf))
+
+	w = httptest.NewRecorder()
+	engine.ServeHTTP(w, httptest.NewRequest(http.MethodDelete, "/shelves/123", nil))
+	require.Equal(t, http.StatusOK, w.Code)
+	require.Equal(t, "{}", w.Body.String())
 }
 
 func jsonify(t *testing.T, obj map[string]interface{}) io.Reader {
@@ -65,4 +70,9 @@ func (mb *mockBookstore) CreateShelf(ctx context.Context, req *bookstore_v1.Crea
 	return &bookstore_v1.CreateShelfResponse{
 		Shelf: &bookstore_v1.Shelf{Id: 123, Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"},
 	}, nil
+}
+
+func (mb *mockBookstore) DeleteShelf(ctx context.Context, req *bookstore_v1.DeleteShelfRequest) (*bookstore_v1.DeleteShelfResponse, error) {
+	require.Equal(mb.t, int64(123), req.Shelf)
+	return &bookstore_v1.DeleteShelfResponse{}, nil
 }

@@ -50,9 +50,11 @@ func {{ .DecoderHandlerName -}}(ctx context.Context, input apigw_v1.DecoderInput
 		if err != nil {
 			return err
 		}
-		err = protojson.Unmarshal(bodyData, out)
-		if err != nil {
-			return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+		if len(bodyData) > 0 {
+			err = protojson.Unmarshal(bodyData, out)
+			if err != nil {
+				return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+			}
 		}
 	{{ end }}
 

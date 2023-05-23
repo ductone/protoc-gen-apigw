@@ -7,6 +7,6 @@ if err != nil {
 
 {{.OutputName}} := protopack.Message{
         protopack.Tag{Number: {{- .Tag -}}, Type: protopack.VarintType},
-		protopack.Svarint({{.OutputName}}tmp),
+		protopack.Varint({{.OutputName}}tmp),
     }
 
