@@ -13,14 +13,13 @@ linters-settings:
     enable-all: true
     disable:
       - fieldalignment # too strict
-      - shadow # err shadowing is too painful
+      - shadow # complains too much about shadowing errors. All research points to this being fine.
 
   nakedret:
     max-func-lines: 0
 
   nolintlint:
-    allow-no-explanation:
-      [forbidigo, tracecheck, gomnd, gochecknoinits, makezero]
+    allow-no-explanation: [ forbidigo, tracecheck, gomnd, gochecknoinits, makezero ]
     require-explanation: true
     require-specific: true
 
@@ -30,7 +29,7 @@ linters-settings:
     rules:
       - name: atomic
       - name: line-length-limit
-        arguments: [200]
+        arguments: [ 200 ]
       # These are functions that we use without checking the errors often. Most of these can't return an error even
       # though they implement an interface that can.
       - name: unhandled-error
@@ -50,6 +49,10 @@ linters-settings:
 
   tenv:
     all: true
+
+  varcheck:
+    exported-fields: false # this appears to improperly detect exported variables as unused when they are used from a package with the same name
+
 
 linters:
   disable-all: true
@@ -72,6 +75,7 @@ linters:
     - exportloopref # checks for pointers to enclosing loop variables
     - forbidigo # Forbids identifiers
     - gochecknoinits # Checks that no init functions are present in Go code
+    - goconst # Finds repeated strings that could be replaced by a constant
     - gocritic # Provides diagnostics that check for bugs, performance and style issues.
     - godot # Check if comments end in a period
     - goimports # In addition to fixing imports, goimports also formats your code in the same style as gofmt.
@@ -98,21 +102,4 @@ issues:
   exclude-rules:
     # Don't require TODO comments to end in a period
     - source: "(TODO)"
-      linters: [godot]
-
-    - path: "internal/stackoverflow/generated.go"
-      linters:
-        - revive
-
-    - path: "pgdb/v1/xpq/string_array.go"
-      linters:
-        - nonamedreturns
-        - nakedret
-        - gocritic
-
-    - path: "_test\\.go"
-      linters:
-        - goconst
-        - gosec
-        - forbidigo
-        - unused
+      linters: [ godot ]
