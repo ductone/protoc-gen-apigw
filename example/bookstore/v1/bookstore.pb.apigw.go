@@ -109,6 +109,8 @@ func _BookstoreService_ListShelves_APIGW_Handler(srv interface{}, ctx context.Co
 }
 
 func _BookstoreService_ListShelves_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
 
 	return nil
 }
@@ -137,6 +139,8 @@ func _BookstoreService_CreateShelf_APIGW_Handler(srv interface{}, ctx context.Co
 }
 
 func _BookstoreService_CreateShelf_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
 
 	bodyData, err := io.ReadAll(input.Body())
 	if err != nil {
@@ -176,6 +180,8 @@ func _BookstoreService_DeleteShelf_APIGW_Handler(srv interface{}, ctx context.Co
 }
 
 func _BookstoreService_DeleteShelf_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
 
 	bodyData, err := io.ReadAll(input.Body())
 	if err != nil {
@@ -232,6 +238,8 @@ func _BookstoreService_CreateBook_APIGW_Handler(srv interface{}, ctx context.Con
 }
 
 func _BookstoreService_CreateBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
 
 	bodyData, err := io.ReadAll(input.Body())
 	if err != nil {
@@ -288,6 +296,8 @@ func _BookstoreService_GetBook_APIGW_Handler(srv interface{}, ctx context.Contex
 }
 
 func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
 
 	vn4 := input.Query().Get("author")
 
@@ -367,6 +377,8 @@ func _BookstoreService_DeleteBook_APIGW_Handler(srv interface{}, ctx context.Con
 }
 
 func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
 
 	bodyData, err := io.ReadAll(input.Body())
 	if err != nil {
@@ -440,6 +452,8 @@ func _BookstoreService_UpdateBook_APIGW_Handler(srv interface{}, ctx context.Con
 }
 
 func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
 
 	bodyData, err := io.ReadAll(input.Body())
 	if err != nil {
@@ -496,6 +510,8 @@ func _BookstoreService_GetAuthor_APIGW_Handler(srv interface{}, ctx context.Cont
 }
 
 func _BookstoreService_GetAuthor_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
 
 	vn0 := input.PathParam("author")
 
