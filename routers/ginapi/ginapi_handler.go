@@ -51,7 +51,7 @@ func Handler(srv interface{}, method *apigw_v1.MethodDesc, interceptor grpc.Unar
 
 		ctx = peer.NewContext(ctx, p)
 		ctx = metadata.NewIncomingContext(ctx, md)
-		stream := &ginTransportStream{ctx: c}
+		stream := newGinTransportStream(c, method)
 		ctx = grpc.NewContextWithServerTransportStream(ctx, stream)
 
 		bytesBody, err := io.ReadAll(http.MaxBytesReader(c.Writer, c.Request.Body, maxRequestBody))
@@ -115,6 +115,15 @@ type ginTransportStream struct {
 	method   *apigw_v1.MethodDesc
 	headers  metadata.MD
 	trailers metadata.MD
+}
+
+func newGinTransportStream(ctx *gin.Context, method *apigw_v1.MethodDesc) *ginTransportStream {
+	return &ginTransportStream{
+		ctx:      ctx,
+		method:   method,
+		headers:  metadata.MD{},
+		trailers: metadata.MD{},
+	}
 }
 
 func (g *ginTransportStream) Method() string {

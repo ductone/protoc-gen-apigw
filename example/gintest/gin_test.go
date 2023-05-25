@@ -14,6 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -49,6 +51,7 @@ func TestGinRouter(t *testing.T) {
 	engine.ServeHTTP(w, httptest.NewRequest(http.MethodDelete, "/shelves/123", nil))
 	require.Equal(t, http.StatusOK, w.Code)
 	require.Equal(t, "{}", w.Body.String())
+	require.Equal(t, "foo", w.Header().Get("x-thing"))
 }
 
 func jsonify(t *testing.T, obj map[string]interface{}) io.Reader {
@@ -73,6 +76,10 @@ func (mb *mockBookstore) CreateShelf(ctx context.Context, req *bookstore_v1.Crea
 }
 
 func (mb *mockBookstore) DeleteShelf(ctx context.Context, req *bookstore_v1.DeleteShelfRequest) (*bookstore_v1.DeleteShelfResponse, error) {
+	err := grpc.SetHeader(ctx, metadata.Pairs("x-thing", "foo"))
+	if err != nil {
+		return nil, err
+	}
 	require.Equal(mb.t, int64(123), req.Shelf)
 	return &bookstore_v1.DeleteShelfResponse{}, nil
 }
