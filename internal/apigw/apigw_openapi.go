@@ -22,6 +22,13 @@ type route struct {
 func (module *Module) buildOpenAPI(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Document, error) {
 	doc := &dm_v3.Document{
 		Version: "3.1.0",
+		// NOTE: Info is required to be a valid OAS,
+		// but we expect multiple services to Merge()
+		// their OAS together, so we leave it minimally filled out.
+		Info: &dm_base.Info{
+			Title:   "API For " + in.FullyQualifiedName(),
+			Version: "0.0.1",
+		},
 		Paths: &dm_v3.Paths{
 			PathItems: map[string]*dm_v3.PathItem{},
 		},

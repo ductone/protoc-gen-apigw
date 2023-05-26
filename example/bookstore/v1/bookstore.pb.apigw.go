@@ -18,46 +18,12 @@ import (
 	"google.golang.org/protobuf/testing/protopack"
 )
 
-const APIGW_BookstoreServiceServer_OpenAPISpec = `---
+const APIGW_BookstoreServiceServer_OpenAPI_3_1_Spec = `---
 openapi: 3.1.0
+info:
+    title: API For .bookstore.v1.BookstoreService
+    version: 0.0.1
 paths:
-    /shelf:
-        post:
-            operationId: .bookstore.v1.BookstoreService.CreateShelf
-            parameters: []
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/.bookstore.v1.CreateShelfRequest'
-            responses:
-                default:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/.bookstore.v1.CreateShelfResponse'
-    /shelves/{shelf}:
-        delete:
-            operationId: .bookstore.v1.BookstoreService.DeleteShelf
-            parameters:
-                - name: shelf
-                  in: path
-                  required: true
-                  style: simple
-                  schema:
-                    type: string
-                    format: int64
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/.bookstore.v1.DeleteShelfRequestInput'
-            responses:
-                default:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/.bookstore.v1.DeleteShelfResponse'
     /shelves/{shelf}/books:
         post:
             operationId: .bookstore.v1.BookstoreService.CreateBook
@@ -193,29 +159,93 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/.bookstore.v1.ListShelvesResponse'
+    /shelf:
+        post:
+            operationId: .bookstore.v1.BookstoreService.CreateShelf
+            parameters: []
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/.bookstore.v1.CreateShelfRequest'
+            responses:
+                default:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/.bookstore.v1.CreateShelfResponse'
+    /shelves/{shelf}:
+        delete:
+            operationId: .bookstore.v1.BookstoreService.DeleteShelf
+            parameters:
+                - name: shelf
+                  in: path
+                  required: true
+                  style: simple
+                  schema:
+                    type: string
+                    format: int64
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/.bookstore.v1.DeleteShelfRequestInput'
+            responses:
+                default:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/.bookstore.v1.DeleteShelfResponse'
 components:
     schemas:
-        .bookstore.v1.DeleteBookRequestInput:
-            type: object
         .bookstore.v1.UpdateBookResponse:
             type: object
             properties:
                 book:
                     $ref: '#/components/schemas/.bookstore.v1.Book'
-        .bookstore.v1.GetAuthorRequestInput:
-            type: object
-        .bookstore.v1.DeleteShelfResponse:
-            type: object
-        .bookstore.v1.CreateBookResponse:
+        .bookstore.v1.UpdateBookRequestInput:
             type: object
             properties:
                 book:
                     $ref: '#/components/schemas/.bookstore.v1.Book'
+        .bookstore.v1.ListShelvesResponse:
+            type: object
+            properties:
+                shelves:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/.bookstore.v1.Shelf'
+                    nullable: true
         .bookstore.v1.CreateShelfRequest:
             type: object
             properties:
                 shelf:
                     $ref: '#/components/schemas/.bookstore.v1.Shelf'
+        .bookstore.v1.CreateBookRequestInput:
+            type: object
+            properties:
+                book:
+                    $ref: '#/components/schemas/.bookstore.v1.Book'
+        .bookstore.v1.GetBookResponse:
+            type: object
+            properties:
+                book:
+                    $ref: '#/components/schemas/.bookstore.v1.Book'
+        .bookstore.v1.DeleteBookResponse:
+            type: object
+        .bookstore.v1.DeleteBookRequestInput:
+            type: object
+        .bookstore.v1.GetAuthorResponse:
+            type: object
+            properties:
+                author:
+                    $ref: '#/components/schemas/.bookstore.v1.Author'
+        .bookstore.v1.GetAuthorRequestInput:
+            type: object
+        .bookstore.v1.ListShelvesRequest:
+            type: object
+        .bookstore.v1.DeleteShelfResponse:
+            type: object
         .bookstore.v1.DeleteShelfRequestInput:
             type: object
         .bookstore.v1.Book:
@@ -233,54 +263,6 @@ components:
                     items:
                         type: string
                     nullable: true
-        .bookstore.v1.CreateBookRequestInput:
-            type: object
-            properties:
-                book:
-                    $ref: '#/components/schemas/.bookstore.v1.Book'
-        .bookstore.v1.UpdateBookRequestInput:
-            type: object
-            properties:
-                book:
-                    $ref: '#/components/schemas/.bookstore.v1.Book'
-        .bookstore.v1.GetAuthorResponse:
-            type: object
-            properties:
-                author:
-                    $ref: '#/components/schemas/.bookstore.v1.Author'
-        .bookstore.v1.ListShelvesResponse:
-            type: object
-            properties:
-                shelves:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/.bookstore.v1.Shelf'
-                    nullable: true
-        .bookstore.v1.CreateShelfResponse:
-            type: object
-            properties:
-                shelf:
-                    $ref: '#/components/schemas/.bookstore.v1.Shelf'
-        .bookstore.v1.Author:
-            type: object
-            properties:
-                id:
-                    type: string
-                    format: int64
-                gender:
-                    type: string
-                    enum:
-                        - GENDER_UNSPECIFIED
-                        - GENDER_MALE
-                        - GENDER_FEMALE
-                firstName:
-                    type: string
-                lname:
-                    type: string
-        .bookstore.v1.DeleteBookResponse:
-            type: object
-        .bookstore.v1.ListShelvesRequest:
-            type: object
         .bookstore.v1.GetBookRequestInput:
             type: object
         .bookstore.v1.Shelf:
@@ -295,11 +277,32 @@ components:
                     type: string
                 search%5Bencoded%5D:
                     type: string
-        .bookstore.v1.GetBookResponse:
+        .bookstore.v1.CreateShelfResponse:
+            type: object
+            properties:
+                shelf:
+                    $ref: '#/components/schemas/.bookstore.v1.Shelf'
+        .bookstore.v1.CreateBookResponse:
             type: object
             properties:
                 book:
                     $ref: '#/components/schemas/.bookstore.v1.Book'
+        .bookstore.v1.Author:
+            type: object
+            properties:
+                lname:
+                    type: string
+                id:
+                    type: string
+                    format: int64
+                gender:
+                    type: string
+                    enum:
+                        - GENDER_UNSPECIFIED
+                        - GENDER_MALE
+                        - GENDER_FEMALE
+                firstName:
+                    type: string
 
 `
 
