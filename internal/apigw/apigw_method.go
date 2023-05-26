@@ -34,7 +34,10 @@ type paramContext struct {
 }
 
 func jsonName(f pgs.Field) string {
-	return *f.Descriptor().JsonName
+	if f.Descriptor().JsonName != nil {
+		return *f.Descriptor().JsonName
+	}
+	return f.Name().SnakeCase().String()
 }
 
 func (module *Module) path2fieldNumbers(path []string, msg pgs.Message) ([]protopack.Number, pgs.Field) {
