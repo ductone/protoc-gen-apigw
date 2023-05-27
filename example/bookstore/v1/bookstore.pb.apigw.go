@@ -19,7 +19,6 @@ import (
 )
 
 const APIGW_BookstoreServiceServer_OpenAPI_3_1_Spec = `---
----
 components:
   schemas:
     .bookstore.v1.Author:
