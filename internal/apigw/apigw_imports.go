@@ -15,6 +15,7 @@ type importTracker struct {
 	typeMapper           map[pgs.Name]pgs.FilePath
 	APIGWV1              bool
 	Bytes                bool
+	Embed                bool
 	Fmt                  bool
 	GRPC                 bool
 	GRPCCodes            bool

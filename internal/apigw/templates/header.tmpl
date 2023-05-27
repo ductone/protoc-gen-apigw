@@ -9,6 +9,7 @@ import (
 {{ if .Imports.Strconv }} "strconv" {{ end }}
 {{ if .Imports.Strings }} "strings" {{ end }}
 {{ if .Imports.Time }} "time" {{ end }}
+{{ if .Imports.Embed }} _ "embed" {{ end }}
 
 {{ range .Imports.ProtoImports }}
     {{ .Alias }}  "{{ .Import }}"

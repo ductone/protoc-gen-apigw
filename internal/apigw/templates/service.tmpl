@@ -3,6 +3,10 @@ func RegisterGateway{{- .ServerName -}}(s apigw_v1.ServiceRegistrar, srv {{ .Ser
 	s.RegisterService(&apigw_desc_{{- .ServerName -}}, srv)
 }
 
+//go:embed {{.OASFileName}}
+var APIGW_OAS31_{{- .ServerName }} string
+
+
 var apigw_desc_{{- .ServerName -}} = apigw_v1.ServiceDesc{
 	Name: "{{ .FullyQualifiedName -}}",
 	HandlerType: (*{{- .ServerName -}})(nil),

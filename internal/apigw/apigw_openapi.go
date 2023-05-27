@@ -187,8 +187,7 @@ func (module *Module) renderOpenAPI(ctx pgsgo.Context, w io.Writer, in pgs.Servi
 		return err
 	}
 
-	// hack to escaple backticks in the yaml string
-	c.Spec = strings.ReplaceAll(string(yamlData), "`", "` + "+`"`+"`"+`"`+" + `")
+	c.Spec = string(yamlData)
 	return templates["openapi.tmpl"].Execute(w, c)
 }
 
