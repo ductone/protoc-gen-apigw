@@ -66,12 +66,18 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		Route:  operation.Route,
 	}
 
-	outputRef := mt.Add(method.Output())
+	outObj := method.Output()
+	outDescription := outObj.SourceCodeInfo().LeadingComments()
+	if outDescription == "" {
+		outDescription = "Succesful response"
+	}
+	outputRef := mt.Add(outObj)
 	op := &dm_v3.Operation{
 		OperationId: method.FullyQualifiedName(),
 		Responses: &dm_v3.Responses{
 			Codes: map[string]*dm_v3.Response{
 				"200": {
+					Description: outDescription,
 					Content: map[string]*dm_v3.MediaType{
 						"application/json": {
 							Schema: outputRef,

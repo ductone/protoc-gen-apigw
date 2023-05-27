@@ -123,6 +123,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/.bookstore.v1.GetAuthorResponse'
+          description: Succesful response
   /shelf:
     post:
       operationId: .bookstore.v1.BookstoreService.CreateShelf
@@ -137,6 +138,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/.bookstore.v1.CreateShelfResponse'
+          description: Succesful response
   /shelves:
     get:
       operationId: .bookstore.v1.BookstoreService.ListShelves
@@ -146,6 +148,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/.bookstore.v1.ListShelvesResponse'
+          description: |2
+             Response to ListShelves call.
   /shelves/{shelf}:
     delete:
       operationId: .bookstore.v1.BookstoreService.DeleteShelf
@@ -167,6 +171,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/.bookstore.v1.DeleteShelfResponse'
+          description: Succesful response
   /shelves/{shelf}/books:
     post:
       operationId: .bookstore.v1.BookstoreService.CreateBook
@@ -188,6 +193,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/.bookstore.v1.CreateBookResponse'
+          description: Succesful response
   /shelves/{shelf}/books/{book.id}:
     patch:
       operationId: .bookstore.v1.BookstoreService.UpdateBook
@@ -215,6 +221,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/.bookstore.v1.UpdateBookResponse'
+          description: Succesful response
   /shelves/{shelf}/books/{book}:
     delete:
       operationId: .bookstore.v1.BookstoreService.DeleteBook
@@ -242,6 +249,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/.bookstore.v1.DeleteBookResponse'
+          description: Succesful response
     get:
       operationId: .bookstore.v1.BookstoreService.GetBook
       parameters:
@@ -267,3 +275,4 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/.bookstore.v1.GetBookResponse'
+          description: Succesful response
