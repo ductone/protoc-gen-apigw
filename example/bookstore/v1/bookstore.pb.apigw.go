@@ -80,21 +80,15 @@ components:
       type: object
     .bookstore.v1.DeleteShelfResponse:
       type: object
-    .bookstore.v1.GetAuthorRequestInput:
-      type: object
     .bookstore.v1.GetAuthorResponse:
       properties:
         author:
           $ref: '#/components/schemas/.bookstore.v1.Author'
       type: object
-    .bookstore.v1.GetBookRequestInput:
-      type: object
     .bookstore.v1.GetBookResponse:
       properties:
         book:
           $ref: '#/components/schemas/.bookstore.v1.Book'
-      type: object
-    .bookstore.v1.ListShelvesRequest:
       type: object
     .bookstore.v1.ListShelvesResponse:
       properties:
