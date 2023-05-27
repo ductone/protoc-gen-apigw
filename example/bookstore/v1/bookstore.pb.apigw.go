@@ -135,9 +135,8 @@ paths:
           schema:
             format: int64
             type: string
-          style: simple
       responses:
-        default:
+        "200":
           content:
             application/json:
               schema:
@@ -145,14 +144,13 @@ paths:
   /shelf:
     post:
       operationId: .bookstore.v1.BookstoreService.CreateShelf
-      parameters: []
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/.bookstore.v1.CreateShelfRequest'
       responses:
-        default:
+        "200":
           content:
             application/json:
               schema:
@@ -160,9 +158,8 @@ paths:
   /shelves:
     get:
       operationId: .bookstore.v1.BookstoreService.ListShelves
-      parameters: []
       responses:
-        default:
+        "200":
           content:
             application/json:
               schema:
@@ -177,14 +174,13 @@ paths:
           schema:
             format: int64
             type: string
-          style: simple
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/.bookstore.v1.DeleteShelfRequestInput'
       responses:
-        default:
+        "200":
           content:
             application/json:
               schema:
@@ -199,14 +195,13 @@ paths:
           schema:
             format: int64
             type: string
-          style: simple
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/.bookstore.v1.CreateBookRequestInput'
       responses:
-        default:
+        "200":
           content:
             application/json:
               schema:
@@ -221,21 +216,19 @@ paths:
           schema:
             format: int64
             type: string
-          style: simple
         - in: path
           name: book.id
           required: true
           schema:
             format: int64
             type: string
-          style: simple
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/.bookstore.v1.UpdateBookRequestInput'
       responses:
-        default:
+        "200":
           content:
             application/json:
               schema:
@@ -250,21 +243,19 @@ paths:
           schema:
             format: int64
             type: string
-          style: simple
         - in: path
           name: book
           required: true
           schema:
             format: int64
             type: string
-          style: simple
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/.bookstore.v1.DeleteBookRequestInput'
       responses:
-        default:
+        "200":
           content:
             application/json:
               schema:
@@ -278,21 +269,18 @@ paths:
           schema:
             format: int64
             type: string
-          style: simple
         - in: path
           name: book
           required: true
           schema:
             format: int64
             type: string
-          style: simple
         - in: query
           name: author
           schema:
             type: boolean
-          style: simple
       responses:
-        default:
+        "200":
           content:
             application/json:
               schema:

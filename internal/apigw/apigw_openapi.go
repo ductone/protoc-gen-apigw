@@ -68,12 +68,13 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	outputRef := mt.Add(method.Output())
 	op := &dm_v3.Operation{
 		OperationId: method.FullyQualifiedName(),
-		Parameters:  []*dm_v3.Parameter{},
 		Responses: &dm_v3.Responses{
-			Default: &dm_v3.Response{
-				Content: map[string]*dm_v3.MediaType{
-					"application/json": {
-						Schema: outputRef,
+			Codes: map[string]*dm_v3.Response{
+				"200": {
+					Content: map[string]*dm_v3.MediaType{
+						"application/json": {
+							Schema: outputRef,
+						},
 					},
 				},
 			},
@@ -99,7 +100,6 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 			Name:     p.ParamName,
 			In:       "path",
 			Required: true,
-			Style:    "simple",
 			Schema:   sc.Field(edgeField),
 		}
 
@@ -113,7 +113,6 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		op.Parameters = append(op.Parameters, &dm_v3.Parameter{
 			Name:   qp,
 			In:     "query",
-			Style:  "simple",
 			Schema: sc.Field(edgeField),
 		})
 		inputFilter = append(inputFilter, fieldName)
