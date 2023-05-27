@@ -28,8 +28,9 @@ func (module *Module) buildOpenAPI(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Do
 		// but we expect multiple services to Merge()
 		// their OAS together, so we leave it minimally filled out.
 		Info: &dm_base.Info{
-			Title:   "API For " + in.FullyQualifiedName(),
-			Version: "0.0.1",
+			Title:       "API For " + in.FullyQualifiedName(),
+			Version:     "0.0.1",
+			Description: "This is an auto-generated API for " + in.FullyQualifiedName() + ".\n",
 		},
 		Paths: &dm_v3.Paths{
 			PathItems: map[string]*dm_v3.PathItem{},

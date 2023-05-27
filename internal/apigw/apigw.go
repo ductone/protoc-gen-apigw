@@ -79,6 +79,13 @@ func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) e
 		if err != nil {
 			return err
 		}
+		oasBuf := &bytes.Buffer{}
+		err = m.renderOpenAPI(ctx, oasBuf, service)
+		if err != nil {
+			return err
+		}
+		oasName := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.oas31.yaml", service.Name().LowerSnakeCase())).String()
+		m.AddGeneratorFile(oasName, oasBuf.String())
 	}
 
 	err := m.renderHeader(ctx, headerBuf, f, ix)

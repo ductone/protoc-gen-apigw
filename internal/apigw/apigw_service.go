@@ -34,10 +34,5 @@ func (module *Module) renderService(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		c.Methods = append(c.Methods, methodCtx)
 	}
 
-	err := module.renderOpenAPI(ctx, w, in)
-	if err != nil {
-		return err
-	}
-
 	return templates["service.tmpl"].Execute(w, c)
 }
