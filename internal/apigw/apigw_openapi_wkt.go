@@ -115,7 +115,6 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.SchemaPr
 	default:
 		panic("Unknown WKT")
 	}
-
 }
 
 func oapiTrue() *bool {

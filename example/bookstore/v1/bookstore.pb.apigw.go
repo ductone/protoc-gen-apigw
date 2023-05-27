@@ -19,290 +19,291 @@ import (
 )
 
 const APIGW_BookstoreServiceServer_OpenAPI_3_1_Spec = `---
-openapi: 3.1.0
-info:
-    title: API For .bookstore.v1.BookstoreService
-    version: 0.0.1
-paths:
-    /shelves/{shelf}/books:
-        post:
-            operationId: .bookstore.v1.BookstoreService.CreateBook
-            parameters:
-                - name: shelf
-                  in: path
-                  required: true
-                  style: simple
-                  schema:
-                    type: string
-                    format: int64
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/.bookstore.v1.CreateBookRequestInput'
-            responses:
-                default:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/.bookstore.v1.CreateBookResponse'
-    /shelves/{shelf}/books/{book}:
-        get:
-            operationId: .bookstore.v1.BookstoreService.GetBook
-            parameters:
-                - name: shelf
-                  in: path
-                  required: true
-                  style: simple
-                  schema:
-                    type: string
-                    format: int64
-                - name: book
-                  in: path
-                  required: true
-                  style: simple
-                  schema:
-                    type: string
-                    format: int64
-                - name: author
-                  in: query
-                  style: simple
-                  schema:
-                    type: boolean
-            responses:
-                default:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/.bookstore.v1.GetBookResponse'
-        delete:
-            operationId: .bookstore.v1.BookstoreService.DeleteBook
-            parameters:
-                - name: shelf
-                  in: path
-                  required: true
-                  style: simple
-                  schema:
-                    type: string
-                    format: int64
-                - name: book
-                  in: path
-                  required: true
-                  style: simple
-                  schema:
-                    type: string
-                    format: int64
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/.bookstore.v1.DeleteBookRequestInput'
-            responses:
-                default:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/.bookstore.v1.DeleteBookResponse'
-    /shelves/{shelf}/books/{book.id}:
-        patch:
-            operationId: .bookstore.v1.BookstoreService.UpdateBook
-            parameters:
-                - name: shelf
-                  in: path
-                  required: true
-                  style: simple
-                  schema:
-                    type: string
-                    format: int64
-                - name: book.id
-                  in: path
-                  required: true
-                  style: simple
-                  schema:
-                    type: string
-                    format: int64
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/.bookstore.v1.UpdateBookRequestInput'
-            responses:
-                default:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/.bookstore.v1.UpdateBookResponse'
-    /authors/{author}:
-        get:
-            operationId: .bookstore.v1.BookstoreService.GetAuthor
-            parameters:
-                - name: author
-                  in: path
-                  required: true
-                  style: simple
-                  schema:
-                    type: string
-                    format: int64
-            responses:
-                default:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/.bookstore.v1.GetAuthorResponse'
-    /shelves:
-        get:
-            operationId: .bookstore.v1.BookstoreService.ListShelves
-            parameters: []
-            responses:
-                default:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/.bookstore.v1.ListShelvesResponse'
-    /shelf:
-        post:
-            operationId: .bookstore.v1.BookstoreService.CreateShelf
-            parameters: []
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/.bookstore.v1.CreateShelfRequest'
-            responses:
-                default:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/.bookstore.v1.CreateShelfResponse'
-    /shelves/{shelf}:
-        delete:
-            operationId: .bookstore.v1.BookstoreService.DeleteShelf
-            parameters:
-                - name: shelf
-                  in: path
-                  required: true
-                  style: simple
-                  schema:
-                    type: string
-                    format: int64
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/.bookstore.v1.DeleteShelfRequestInput'
-            responses:
-                default:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/.bookstore.v1.DeleteShelfResponse'
+---
 components:
-    schemas:
-        .bookstore.v1.UpdateBookResponse:
-            type: object
-            properties:
-                book:
-                    $ref: '#/components/schemas/.bookstore.v1.Book'
-        .bookstore.v1.UpdateBookRequestInput:
-            type: object
-            properties:
-                book:
-                    $ref: '#/components/schemas/.bookstore.v1.Book'
-        .bookstore.v1.ListShelvesResponse:
-            type: object
-            properties:
-                shelves:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/.bookstore.v1.Shelf'
-                    nullable: true
-        .bookstore.v1.CreateShelfRequest:
-            type: object
-            properties:
-                shelf:
-                    $ref: '#/components/schemas/.bookstore.v1.Shelf'
-        .bookstore.v1.CreateBookRequestInput:
-            type: object
-            properties:
-                book:
-                    $ref: '#/components/schemas/.bookstore.v1.Book'
-        .bookstore.v1.GetBookResponse:
-            type: object
-            properties:
-                book:
-                    $ref: '#/components/schemas/.bookstore.v1.Book'
-        .bookstore.v1.DeleteBookResponse:
-            type: object
-        .bookstore.v1.DeleteBookRequestInput:
-            type: object
-        .bookstore.v1.GetAuthorResponse:
-            type: object
-            properties:
-                author:
-                    $ref: '#/components/schemas/.bookstore.v1.Author'
-        .bookstore.v1.GetAuthorRequestInput:
-            type: object
-        .bookstore.v1.ListShelvesRequest:
-            type: object
-        .bookstore.v1.DeleteShelfResponse:
-            type: object
-        .bookstore.v1.DeleteShelfRequestInput:
-            type: object
-        .bookstore.v1.Book:
-            type: object
-            properties:
-                id:
-                    type: string
-                    format: int64
-                author:
-                    type: string
-                title:
-                    type: string
-                quotes:
-                    type: array
-                    items:
-                        type: string
-                    nullable: true
-        .bookstore.v1.GetBookRequestInput:
-            type: object
-        .bookstore.v1.Shelf:
-            type: object
-            properties:
-                id:
-                    type: string
-                    format: int64
-                theme:
-                    type: string
-                search[decoded]:
-                    type: string
-                search%5Bencoded%5D:
-                    type: string
-        .bookstore.v1.CreateShelfResponse:
-            type: object
-            properties:
-                shelf:
-                    $ref: '#/components/schemas/.bookstore.v1.Shelf'
-        .bookstore.v1.CreateBookResponse:
-            type: object
-            properties:
-                book:
-                    $ref: '#/components/schemas/.bookstore.v1.Book'
-        .bookstore.v1.Author:
-            type: object
-            properties:
-                lname:
-                    type: string
-                id:
-                    type: string
-                    format: int64
-                gender:
-                    type: string
-                    enum:
-                        - GENDER_UNSPECIFIED
-                        - GENDER_MALE
-                        - GENDER_FEMALE
-                firstName:
-                    type: string
+  schemas:
+    .bookstore.v1.Author:
+      properties:
+        firstName:
+          type: string
+        gender:
+          enum:
+            - GENDER_UNSPECIFIED
+            - GENDER_MALE
+            - GENDER_FEMALE
+          type: string
+        id:
+          format: int64
+          type: string
+        lname:
+          type: string
+      type: object
+    .bookstore.v1.Book:
+      properties:
+        author:
+          type: string
+        id:
+          format: int64
+          type: string
+        quotes:
+          items:
+            type: string
+          nullable: true
+          type: array
+        title:
+          type: string
+      type: object
+    .bookstore.v1.CreateBookRequestInput:
+      properties:
+        book:
+          $ref: '#/components/schemas/.bookstore.v1.Book'
+      type: object
+    .bookstore.v1.CreateBookResponse:
+      properties:
+        book:
+          $ref: '#/components/schemas/.bookstore.v1.Book'
+      type: object
+    .bookstore.v1.CreateShelfRequest:
+      properties:
+        shelf:
+          $ref: '#/components/schemas/.bookstore.v1.Shelf'
+      type: object
+    .bookstore.v1.CreateShelfResponse:
+      properties:
+        shelf:
+          $ref: '#/components/schemas/.bookstore.v1.Shelf'
+      type: object
+    .bookstore.v1.DeleteBookRequestInput:
+      type: object
+    .bookstore.v1.DeleteBookResponse:
+      type: object
+    .bookstore.v1.DeleteShelfRequestInput:
+      type: object
+    .bookstore.v1.DeleteShelfResponse:
+      type: object
+    .bookstore.v1.GetAuthorRequestInput:
+      type: object
+    .bookstore.v1.GetAuthorResponse:
+      properties:
+        author:
+          $ref: '#/components/schemas/.bookstore.v1.Author'
+      type: object
+    .bookstore.v1.GetBookRequestInput:
+      type: object
+    .bookstore.v1.GetBookResponse:
+      properties:
+        book:
+          $ref: '#/components/schemas/.bookstore.v1.Book'
+      type: object
+    .bookstore.v1.ListShelvesRequest:
+      type: object
+    .bookstore.v1.ListShelvesResponse:
+      properties:
+        shelves:
+          items:
+            $ref: '#/components/schemas/.bookstore.v1.Shelf'
+          nullable: true
+          type: array
+      type: object
+    .bookstore.v1.Shelf:
+      properties:
+        id:
+          format: int64
+          type: string
+        search%5Bencoded%5D:
+          type: string
+        search[decoded]:
+          type: string
+        theme:
+          type: string
+      type: object
+    .bookstore.v1.UpdateBookRequestInput:
+      properties:
+        book:
+          $ref: '#/components/schemas/.bookstore.v1.Book'
+      type: object
+    .bookstore.v1.UpdateBookResponse:
+      properties:
+        book:
+          $ref: '#/components/schemas/.bookstore.v1.Book'
+      type: object
+info:
+  title: API For .bookstore.v1.BookstoreService
+  version: 0.0.1
+openapi: 3.1.0
+paths:
+  /authors/{author}:
+    get:
+      operationId: .bookstore.v1.BookstoreService.GetAuthor
+      parameters:
+        - in: path
+          name: author
+          required: true
+          schema:
+            format: int64
+            type: string
+          style: simple
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/.bookstore.v1.GetAuthorResponse'
+  /shelf:
+    post:
+      operationId: .bookstore.v1.BookstoreService.CreateShelf
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/.bookstore.v1.CreateShelfRequest'
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/.bookstore.v1.CreateShelfResponse'
+  /shelves:
+    get:
+      operationId: .bookstore.v1.BookstoreService.ListShelves
+      parameters: []
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/.bookstore.v1.ListShelvesResponse'
+  /shelves/{shelf}:
+    delete:
+      operationId: .bookstore.v1.BookstoreService.DeleteShelf
+      parameters:
+        - in: path
+          name: shelf
+          required: true
+          schema:
+            format: int64
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/.bookstore.v1.DeleteShelfRequestInput'
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/.bookstore.v1.DeleteShelfResponse'
+  /shelves/{shelf}/books:
+    post:
+      operationId: .bookstore.v1.BookstoreService.CreateBook
+      parameters:
+        - in: path
+          name: shelf
+          required: true
+          schema:
+            format: int64
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/.bookstore.v1.CreateBookRequestInput'
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/.bookstore.v1.CreateBookResponse'
+  /shelves/{shelf}/books/{book.id}:
+    patch:
+      operationId: .bookstore.v1.BookstoreService.UpdateBook
+      parameters:
+        - in: path
+          name: shelf
+          required: true
+          schema:
+            format: int64
+            type: string
+          style: simple
+        - in: path
+          name: book.id
+          required: true
+          schema:
+            format: int64
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/.bookstore.v1.UpdateBookRequestInput'
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/.bookstore.v1.UpdateBookResponse'
+  /shelves/{shelf}/books/{book}:
+    delete:
+      operationId: .bookstore.v1.BookstoreService.DeleteBook
+      parameters:
+        - in: path
+          name: shelf
+          required: true
+          schema:
+            format: int64
+            type: string
+          style: simple
+        - in: path
+          name: book
+          required: true
+          schema:
+            format: int64
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/.bookstore.v1.DeleteBookRequestInput'
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/.bookstore.v1.DeleteBookResponse'
+    get:
+      operationId: .bookstore.v1.BookstoreService.GetBook
+      parameters:
+        - in: path
+          name: shelf
+          required: true
+          schema:
+            format: int64
+            type: string
+          style: simple
+        - in: path
+          name: book
+          required: true
+          schema:
+            format: int64
+            type: string
+          style: simple
+        - in: query
+          name: author
+          schema:
+            type: boolean
+          style: simple
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/.bookstore.v1.GetBookResponse'
 
 `
 

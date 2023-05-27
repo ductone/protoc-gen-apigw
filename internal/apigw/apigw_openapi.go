@@ -1,6 +1,7 @@
 package apigw
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 	dm_v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/stuart-warren/yamlfmt"
 )
 
 type route struct {
@@ -180,8 +182,13 @@ func (module *Module) renderOpenAPI(ctx pgsgo.Context, w io.Writer, in pgs.Servi
 	c := openAPIContext{
 		ServerName: ctx.ServerName(in).String(),
 	}
+	yamlData, err = yamlfmt.Format(bytes.NewReader(yamlData), true)
+	if err != nil {
+		return err
+	}
+
 	// hack to escaple backticks in the yaml string
-	c.Spec = strings.Replace(string(yamlData), "`", "` + "+`"`+"`"+`"`+" + `", -1)
+	c.Spec = strings.ReplaceAll(string(yamlData), "`", "` + "+`"`+"`"+`"`+" + `")
 	return templates["openapi.tmpl"].Execute(w, c)
 }
 
