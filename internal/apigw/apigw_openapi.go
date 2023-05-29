@@ -28,9 +28,15 @@ func (module *Module) buildOpenAPI(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Do
 		// but we expect multiple services to Merge()
 		// their OAS together, so we leave it minimally filled out.
 		Info: &dm_base.Info{
-			Title:       "API For " + in.FullyQualifiedName(),
+			Title:       "API For " + nicerFQN(in),
 			Version:     "0.0.1",
-			Description: "This is an auto-generated API for " + in.FullyQualifiedName() + ".\n",
+			Description: "This is an auto-generated API for " + nicerFQN(in) + ".\n",
+		},
+		Servers: []*dm_v3.Server{
+			{
+				URL:         "/",
+				Description: "The server for " + nicerFQN(in) + ".",
+			},
 		},
 		Paths: &dm_v3.Paths{
 			PathItems: map[string]*dm_v3.PathItem{},
@@ -71,9 +77,17 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	if outDescription == "" {
 		outDescription = "Succesful response"
 	}
+
+	methodDescription := method.SourceCodeInfo().LeadingComments()
+	if methodDescription == "" {
+		methodDescription = "Invokes the " + nicerFQN(method) + " method."
+	}
+
 	outputRef := mt.Add(outObj)
 	op := &dm_v3.Operation{
-		OperationId: method.FullyQualifiedName(),
+		OperationId: nicerFQN(method),
+		Description: methodDescription,
+		Deprecated:  oasBool(method.Descriptor().GetOptions().GetDeprecated()),
 		Responses: &dm_v3.Responses{
 			Codes: map[string]*dm_v3.Response{
 				"200": {
@@ -136,7 +150,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		}
 	}
 	for _, sd := range mt.messages {
-		_ = sc.Message(sd.msg, sd.filter)
+		_ = sc.Message(sd.msg, sd.filter, nil)
 	}
 	components := &dm_v3.Components{
 		Schemas: sc.schemas,
@@ -207,6 +221,10 @@ type msgTracker struct {
 	messages map[string]*schemaData
 }
 
+func nicerFQN(e pgs.Entity) string {
+	return strings.TrimPrefix(e.FullyQualifiedName(), ".")
+}
+
 func (mt *msgTracker) AddInput(m pgs.Message, filter []string) *dm_base.SchemaProxy {
 	if len(filter) == 0 {
 		return mt.Add(m)
@@ -215,7 +233,7 @@ func (mt *msgTracker) AddInput(m pgs.Message, filter []string) *dm_base.SchemaPr
 		mt.messages = map[string]*schemaData{}
 	}
 	// TODO(pquerna): methods must have unique Input() messages?
-	fqn := m.FullyQualifiedName() + "Input"
+	fqn := nicerFQN(m) + "Input"
 	if sd, ok := mt.messages[fqn]; ok {
 		if !reflect.DeepEqual(sd.filter, filter) {
 			panic(fmt.Sprintf("apigw: AddInput: %s: filter must be identical for repeated inputs: %v != %v", fqn, sd.filter, filter))
@@ -231,7 +249,7 @@ func (mt *msgTracker) Add(m pgs.Message) *dm_base.SchemaProxy {
 	if mt.messages == nil {
 		mt.messages = map[string]*schemaData{}
 	}
-	fqn := m.FullyQualifiedName()
+	fqn := nicerFQN(m)
 	mt.messages[fqn] = &schemaData{path: fqn, msg: m}
 	return dm_base.CreateSchemaProxyRef("#/components/schemas/" + fqn)
 }
@@ -243,4 +261,19 @@ func contains[T comparable](needle T, haystack []T) bool {
 		}
 	}
 	return false
+}
+
+func oasTrue() *bool {
+	b := true
+	return &b
+}
+
+func oasFalse() *bool {
+	b := false
+	return &b
+}
+
+func oasBool(v bool) *bool {
+	b := v
+	return &b
 }

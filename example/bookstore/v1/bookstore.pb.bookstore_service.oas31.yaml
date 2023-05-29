@@ -1,11 +1,14 @@
 ---
 components:
   schemas:
-    .bookstore.v1.Author:
+    bookstore.v1.Author:
+      description: |2
+         An author resource.
       properties:
         firstName:
           type: string
         gender:
+          description: The gender field.
           enum:
             - GENDER_UNSPECIFIED
             - GENDER_MALE
@@ -17,7 +20,9 @@ components:
         lname:
           type: string
       type: object
-    .bookstore.v1.Book:
+    bookstore.v1.Book:
+      description: |2
+         A book resource.
       properties:
         author:
           type: string
@@ -25,6 +30,8 @@ components:
           format: int64
           type: string
         quotes:
+          description: |2
+             Quotes from the book.
           items:
             type: string
           nullable: true
@@ -32,53 +39,73 @@ components:
         title:
           type: string
       type: object
-    .bookstore.v1.CreateBookRequestInput:
+    bookstore.v1.CreateBookRequestInput:
+      description: |2
+         Request message for CreateBook method.
       properties:
         book:
-          $ref: '#/components/schemas/.bookstore.v1.Book'
+          $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
-    .bookstore.v1.CreateBookResponse:
+    bookstore.v1.CreateBookResponse:
+      description: The CreateBookResponse message.
       properties:
         book:
-          $ref: '#/components/schemas/.bookstore.v1.Book'
+          $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
-    .bookstore.v1.CreateShelfRequest:
+    bookstore.v1.CreateShelfRequest:
+      description: |2
+         Request message for CreateShelf method.
       properties:
         shelf:
-          $ref: '#/components/schemas/.bookstore.v1.Shelf'
+          $ref: '#/components/schemas/bookstore.v1.Shelf'
       type: object
-    .bookstore.v1.CreateShelfResponse:
+    bookstore.v1.CreateShelfResponse:
+      description: The CreateShelfResponse message.
       properties:
         shelf:
-          $ref: '#/components/schemas/.bookstore.v1.Shelf'
+          $ref: '#/components/schemas/bookstore.v1.Shelf'
       type: object
-    .bookstore.v1.DeleteBookRequestInput:
+    bookstore.v1.DeleteBookRequestInput:
+      description: |2
+         Request message for DeleteBook method.
       type: object
-    .bookstore.v1.DeleteBookResponse:
+    bookstore.v1.DeleteBookResponse:
+      description: The DeleteBookResponse message.
       type: object
-    .bookstore.v1.DeleteShelfRequestInput:
+    bookstore.v1.DeleteShelfRequestInput:
+      description: |2
+         Request message for DeleteShelf method.
       type: object
-    .bookstore.v1.DeleteShelfResponse:
+    bookstore.v1.DeleteShelfResponse:
+      description: The DeleteShelfResponse message.
       type: object
-    .bookstore.v1.GetAuthorResponse:
+    bookstore.v1.GetAuthorResponse:
+      description: The GetAuthorResponse message.
       properties:
         author:
-          $ref: '#/components/schemas/.bookstore.v1.Author'
+          $ref: '#/components/schemas/bookstore.v1.Author'
       type: object
-    .bookstore.v1.GetBookResponse:
+    bookstore.v1.GetBookResponse:
+      description: The GetBookResponse message.
       properties:
         book:
-          $ref: '#/components/schemas/.bookstore.v1.Book'
+          $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
-    .bookstore.v1.ListShelvesResponse:
+    bookstore.v1.ListShelvesResponse:
+      description: |2
+         Response to ListShelves call.
       properties:
         shelves:
+          description: |2
+             Shelves in the bookstore.
           items:
-            $ref: '#/components/schemas/.bookstore.v1.Shelf'
+            $ref: '#/components/schemas/bookstore.v1.Shelf'
           nullable: true
           type: array
       type: object
-    .bookstore.v1.Shelf:
+    bookstore.v1.Shelf:
+      description: |2
+         A shelf resource.
       properties:
         id:
           format: int64
@@ -90,26 +117,31 @@ components:
         theme:
           type: string
       type: object
-    .bookstore.v1.UpdateBookRequestInput:
+    bookstore.v1.UpdateBookRequestInput:
+      description: |2
+         Request message for UpdateBook method
       properties:
         book:
-          $ref: '#/components/schemas/.bookstore.v1.Book'
+          $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
-    .bookstore.v1.UpdateBookResponse:
+    bookstore.v1.UpdateBookResponse:
+      description: The UpdateBookResponse message.
       properties:
         book:
-          $ref: '#/components/schemas/.bookstore.v1.Book'
+          $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
 info:
   description: |
-    This is an auto-generated API for .bookstore.v1.BookstoreService.
-  title: API For .bookstore.v1.BookstoreService
+    This is an auto-generated API for bookstore.v1.BookstoreService.
+  title: API For bookstore.v1.BookstoreService
   version: 0.0.1
 openapi: 3.1.0
 paths:
   /authors/{author}:
     get:
-      operationId: .bookstore.v1.BookstoreService.GetAuthor
+      description: |2
+         Returns a specific author.
+      operationId: bookstore.v1.BookstoreService.GetAuthor
       parameters:
         - in: path
           name: author
@@ -122,37 +154,43 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.bookstore.v1.GetAuthorResponse'
+                $ref: '#/components/schemas/bookstore.v1.GetAuthorResponse'
           description: Succesful response
   /shelf:
     post:
-      operationId: .bookstore.v1.BookstoreService.CreateShelf
+      description: |2
+         Creates a new shelf in the bookstore.
+      operationId: bookstore.v1.BookstoreService.CreateShelf
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/.bookstore.v1.CreateShelfRequest'
+              $ref: '#/components/schemas/bookstore.v1.CreateShelfRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.bookstore.v1.CreateShelfResponse'
+                $ref: '#/components/schemas/bookstore.v1.CreateShelfResponse'
           description: Succesful response
   /shelves:
     get:
-      operationId: .bookstore.v1.BookstoreService.ListShelves
+      description: |2
+         Returns a list of all shelves in the bookstore.
+      operationId: bookstore.v1.BookstoreService.ListShelves
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.bookstore.v1.ListShelvesResponse'
+                $ref: '#/components/schemas/bookstore.v1.ListShelvesResponse'
           description: |2
              Response to ListShelves call.
   /shelves/{shelf}:
     delete:
-      operationId: .bookstore.v1.BookstoreService.DeleteShelf
+      description: |2
+         Deletes a shelf, including all books that are stored on the shelf.
+      operationId: bookstore.v1.BookstoreService.DeleteShelf
       parameters:
         - in: path
           name: shelf
@@ -164,17 +202,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/.bookstore.v1.DeleteShelfRequestInput'
+              $ref: '#/components/schemas/bookstore.v1.DeleteShelfRequestInput'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.bookstore.v1.DeleteShelfResponse'
+                $ref: '#/components/schemas/bookstore.v1.DeleteShelfResponse'
           description: Succesful response
   /shelves/{shelf}/books:
     post:
-      operationId: .bookstore.v1.BookstoreService.CreateBook
+      description: |2
+         Creates a new book.
+      operationId: bookstore.v1.BookstoreService.CreateBook
       parameters:
         - in: path
           name: shelf
@@ -186,17 +226,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/.bookstore.v1.CreateBookRequestInput'
+              $ref: '#/components/schemas/bookstore.v1.CreateBookRequestInput'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.bookstore.v1.CreateBookResponse'
+                $ref: '#/components/schemas/bookstore.v1.CreateBookResponse'
           description: Succesful response
   /shelves/{shelf}/books/{book.id}:
     patch:
-      operationId: .bookstore.v1.BookstoreService.UpdateBook
+      description: Invokes the bookstore.v1.BookstoreService.UpdateBook method.
+      operationId: bookstore.v1.BookstoreService.UpdateBook
       parameters:
         - in: path
           name: shelf
@@ -214,17 +255,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/.bookstore.v1.UpdateBookRequestInput'
+              $ref: '#/components/schemas/bookstore.v1.UpdateBookRequestInput'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.bookstore.v1.UpdateBookResponse'
+                $ref: '#/components/schemas/bookstore.v1.UpdateBookResponse'
           description: Succesful response
   /shelves/{shelf}/books/{book}:
     delete:
-      operationId: .bookstore.v1.BookstoreService.DeleteBook
+      description: |2
+         Deletes a book from a shelf.
+      operationId: bookstore.v1.BookstoreService.DeleteBook
       parameters:
         - in: path
           name: shelf
@@ -242,16 +285,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/.bookstore.v1.DeleteBookRequestInput'
+              $ref: '#/components/schemas/bookstore.v1.DeleteBookRequestInput'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.bookstore.v1.DeleteBookResponse'
+                $ref: '#/components/schemas/bookstore.v1.DeleteBookResponse'
           description: Succesful response
     get:
-      operationId: .bookstore.v1.BookstoreService.GetBook
+      description: |2
+         Returns a specific book.
+      operationId: bookstore.v1.BookstoreService.GetBook
       parameters:
         - in: path
           name: shelf
@@ -274,5 +319,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.bookstore.v1.GetBookResponse'
+                $ref: '#/components/schemas/bookstore.v1.GetBookResponse'
           description: Succesful response
+servers:
+  - description: The server for bookstore.v1.BookstoreService.
+    url: /

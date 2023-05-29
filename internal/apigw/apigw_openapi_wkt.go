@@ -7,10 +7,10 @@ import (
 
 // based on the work here:
 // https://github.com/google/gnostic/blob/main/cmd/protoc-gen-openapi/generator/wellknown/schemas.go
-func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.SchemaProxy {
+func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 	switch wkt {
 	case pgs.AnyWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:        []string{"object"},
 			Description: "Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.",
 			Properties: map[string]*dm_base.SchemaProxy{
@@ -24,100 +24,95 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.SchemaPr
 					// TODO(pquerna): add a tag based annotation for possible Any values.
 				},
 			}),
-		})
+		}
 	case pgs.DurationWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:   []string{"string"},
 			Format: "duration",
-		})
+		}
 	case pgs.EmptyWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:     []string{"object"},
-			Nullable: oapiTrue(),
-		})
+			Nullable: oasTrue(),
+		}
 	case pgs.StructWKT:
 		// todo: pquerna: is this the right mapping for an arbitrary Struct?
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:                 []string{"object"},
 			AdditionalProperties: sc.schemaForWKT(pgs.ValueWKT),
-		})
+		}
 	case pgs.TimestampWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:   []string{"string"},
 			Format: "date-time",
-		})
+		}
 	case pgs.ValueWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:     []string{"string", "number", "object", "array", "boolean", "null"},
-			Nullable: oapiTrue(),
-		})
+			Nullable: oasTrue(),
+		}
 	case pgs.ListValueWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:                 []string{"array"},
 			AdditionalProperties: sc.schemaForWKT(pgs.ValueWKT),
-			Nullable:             oapiTrue(),
-		})
+			Nullable:             oasTrue(),
+		}
 	case pgs.DoubleValueWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:     []string{"number"},
 			Format:   "double",
-			Nullable: oapiTrue(),
-		})
+			Nullable: oasTrue(),
+		}
 	case pgs.FloatValueWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:     []string{"number"},
 			Format:   "float",
-			Nullable: oapiTrue(),
-		})
+			Nullable: oasTrue(),
+		}
 	case pgs.Int64ValueWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:     []string{"string"},
 			Format:   "int64",
-			Nullable: oapiTrue(),
-		})
+			Nullable: oasTrue(),
+		}
 	case pgs.UInt64ValueWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:     []string{"string"},
 			Format:   "uint64",
-			Nullable: oapiTrue(),
-		})
+			Nullable: oasTrue(),
+		}
 	case pgs.Int32ValueWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:     []string{"number"},
 			Format:   "int32",
-			Nullable: oapiTrue(),
-		})
+			Nullable: oasTrue(),
+		}
 	case pgs.UInt32ValueWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:     []string{"number"},
 			Format:   "int64",
-			Nullable: oapiTrue(),
-		})
+			Nullable: oasTrue(),
+		}
 	case pgs.BoolValueWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:     []string{"boolean"},
-			Nullable: oapiTrue(),
-		})
+			Nullable: oasTrue(),
+		}
 	case pgs.StringValueWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:     []string{"string"},
-			Nullable: oapiTrue(),
-		})
+			Nullable: oasTrue(),
+		}
 	case pgs.BytesValueWKT:
-		return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		return &dm_base.Schema{
 			Type:     []string{"string"},
 			Format:   "bytes",
-			Nullable: oapiTrue(),
-		})
+			Nullable: oasTrue(),
+		}
 	case pgs.UnknownWKT:
 		// TODO: handle these.. if any are really needed
 		panic("UnknownWKT is not supported")
 	default:
 		panic("Unknown WKT")
 	}
-}
-
-func oapiTrue() *bool {
-	b := true
-	return &b
 }
