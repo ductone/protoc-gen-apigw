@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	_ "embed"
+
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 
 	"google.golang.org/grpc"
@@ -21,6 +23,9 @@ import (
 func RegisterGatewayBookstoreServiceServer(s apigw_v1.ServiceRegistrar, srv BookstoreServiceServer) {
 	s.RegisterService(&apigw_desc_BookstoreServiceServer, srv)
 }
+
+//go:embed bookstore.pb.bookstore_service.oas31.yaml
+var APIGW_OAS31_BookstoreServiceServer string
 
 var apigw_desc_BookstoreServiceServer = apigw_v1.ServiceDesc{
 	Name:        "bookstore.v1.BookstoreService",

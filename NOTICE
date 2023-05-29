@@ -7,10 +7,18 @@ apigw/v1/grpc_internals.go:
 
     Portions based on <https://github.com/grpc/grpc-go/blob/v1.55.0/internal/transport/handler_server.go>
     Copyright 2016 gRPC authors.
+    License: Apache-2.0
 
     Portions based on <https://github.com/grpc/grpc-go/blob/v1.55.0/server.go>
     Copyright 2016 gRPC authors.
+    License: Apache-2.0
 
     Portions based on <https://github.com/grpc-ecosystem/grpc-gateway/blob/main/runtime/errors.go>
     Copyright (c) 2015, Gengo, Inc.
+    License: BSD-3-Clause
 
+internal/apigw/apigw_openapi_wkt.go:
+
+    Portions dervived from <https://github.com/google/gnostic/blob/main/cmd/protoc-gen-openapi/generator/wellknown/schemas.go>
+    Copyright 2020 Google LLC. All Rights Reserved.
+    License: Apache-2.0

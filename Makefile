@@ -18,6 +18,11 @@ test:
 example: build
 	buf --debug generate --template buf.example.gen.yaml --path example/bookstore
 
+.PHONY: example_oas_lint
+example_oas_lint:
+	podman run -v $(CURDIR)/example/bookstore/v1:/spec --rm docker.io/p1c2u/openapi-spec-validator /spec/bookstore.pb.bookstore_service.oas31.yaml
+	vacuum lint -d example/bookstore/v1/bookstore.pb.bookstore_service.oas31.yaml
+
 .PHONY: fmt
 fmt:
 	buf format -w 
