@@ -268,11 +268,6 @@ func oasTrue() *bool {
 	return &b
 }
 
-func oasFalse() *bool {
-	b := false
-	return &b
-}
-
 func oasBool(v bool) *bool {
 	b := v
 	return &b
