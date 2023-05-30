@@ -216,9 +216,4 @@ message DeleteBookRequest {
 message GetAuthorRequest {
   // The ID of the author resource to retrieve.
   int64 author = 1;
-
-  oneof genre {
-    bool scifi = 2;
-    bool magic = 3;
-  }
 }
