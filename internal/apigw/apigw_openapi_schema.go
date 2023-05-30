@@ -38,7 +38,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	if comments == "" {
 		_, _ = fmt.Fprintf(description, "The %s message.", m.Name().String())
 	} else {
-		description.WriteString(comments)
+		_, _ = description.WriteString(comments)
 	}
 	deprecated := oasBool(m.Descriptor().GetOptions().GetDeprecated())
 	obj := &dm_base.Schema{
