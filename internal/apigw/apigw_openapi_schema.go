@@ -2,9 +2,10 @@ package apigw
 
 import (
 	"fmt"
+	"strings"
+
 	pgs "github.com/lyft/protoc-gen-star"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
-	"strings"
 )
 
 func newSchemaContainer() *schemaContainer {
