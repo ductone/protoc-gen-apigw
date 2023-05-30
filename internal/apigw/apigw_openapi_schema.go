@@ -1,6 +1,9 @@
 package apigw
 
 import (
+	"fmt"
+	"strings"
+
 	pgs "github.com/lyft/protoc-gen-star"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 )
@@ -31,17 +34,19 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		return dm_base.CreateSchemaProxyRef("#/components/schemas/" + fqn)
 	}
 
-	description := m.SourceCodeInfo().LeadingComments()
-	if description == "" {
-		description = "The " + m.Name().String() + " message."
+	description := &strings.Builder{}
+	comments := m.SourceCodeInfo().LeadingComments()
+	if comments == "" {
+		_, _ = fmt.Fprintf(description, "The %s message.", m.Name().String())
+	} else {
+		_, _ = description.WriteString(comments)
 	}
 	deprecated := oasBool(m.Descriptor().GetOptions().GetDeprecated())
 	obj := &dm_base.Schema{
-		Type:        []string{"object"},
-		Properties:  map[string]*dm_base.SchemaProxy{},
-		Nullable:    nullable,
-		Description: description,
-		Deprecated:  deprecated,
+		Type:       []string{"object"},
+		Properties: map[string]*dm_base.SchemaProxy{},
+		Nullable:   nullable,
+		Deprecated: deprecated,
 	}
 	for _, f := range m.NonOneOfFields() {
 		jn := jsonName(f)
@@ -57,25 +62,22 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	}
 
 	for _, of := range m.OneOfs() {
-		required := []*dm_base.SchemaProxy{}
+		_, _ = fmt.Fprintf(description,
+			"\n\nThis message contains a oneof named %s. "+
+				"Only a single field of the following list may be set at a time:\n",
+			of.Name().String(),
+		)
 
 		for _, f := range of.Fields() {
 			jn := jsonName(f)
 			obj.Properties[jn] = sc.Field(f)
-			required = append(required, dm_base.CreateSchemaProxy(&dm_base.Schema{
-				Required: []string{jn},
-			}))
-		}
 
-		ao := &dm_base.Schema{
-			OneOf: required,
+			_, _ = fmt.Fprintf(description, "  - %s\n", jn)
 		}
-
-		obj.AnyOf = append(obj.AnyOf, dm_base.CreateSchemaProxy(ao))
 	}
+	obj.Description = description.String()
 	rv := dm_base.CreateSchemaProxy(obj)
 	sc.schemas[fqn] = rv
-
 	return dm_base.CreateSchemaProxyRef("#/components/schemas/" + fqn)
 }
 
@@ -114,15 +116,17 @@ func (sc *schemaContainer) FieldTypeElem(fte pgs.FieldTypeElem) *dm_base.SchemaP
 }
 
 func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
-	var nullable *bool
-	if f.OneOf() != nil {
-		nullable = oasTrue()
-	}
 	deprecated := oasBool(f.Descriptor().GetOptions().GetDeprecated())
 	description := f.SourceCodeInfo().LeadingComments()
 	if description == "" {
 		jn := jsonName(f)
 		description = "The " + jn + " field."
+	}
+	var nullable *bool
+	if f.OneOf() != nil {
+		nullable = oasTrue()
+		description += "\nThis field is part of the `" + f.OneOf().Name().String() + "` oneof.\n" +
+			"See the documentation for `" + nicerFQN(f.Message()) + "` for more details."
 	}
 
 	switch {
@@ -159,6 +163,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		sv := sc.schemaForScalar(f.Type().ProtoType())
 		mergeNullable(sv, nullable)
 		sv.Deprecated = deprecated
+		sv.Description = description
 		return dm_base.CreateSchemaProxy(sv)
 	}
 }

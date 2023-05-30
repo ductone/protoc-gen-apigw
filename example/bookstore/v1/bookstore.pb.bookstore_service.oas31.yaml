@@ -6,6 +6,7 @@ components:
          An author resource.
       properties:
         firstName:
+          description: The firstName field.
           type: string
         gender:
           description: The gender field.
@@ -15,9 +16,12 @@ components:
             - GENDER_FEMALE
           type: string
         id:
+          description: |2
+             A unique author id.
           format: int64
           type: string
         lname:
+          description: The lname field.
           type: string
       type: object
     bookstore.v1.Book:
@@ -25,8 +29,12 @@ components:
          A book resource.
       properties:
         author:
+          description: |2
+             An author of the book.
           type: string
         id:
+          description: |2
+             A unique book id.
           format: int64
           type: string
         quotes:
@@ -37,6 +45,8 @@ components:
           nullable: true
           type: array
         title:
+          description: |2
+             A book title.
           type: string
       type: object
     bookstore.v1.CreateBookRequestInput:
@@ -80,10 +90,29 @@ components:
       description: The DeleteShelfResponse message.
       type: object
     bookstore.v1.GetAuthorResponse:
-      description: The GetAuthorResponse message.
+      description: |
+        The GetAuthorResponse message.
+
+        This message contains a oneof named genre. Only a single field of the following list may be set at a time:
+          - fiction
+          - nonfiction
       properties:
         author:
           $ref: '#/components/schemas/bookstore.v1.Author'
+        fiction:
+          description: |-
+            The fiction field.
+            This field is part of the `genre` oneof.
+            See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
+          nullable: true
+          type: boolean
+        nonfiction:
+          description: |-
+            The nonfiction field.
+            This field is part of the `genre` oneof.
+            See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
+          nullable: true
+          type: boolean
       type: object
     bookstore.v1.GetBookResponse:
       description: The GetBookResponse message.
@@ -108,13 +137,21 @@ components:
          A shelf resource.
       properties:
         id:
+          description: |2
+             A unique shelf id.
           format: int64
           type: string
         search%5Bencoded%5D:
+          description: |2
+             To test json name is percentage encoded
           type: string
         search[decoded]:
+          description: |2
+             To test json name is percentage decoded
           type: string
         theme:
+          description: |2
+             A theme of the shelf (fiction, poetry, etc).
           type: string
       type: object
     bookstore.v1.UpdateBookRequestInput:
@@ -147,6 +184,8 @@ paths:
           name: author
           required: true
           schema:
+            description: |2
+               The ID of the author resource to retrieve.
             format: int64
             type: string
       responses:
@@ -196,6 +235,8 @@ paths:
           name: shelf
           required: true
           schema:
+            description: |2
+               The ID of the shelf to delete.
             format: int64
             type: string
       requestBody:
@@ -220,6 +261,8 @@ paths:
           name: shelf
           required: true
           schema:
+            description: |2
+               The ID of the shelf on which to create a book.
             format: int64
             type: string
       requestBody:
@@ -243,12 +286,16 @@ paths:
           name: shelf
           required: true
           schema:
+            description: |2
+               The ID of the shelf from which to retrieve a book.
             format: int64
             type: string
         - in: path
           name: book.id
           required: true
           schema:
+            description: |2
+               A unique book id.
             format: int64
             type: string
       requestBody:
@@ -273,12 +320,16 @@ paths:
           name: shelf
           required: true
           schema:
+            description: |2
+               The ID of the shelf from which to delete a book.
             format: int64
             type: string
         - in: path
           name: book
           required: true
           schema:
+            description: |2
+               The ID of the book to delete.
             format: int64
             type: string
       requestBody:
@@ -302,17 +353,22 @@ paths:
           name: shelf
           required: true
           schema:
+            description: |2
+               The ID of the shelf from which to retrieve a book.
             format: int64
             type: string
         - in: path
           name: book
           required: true
           schema:
+            description: |2
+               The ID of the book to retrieve.
             format: int64
             type: string
         - in: query
           name: author
           schema:
+            description: The includeAuthor field.
             type: boolean
       responses:
         "200":
