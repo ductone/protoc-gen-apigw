@@ -102,6 +102,11 @@ message UpdateBookResponse {
 
 message GetAuthorResponse {
   Author author = 1;
+
+  oneof genre {
+    bool fiction = 2;
+    bool nonfiction = 3;
+  }
 }
 
 // A shelf resource.
@@ -211,4 +216,9 @@ message DeleteBookRequest {
 message GetAuthorRequest {
   // The ID of the author resource to retrieve.
   int64 author = 1;
+
+  oneof genre {
+    bool scifi = 2;
+    bool magic = 3;
+  }
 }
