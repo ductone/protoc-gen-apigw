@@ -52,13 +52,16 @@ func {{ .DecoderHandlerName -}}(ctx context.Context, input apigw_v1.DecoderInput
 	var err error
 	_ = err
 
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+    _ = unmarshalOpts
+
 	{{ if .HasBody }}
 		bodyData, err := io.ReadAll(input.Body())
 		if err != nil {
 			return err
 		}
 		if len(bodyData) > 0 {
-			err = protojson.Unmarshal(bodyData, out)
+			err = protojson.UnmarshalOptions{AllowPartial: true}.Unmarshal(bodyData, out)
 			if err != nil {
 				return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
 			}
@@ -68,7 +71,7 @@ func {{ .DecoderHandlerName -}}(ctx context.Context, input apigw_v1.DecoderInput
 	{{ range .QueryParams }}
 		{{.Converter}}
 
-		err = proto.Unmarshal({{.ConverterOutputName}}.Marshal(), out)
+		err = unmarshalOpts.Unmarshal({{.ConverterOutputName}}.Marshal(), out)
 		if err != nil {
 			return err
 		}
@@ -77,7 +80,7 @@ func {{ .DecoderHandlerName -}}(ctx context.Context, input apigw_v1.DecoderInput
 	{{ range .RouteParams }}
 		{{.Converter}}
 
-		err = proto.Unmarshal({{.ConverterOutputName}}.Marshal(), out)
+		err = unmarshalOpts.Unmarshal({{.ConverterOutputName}}.Marshal(), out)
 		if err != nil {
 			return err
 		}

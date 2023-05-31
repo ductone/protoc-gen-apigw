@@ -52,6 +52,11 @@ func TestGinRouter(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code)
 	require.Equal(t, "{}", w.Body.String())
 	require.Equal(t, "foo", w.Header().Get("x-thing"))
+
+	w = httptest.NewRecorder()
+	engine.ServeHTTP(w, httptest.NewRequest(http.MethodDelete, "/shelves/123/books/456", nil))
+	require.Equal(t, http.StatusOK, w.Code)
+	require.Equal(t, "{}", w.Body.String())
 }
 
 func jsonify(t *testing.T, obj map[string]interface{}) io.Reader {
@@ -82,4 +87,11 @@ func (mb *mockBookstore) DeleteShelf(ctx context.Context, req *bookstore_v1.Dele
 	}
 	require.Equal(mb.t, int64(123), req.Shelf)
 	return &bookstore_v1.DeleteShelfResponse{}, nil
+}
+
+// /shelves/{shelf}/books/{book}
+func (mb *mockBookstore) DeleteBook(ctx context.Context, req *bookstore_v1.DeleteBookRequest) (*bookstore_v1.DeleteBookResponse, error) {
+	require.Equal(mb.t, int64(123), req.Shelf)
+	require.Equal(mb.t, int64(456), req.Book)
+	return &bookstore_v1.DeleteBookResponse{}, nil
 }
