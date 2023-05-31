@@ -24,8 +24,8 @@ func RegisterGatewayBookstoreServiceServer(s apigw_v1.ServiceRegistrar, srv Book
 	s.RegisterService(&apigw_desc_BookstoreServiceServer, srv)
 }
 
-//go:embed bookstore.pb.bookstore_service.oas31.yaml
-var APIGW_OAS31_BookstoreServiceServer string
+//go:embed bookstore.pb.bookstore_service.oas303.yaml
+var APIGW_OAS303_BookstoreServiceServer string
 
 var apigw_desc_BookstoreServiceServer = apigw_v1.ServiceDesc{
 	Name:        "bookstore.v1.BookstoreService",
