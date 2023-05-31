@@ -23,7 +23,6 @@ import (
 
 // TODO(pquerna): consider a server option to control this.
 var jsonMarshaler = protojson.MarshalOptions{
-	UseProtoNames:   true,
 	EmitUnpopulated: true,
 }
 
