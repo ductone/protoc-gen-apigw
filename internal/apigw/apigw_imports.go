@@ -10,25 +10,26 @@ import (
 )
 
 type importTracker struct {
-	ctx                  pgsgo.Context
-	input                pgs.File
-	typeMapper           map[pgs.Name]pgs.FilePath
-	APIGWV1              bool
-	Bytes                bool
-	Embed                bool
-	Fmt                  bool
-	GRPC                 bool
-	GRPCCodes            bool
-	GRPCStatus           bool
-	Io                   bool
-	NetHTTP              bool
-	Ogen                 bool
-	ProtobufEncodingJSON bool
-	ProtobufProto        bool
-	ProtobufProtoPack    bool
-	Strconv              bool
-	Strings              bool
-	Time                 bool
+	ctx                       pgsgo.Context
+	input                     pgs.File
+	typeMapper                map[pgs.Name]pgs.FilePath
+	APIGWV1                   bool
+	Bytes                     bool
+	Embed                     bool
+	Fmt                       bool
+	GRPC                      bool
+	GRPCCodes                 bool
+	GRPCStatus                bool
+	Io                        bool
+	NetHTTP                   bool
+	Ogen                      bool
+	ProtobufEncodingJSON      bool
+	ProtobufProto             bool
+	ProtobufProtoPack         bool
+	ProtobufEncodingProtowire bool
+	Strconv                   bool
+	Strings                   bool
+	Time                      bool
 }
 
 type ImportAlias struct {

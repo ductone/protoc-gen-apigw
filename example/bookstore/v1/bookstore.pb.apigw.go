@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protopack"
 )
@@ -117,6 +118,9 @@ func _BookstoreService_ListShelves_APIGW_Decoder(ctx context.Context, input apig
 	var err error
 	_ = err
 
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
 	return nil
 }
 
@@ -147,12 +151,15 @@ func _BookstoreService_CreateShelf_APIGW_Decoder(ctx context.Context, input apig
 	var err error
 	_ = err
 
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
 	bodyData, err := io.ReadAll(input.Body())
 	if err != nil {
 		return err
 	}
 	if len(bodyData) > 0 {
-		err = protojson.Unmarshal(bodyData, out)
+		err = protojson.UnmarshalOptions{AllowPartial: true}.Unmarshal(bodyData, out)
 		if err != nil {
 			return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
 		}
@@ -188,12 +195,15 @@ func _BookstoreService_DeleteShelf_APIGW_Decoder(ctx context.Context, input apig
 	var err error
 	_ = err
 
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
 	bodyData, err := io.ReadAll(input.Body())
 	if err != nil {
 		return err
 	}
 	if len(bodyData) > 0 {
-		err = protojson.Unmarshal(bodyData, out)
+		err = protojson.UnmarshalOptions{AllowPartial: true}.Unmarshal(bodyData, out)
 		if err != nil {
 			return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
 		}
@@ -211,7 +221,7 @@ func _BookstoreService_DeleteShelf_APIGW_Decoder(ctx context.Context, input apig
 		protopack.Varint(vn1tmp),
 	}
 
-	err = proto.Unmarshal(vn1.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
 	if err != nil {
 		return err
 	}
@@ -246,12 +256,15 @@ func _BookstoreService_CreateBook_APIGW_Decoder(ctx context.Context, input apigw
 	var err error
 	_ = err
 
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
 	bodyData, err := io.ReadAll(input.Body())
 	if err != nil {
 		return err
 	}
 	if len(bodyData) > 0 {
-		err = protojson.Unmarshal(bodyData, out)
+		err = protojson.UnmarshalOptions{AllowPartial: true}.Unmarshal(bodyData, out)
 		if err != nil {
 			return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
 		}
@@ -269,7 +282,7 @@ func _BookstoreService_CreateBook_APIGW_Decoder(ctx context.Context, input apigw
 		protopack.Varint(vn1tmp),
 	}
 
-	err = proto.Unmarshal(vn1.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
 	if err != nil {
 		return err
 	}
@@ -304,6 +317,9 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 	var err error
 	_ = err
 
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
 	vn4 := input.Query().Get("author")
 
 	vn5tmp, err := strconv.ParseBool(strings.ToLower(vn4))
@@ -316,7 +332,7 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 		protopack.Bool(vn5tmp),
 	}
 
-	err = proto.Unmarshal(vn5.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn5.Marshal(), out)
 	if err != nil {
 		return err
 	}
@@ -333,7 +349,7 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 		protopack.Varint(vn1tmp),
 	}
 
-	err = proto.Unmarshal(vn1.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
 	if err != nil {
 		return err
 	}
@@ -350,7 +366,7 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 		protopack.Varint(vn3tmp),
 	}
 
-	err = proto.Unmarshal(vn3.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn3.Marshal(), out)
 	if err != nil {
 		return err
 	}
@@ -385,12 +401,15 @@ func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw
 	var err error
 	_ = err
 
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
 	bodyData, err := io.ReadAll(input.Body())
 	if err != nil {
 		return err
 	}
 	if len(bodyData) > 0 {
-		err = protojson.Unmarshal(bodyData, out)
+		err = protojson.UnmarshalOptions{AllowPartial: true}.Unmarshal(bodyData, out)
 		if err != nil {
 			return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
 		}
@@ -408,7 +427,7 @@ func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw
 		protopack.Varint(vn1tmp),
 	}
 
-	err = proto.Unmarshal(vn1.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
 	if err != nil {
 		return err
 	}
@@ -425,7 +444,7 @@ func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw
 		protopack.Varint(vn3tmp),
 	}
 
-	err = proto.Unmarshal(vn3.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn3.Marshal(), out)
 	if err != nil {
 		return err
 	}
@@ -460,12 +479,15 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 	var err error
 	_ = err
 
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
 	bodyData, err := io.ReadAll(input.Body())
 	if err != nil {
 		return err
 	}
 	if len(bodyData) > 0 {
-		err = protojson.Unmarshal(bodyData, out)
+		err = protojson.UnmarshalOptions{AllowPartial: true}.Unmarshal(bodyData, out)
 		if err != nil {
 			return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
 		}
@@ -483,7 +505,7 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 		protopack.Varint(vn1tmp),
 	}
 
-	err = proto.Unmarshal(vn1.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
 	if err != nil {
 		return err
 	}
@@ -518,6 +540,9 @@ func _BookstoreService_GetAuthor_APIGW_Decoder(ctx context.Context, input apigw_
 	var err error
 	_ = err
 
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
 	vn0 := input.PathParam("author")
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
@@ -530,7 +555,7 @@ func _BookstoreService_GetAuthor_APIGW_Decoder(ctx context.Context, input apigw_
 		protopack.Varint(vn1tmp),
 	}
 
-	err = proto.Unmarshal(vn1.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
 	if err != nil {
 		return err
 	}

@@ -113,6 +113,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 	ix.APIGWV1 = true
 	ix.NetHTTP = true
 	ix.GRPC = true
+	ix.ProtobufEncodingProtowire = true
 
 	// TODO(pquerna): this is like the Service raw name, but translate to Go-safe letters.
 	serviceShortName := strings.TrimSuffix(ctx.Name(service).String(), "Server")
