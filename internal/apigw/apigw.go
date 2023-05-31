@@ -75,7 +75,7 @@ func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) e
 
 	services := f.Services()
 	for _, service := range services {
-		oasName := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.oas31.yaml", service.Name().LowerSnakeCase())).String()
+		oasName := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.oas303.yaml", service.Name().LowerSnakeCase())).String()
 
 		err := m.renderService(ctx, bodyBuf, f, service, ix, oasName)
 		if err != nil {

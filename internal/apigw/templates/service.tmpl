@@ -4,7 +4,7 @@ func RegisterGateway{{- .ServerName -}}(s apigw_v1.ServiceRegistrar, srv {{ .Ser
 }
 
 //go:embed {{.OASFileName}}
-var APIGW_OAS31_{{- .ServerName }} string
+var APIGW_OAS303_{{- .ServerName }} string
 
 
 var apigw_desc_{{- .ServerName -}} = apigw_v1.ServiceDesc{
