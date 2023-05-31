@@ -75,7 +75,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	outObj := method.Output()
 	outDescription := outObj.SourceCodeInfo().LeadingComments()
 	if outDescription == "" {
-		outDescription = "Succesful response"
+		outDescription = "Successful response"
 	}
 
 	methodDescription := method.SourceCodeInfo().LeadingComments()
