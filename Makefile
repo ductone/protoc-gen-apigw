@@ -20,8 +20,8 @@ example: build
 
 .PHONY: example_oas_lint
 example_oas_lint:
-	podman run -v $(CURDIR)/example/bookstore/v1:/spec --rm docker.io/p1c2u/openapi-spec-validator /spec/bookstore.pb.bookstore_service.oas31.yaml
-	vacuum lint -d example/bookstore/v1/bookstore.pb.bookstore_service.oas31.yaml
+	podman run -v $(CURDIR)/example/bookstore/v1:/spec --rm docker.io/p1c2u/openapi-spec-validator /spec/bookstore.pb.bookstore_service.oas303.yaml
+	vacuum lint -d example/bookstore/v1/bookstore.pb.bookstore_service.oas303.yaml
 
 .PHONY: fmt
 fmt:
