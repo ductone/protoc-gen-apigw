@@ -172,7 +172,7 @@ info:
     This is an auto-generated API for bookstore.v1.BookstoreService.
   title: API For bookstore.v1.BookstoreService
   version: 0.0.1
-openapi: 3.0.0
+openapi: 3.0.3
 paths:
   /authors/{author}:
     get:
@@ -194,7 +194,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.GetAuthorResponse'
-          description: Succesful response
+          description: Successful response
   /shelf:
     post:
       description: |2
@@ -211,7 +211,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.CreateShelfResponse'
-          description: Succesful response
+          description: Successful response
   /shelves:
     get:
       description: |2
@@ -250,7 +250,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.DeleteShelfResponse'
-          description: Succesful response
+          description: Successful response
   /shelves/{shelf}/books:
     post:
       description: |2
@@ -276,7 +276,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.CreateBookResponse'
-          description: Succesful response
+          description: Successful response
   /shelves/{shelf}/books/{book.id}:
     patch:
       description: Invokes the bookstore.v1.BookstoreService.UpdateBook method.
@@ -309,7 +309,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.UpdateBookResponse'
-          description: Succesful response
+          description: Successful response
   /shelves/{shelf}/books/{book}:
     delete:
       description: |2
@@ -343,7 +343,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.DeleteBookResponse'
-          description: Succesful response
+          description: Successful response
     get:
       description: |2
          Returns a specific book.
@@ -376,7 +376,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.GetBookResponse'
-          description: Succesful response
+          description: Successful response
 servers:
   - description: The server for bookstore.v1.BookstoreService.
     url: /
