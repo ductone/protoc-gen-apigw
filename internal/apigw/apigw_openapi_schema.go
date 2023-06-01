@@ -8,6 +8,8 @@ import (
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 )
 
+const FieldMaskWKT pgs.WellKnownType = "FieldMask"
+
 func newSchemaContainer() *schemaContainer {
 	return &schemaContainer{
 		schemas: map[string]*dm_base.SchemaProxy{},
@@ -18,11 +20,34 @@ type schemaContainer struct {
 	schemas map[string]*dm_base.SchemaProxy
 }
 
-func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool) *dm_base.SchemaProxy {
+func IsWellKnown(m pgs.Message) bool {
 	if m.IsWellKnown() {
+		return true
+	}
+
+	if string(m.Name()) == string(FieldMaskWKT) {
+		return true
+	}
+
+	return false
+}
+func WellKnownType(m pgs.Message) pgs.WellKnownType {
+	if m.IsWellKnown() {
+		return m.WellKnownType()
+	}
+
+	if string(m.Name()) == string(FieldMaskWKT) {
+		return FieldMaskWKT
+	}
+
+	return pgs.UnknownWKT
+}
+
+func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool) *dm_base.SchemaProxy {
+	if IsWellKnown(m) {
 		// TODO(pquera): we may want to customize this some day,
 		// but right now WKTs are just rendered inline, and not a Ref.
-		return dm_base.CreateSchemaProxy(sc.schemaForWKT(m.WellKnownType()))
+		return dm_base.CreateSchemaProxy(sc.schemaForWKT(WellKnownType(m)))
 	}
 
 	fqn := nicerFQN(m)

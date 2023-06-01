@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package bookstore.v1;
 
+import "google/protobuf/field_mask.proto";
 import "apigw/v1/apigw.proto";
 
 option go_package = "github.com/ductone/protoc-gen-apigw/example/bookstore/v1";
@@ -153,6 +154,7 @@ message Author {
 message ListShelvesResponse {
   // Shelves in the bookstore.
   repeated Shelf shelves = 1;
+  google.protobuf.FieldMask mask = 2;
 }
 
 // Request message for CreateShelf method.

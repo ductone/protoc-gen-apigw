@@ -124,6 +124,9 @@ components:
       description: |2
          Response to ListShelves call.
       properties:
+        mask:
+          nullable: true
+          type: string
         shelves:
           description: |2
              Shelves in the bookstore.

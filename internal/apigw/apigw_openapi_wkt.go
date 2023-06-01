@@ -109,6 +109,11 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 			Format:   "bytes",
 			Nullable: oasTrue(),
 		}
+	case FieldMaskWKT:
+		return &dm_base.Schema{
+			Type:     []string{"string"},
+			Nullable: oasTrue(),
+		}
 	case pgs.UnknownWKT:
 		// TODO: handle these.. if any are really needed
 		panic("UnknownWKT is not supported")
