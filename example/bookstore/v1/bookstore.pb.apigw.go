@@ -209,7 +209,7 @@ func _BookstoreService_DeleteShelf_APIGW_Decoder(ctx context.Context, input apig
 		}
 	}
 
-	vn0 := input.PathParam("shelf")
+	vn0 := input.PathParam("0")
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
 	if err != nil {
@@ -270,7 +270,7 @@ func _BookstoreService_CreateBook_APIGW_Decoder(ctx context.Context, input apigw
 		}
 	}
 
-	vn0 := input.PathParam("shelf")
+	vn0 := input.PathParam("0")
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
 	if err != nil {
@@ -337,7 +337,7 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 		return err
 	}
 
-	vn0 := input.PathParam("shelf")
+	vn0 := input.PathParam("0")
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
 	if err != nil {
@@ -354,7 +354,7 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 		return err
 	}
 
-	vn2 := input.PathParam("book")
+	vn2 := input.PathParam("1")
 
 	vn3tmp, err := strconv.ParseInt(vn2, 10, 64)
 	if err != nil {
@@ -415,7 +415,7 @@ func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw
 		}
 	}
 
-	vn0 := input.PathParam("shelf")
+	vn0 := input.PathParam("0")
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
 	if err != nil {
@@ -432,7 +432,7 @@ func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw
 		return err
 	}
 
-	vn2 := input.PathParam("book")
+	vn2 := input.PathParam("1")
 
 	vn3tmp, err := strconv.ParseInt(vn2, 10, 64)
 	if err != nil {
@@ -493,7 +493,7 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 		}
 	}
 
-	vn0 := input.PathParam("shelf")
+	vn0 := input.PathParam("0")
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
 	if err != nil {
@@ -543,7 +543,7 @@ func _BookstoreService_GetAuthor_APIGW_Decoder(ctx context.Context, input apigw_
 	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
 	_ = unmarshalOpts
 
-	vn0 := input.PathParam("author")
+	vn0 := input.PathParam("0")
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
 	if err != nil {
