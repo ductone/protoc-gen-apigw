@@ -175,9 +175,11 @@ func ConvertRoute(r string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	for i, t := range tkn {
+	paramNum := 0
+	for _, t := range tkn {
 		if t.IsParam {
-			rv = append(rv, fmt.Sprintf(":%d", i))
+			rv = append(rv, fmt.Sprintf(":%d", paramNum))
+			paramNum++
 		} else {
 			rv = append(rv, t.Value)
 		}
