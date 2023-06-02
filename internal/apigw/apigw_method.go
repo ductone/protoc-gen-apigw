@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
@@ -148,6 +149,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		routeGetter, err := templateExecToString("route_get_param.tmpl", &routeParseContext{
 			ParamName:  part.ParamName,
 			OutputName: paramValueName,
+			ParamIndex: strconv.Itoa(part.ParamIndex),
 		})
 		if err != nil {
 			panic(err)
@@ -359,4 +361,5 @@ type uintFieldContext struct {
 type routeParseContext struct {
 	OutputName string
 	ParamName  string
+	ParamIndex string
 }
