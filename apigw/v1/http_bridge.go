@@ -49,9 +49,10 @@ func TimeoutForRequest(req *http.Request) (time.Duration, bool) {
 }
 
 type RouteToken struct {
-	IsParam   bool
-	ParamName string
-	Value     string
+	IsParam    bool
+	ParamName  string
+	ParamIndex int
+	Value      string
 }
 
 // Parses a HTP Route path into a list of RouteTokens.
@@ -67,6 +68,7 @@ func ParseRoute(path string) ([]RouteToken, error) {
 		return nil, fmt.Errorf("apigw_v1: invalid route: must start with '/'")
 	}
 
+	paramIndex := 0
 	rv := make([]RouteToken, 0)
 	for _, token := range strings.Split(path, "/") {
 		if token == "" {
@@ -74,9 +76,11 @@ func ParseRoute(path string) ([]RouteToken, error) {
 		}
 		if strings.HasPrefix(token, "{") && strings.HasSuffix(token, "}") {
 			rv = append(rv, RouteToken{
-				IsParam:   true,
-				ParamName: token[1 : len(token)-1],
+				IsParam:    true,
+				ParamName:  token[1 : len(token)-1],
+				ParamIndex: paramIndex,
 			})
+			paramIndex++
 		} else {
 			rv = append(rv, RouteToken{
 				IsParam: false,
