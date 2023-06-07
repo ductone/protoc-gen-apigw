@@ -198,6 +198,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.GetAuthorResponse'
           description: Successful response
+      x-speakeasy-group: Bookstore
   /shelf:
     post:
       description: |2
@@ -215,6 +216,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.CreateShelfResponse'
           description: Successful response
+      x-speakeasy-group: Bookstore
   /shelves:
     get:
       description: |2
@@ -228,6 +230,7 @@ paths:
                 $ref: '#/components/schemas/bookstore.v1.ListShelvesResponse'
           description: |2
              Response to ListShelves call.
+      x-speakeasy-group: Bookstore
   /shelves/{shelf}:
     delete:
       description: |2
@@ -254,6 +257,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.DeleteShelfResponse'
           description: Successful response
+      x-speakeasy-group: Bookstore
   /shelves/{shelf}/books:
     post:
       description: |2
@@ -280,6 +284,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.CreateBookResponse'
           description: Successful response
+      x-speakeasy-group: Bookstore
   /shelves/{shelf}/books/{book.id}:
     patch:
       description: Invokes the bookstore.v1.BookstoreService.UpdateBook method.
@@ -313,6 +318,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.UpdateBookResponse'
           description: Successful response
+      x-speakeasy-group: Bookstore
   /shelves/{shelf}/books/{book}:
     delete:
       description: |2
@@ -347,6 +353,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.DeleteBookResponse'
           description: Successful response
+      x-speakeasy-group: Bookstore
     get:
       description: |2
          Returns a specific book.
@@ -380,6 +387,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.GetBookResponse'
           description: Successful response
+      x-speakeasy-group: Bookstore
 servers:
   - description: The server for bookstore.v1.BookstoreService.
     url: /
