@@ -83,6 +83,16 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		methodDescription = "Invokes the " + nicerFQN(method) + " method."
 	}
 
+	var groupName string
+	protoPkg := method.File().Package().ProtoName().String()
+	parts := strings.Split(protoPkg, ".")
+	if len(parts) > 2 {
+		parts = parts[len(parts)-2:]
+	}
+	groupName = pgs.Name(strings.Join(parts, ".")).UpperCamelCase().String()
+	// remove V1 from the end of the group name, it just looks nicer.
+	groupName = strings.TrimSuffix(groupName, "V1")
+
 	outputRef := mt.Add(outObj)
 	op := &dm_v3.Operation{
 		OperationId: nicerFQN(method),
@@ -99,6 +109,9 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 					},
 				},
 			},
+		},
+		Extensions: map[string]interface{}{
+			"x-speakeasy-group": groupName,
 		},
 	}
 
