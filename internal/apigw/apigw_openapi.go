@@ -111,7 +111,8 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 			},
 		},
 		Extensions: map[string]interface{}{
-			"x-speakeasy-group": groupName,
+			"x-speakeasy-group":         groupName,
+			"x-speakeasy-name-override": method.Descriptor().Name,
 		},
 	}
 

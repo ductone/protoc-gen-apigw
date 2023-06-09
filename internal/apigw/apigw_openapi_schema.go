@@ -72,6 +72,9 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		Properties: map[string]*dm_base.SchemaProxy{},
 		Nullable:   nullable,
 		Deprecated: deprecated,
+		Extensions: map[string]any{
+			"x-speakeasy-name-override": pgs.Name(*m.Descriptor().Name).UpperCamelCase().String(),
+		},
 	}
 	for _, f := range m.NonOneOfFields() {
 		jn := jsonName(f)
