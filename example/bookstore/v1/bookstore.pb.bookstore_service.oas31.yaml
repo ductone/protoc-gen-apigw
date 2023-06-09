@@ -215,7 +215,7 @@ paths:
                 $ref: '#/components/schemas/bookstore.v1.GetAuthorResponse'
           description: Successful response
       x-speakeasy-group: Bookstore
-      x-speakeasy-name-override: GetAuthor
+      x-speakeasy-name-override: BookstoreGetAuthor
   /shelf:
     post:
       description: |2
@@ -234,7 +234,7 @@ paths:
                 $ref: '#/components/schemas/bookstore.v1.CreateShelfResponse'
           description: Successful response
       x-speakeasy-group: Bookstore
-      x-speakeasy-name-override: CreateShelf
+      x-speakeasy-name-override: BookstoreCreateShelf
   /shelves:
     get:
       description: |2
@@ -249,7 +249,7 @@ paths:
           description: |2
              Response to ListShelves call.
       x-speakeasy-group: Bookstore
-      x-speakeasy-name-override: ListShelves
+      x-speakeasy-name-override: BookstoreListShelves
   /shelves/{shelf}:
     delete:
       description: |2
@@ -277,7 +277,7 @@ paths:
                 $ref: '#/components/schemas/bookstore.v1.DeleteShelfResponse'
           description: Successful response
       x-speakeasy-group: Bookstore
-      x-speakeasy-name-override: DeleteShelf
+      x-speakeasy-name-override: BookstoreDeleteShelf
   /shelves/{shelf}/books:
     post:
       description: |2
@@ -305,7 +305,7 @@ paths:
                 $ref: '#/components/schemas/bookstore.v1.CreateBookResponse'
           description: Successful response
       x-speakeasy-group: Bookstore
-      x-speakeasy-name-override: CreateBook
+      x-speakeasy-name-override: BookstoreCreateBook
   /shelves/{shelf}/books/{book.id}:
     patch:
       description: Invokes the bookstore.v1.BookstoreService.UpdateBook method.
@@ -340,7 +340,7 @@ paths:
                 $ref: '#/components/schemas/bookstore.v1.UpdateBookResponse'
           description: Successful response
       x-speakeasy-group: Bookstore
-      x-speakeasy-name-override: UpdateBook
+      x-speakeasy-name-override: BookstoreUpdateBook
   /shelves/{shelf}/books/{book}:
     delete:
       description: |2
@@ -376,7 +376,7 @@ paths:
                 $ref: '#/components/schemas/bookstore.v1.DeleteBookResponse'
           description: Successful response
       x-speakeasy-group: Bookstore
-      x-speakeasy-name-override: DeleteBook
+      x-speakeasy-name-override: BookstoreDeleteBook
     get:
       description: |2
          Returns a specific book.
@@ -411,7 +411,7 @@ paths:
                 $ref: '#/components/schemas/bookstore.v1.GetBookResponse'
           description: Successful response
       x-speakeasy-group: Bookstore
-      x-speakeasy-name-override: GetBook
+      x-speakeasy-name-override: BookstoreGetBook
 servers:
   - description: The server for bookstore.v1.BookstoreService.
     url: /
