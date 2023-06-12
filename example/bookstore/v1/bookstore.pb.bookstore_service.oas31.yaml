@@ -24,6 +24,7 @@ components:
           description: The lname field.
           type: string
       type: object
+      x-speakeasy-name-override: Author
     bookstore.v1.Book:
       description: |2
          A book resource.
@@ -49,6 +50,7 @@ components:
              A book title.
           type: string
       type: object
+      x-speakeasy-name-override: Book
     bookstore.v1.CreateBookRequestInput:
       description: |2
          Request message for CreateBook method.
@@ -56,12 +58,14 @@ components:
         book:
           $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
+      x-speakeasy-name-override: CreateBookRequest
     bookstore.v1.CreateBookResponse:
       description: The CreateBookResponse message.
       properties:
         book:
           $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
+      x-speakeasy-name-override: CreateBookResponse
     bookstore.v1.CreateShelfRequest:
       description: |2
          Request message for CreateShelf method.
@@ -69,26 +73,32 @@ components:
         shelf:
           $ref: '#/components/schemas/bookstore.v1.Shelf'
       type: object
+      x-speakeasy-name-override: CreateShelfRequest
     bookstore.v1.CreateShelfResponse:
       description: The CreateShelfResponse message.
       properties:
         shelf:
           $ref: '#/components/schemas/bookstore.v1.Shelf'
       type: object
+      x-speakeasy-name-override: CreateShelfResponse
     bookstore.v1.DeleteBookRequestInput:
       description: |2
          Request message for DeleteBook method.
       type: object
+      x-speakeasy-name-override: DeleteBookRequest
     bookstore.v1.DeleteBookResponse:
       description: The DeleteBookResponse message.
       type: object
+      x-speakeasy-name-override: DeleteBookResponse
     bookstore.v1.DeleteShelfRequestInput:
       description: |2
          Request message for DeleteShelf method.
       type: object
+      x-speakeasy-name-override: DeleteShelfRequest
     bookstore.v1.DeleteShelfResponse:
       description: The DeleteShelfResponse message.
       type: object
+      x-speakeasy-name-override: DeleteShelfResponse
     bookstore.v1.GetAuthorResponse:
       description: |
         The GetAuthorResponse message.
@@ -114,12 +124,14 @@ components:
           nullable: true
           type: boolean
       type: object
+      x-speakeasy-name-override: GetAuthorResponse
     bookstore.v1.GetBookResponse:
       description: The GetBookResponse message.
       properties:
         book:
           $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
+      x-speakeasy-name-override: GetBookResponse
     bookstore.v1.ListShelvesResponse:
       description: |2
          Response to ListShelves call.
@@ -135,6 +147,7 @@ components:
           nullable: true
           type: array
       type: object
+      x-speakeasy-name-override: ListShelvesResponse
     bookstore.v1.Shelf:
       description: |2
          A shelf resource.
@@ -157,6 +170,7 @@ components:
              A theme of the shelf (fiction, poetry, etc).
           type: string
       type: object
+      x-speakeasy-name-override: Shelf
     bookstore.v1.UpdateBookRequestInput:
       description: |2
          Request message for UpdateBook method
@@ -164,12 +178,14 @@ components:
         book:
           $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
+      x-speakeasy-name-override: UpdateBookRequest
     bookstore.v1.UpdateBookResponse:
       description: The UpdateBookResponse message.
       properties:
         book:
           $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
+      x-speakeasy-name-override: UpdateBookResponse
 info:
   description: |
     This is an auto-generated API for bookstore.v1.BookstoreService.
@@ -198,7 +214,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.GetAuthorResponse'
           description: Successful response
+      tags:
+        - Bookstore
       x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: GetAuthor
   /shelf:
     post:
       description: |2
@@ -216,7 +235,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.CreateShelfResponse'
           description: Successful response
+      tags:
+        - Bookstore
       x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: CreateShelf
   /shelves:
     get:
       description: |2
@@ -230,7 +252,10 @@ paths:
                 $ref: '#/components/schemas/bookstore.v1.ListShelvesResponse'
           description: |2
              Response to ListShelves call.
+      tags:
+        - Bookstore
       x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: ListShelves
   /shelves/{shelf}:
     delete:
       description: |2
@@ -257,7 +282,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.DeleteShelfResponse'
           description: Successful response
+      tags:
+        - Bookstore
       x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: DeleteShelf
   /shelves/{shelf}/books:
     post:
       description: |2
@@ -284,7 +312,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.CreateBookResponse'
           description: Successful response
+      tags:
+        - Bookstore
       x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: CreateBook
   /shelves/{shelf}/books/{book.id}:
     patch:
       description: Invokes the bookstore.v1.BookstoreService.UpdateBook method.
@@ -318,7 +349,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.UpdateBookResponse'
           description: Successful response
+      tags:
+        - Bookstore
       x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: UpdateBook
   /shelves/{shelf}/books/{book}:
     delete:
       description: |2
@@ -353,7 +387,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.DeleteBookResponse'
           description: Successful response
+      tags:
+        - Bookstore
       x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: DeleteBook
     get:
       description: |2
          Returns a specific book.
@@ -387,7 +424,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.GetBookResponse'
           description: Successful response
+      tags:
+        - Bookstore
       x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: GetBook
 servers:
   - description: The server for bookstore.v1.BookstoreService.
     url: /
