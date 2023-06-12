@@ -73,7 +73,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		Nullable:   nullable,
 		Deprecated: deprecated,
 		Extensions: map[string]any{
-			"x-speakeasy-name-override": pgs.Name(*m.Descriptor().Name).UpperCamelCase().String(),
+			"x-speakeasy-name-override": m.Name().UpperCamelCase().String(),
 		},
 	}
 	for _, f := range m.NonOneOfFields() {

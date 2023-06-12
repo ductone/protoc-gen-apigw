@@ -89,7 +89,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		prefix := fqn[len(fqn)-2]
 		methodName := fqn[len(fqn)-1]
 		// Remove `Service` from method name
-		prefix = strings.Replace(prefix, "Service", "", -1)
+		prefix = strings.ReplaceAll(prefix, "Service", "")
 		extensions["tags"] = []string{prefix}
 		extensions["x-speakeasy-group"] = prefix
 		extensions["x-speakeasy-name-override"] = methodName
