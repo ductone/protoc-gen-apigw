@@ -42,7 +42,7 @@ func jsonName(f pgs.Field) string {
 }
 
 func (module *Module) path2fieldNumbers(path []string, msg pgs.Message) ([]protopack.Number, pgs.Field) {
-	var lasField pgs.Field
+	var lastField pgs.Field
 	if len(path) == 0 {
 		return nil, nil
 	}
@@ -51,7 +51,7 @@ func (module *Module) path2fieldNumbers(path []string, msg pgs.Message) ([]proto
 	deeper := path[1:]
 	for _, f := range msg.Fields() {
 		if next == jsonName(f) || next == f.Name().String() {
-			lasField = f
+			lastField = f
 			rv = append(rv, protopack.Number(f.Descriptor().GetNumber()))
 			if len(deeper) >= 1 {
 				nestedMsg := f.Type().Embed()
@@ -59,7 +59,7 @@ func (module *Module) path2fieldNumbers(path []string, msg pgs.Message) ([]proto
 					panic("apigw: getFieldNumbers: unexpected path: " + strings.Join(path, ".") + " on " + msg.FullyQualifiedName())
 				}
 				nums, edgeField := module.path2fieldNumbers(deeper, nestedMsg)
-				lasField = edgeField
+				lastField = edgeField
 				rv = append(rv, nums...)
 			}
 			break
@@ -68,7 +68,7 @@ func (module *Module) path2fieldNumbers(path []string, msg pgs.Message) ([]proto
 	if len(rv) == 0 {
 		panic("apigw: getFieldNumbers: unexpected path: " + strings.Join(path, ".") + " on " + msg.FullyQualifiedName())
 	}
-	return rv, lasField
+	return rv, lastField
 }
 
 func isInt(pt pgs.ProtoType) bool {
@@ -130,14 +130,8 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 			continue
 		}
 
-		nesteFields := strings.Split(part.ParamName, ".")
-		// TODO(pquerna): support nested fields
-		if len(nesteFields) != 1 {
-			module.Logf("apigw: methodContext: operation.Route invalid: target field is nested (unsupported right now) '%s' for route '%s'", method.FullyQualifiedName(), operation.Route)
-			continue
-		}
-
-		nums, edgeField := module.path2fieldNumbers(nesteFields, method.Input())
+		nestedFields := strings.Split(part.ParamName, ".")
+		nums, edgeField := module.path2fieldNumbers(nestedFields, method.Input())
 		if len(nums) != 1 {
 			return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target numbers is nested (unsupported right now) '%s': %w", method.FullyQualifiedName(), err)
 		}
