@@ -1,0 +1,14 @@
+isTraversable = false
+{{.InputName}}.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
+    if fd.Number() == {{.Number}} {
+        field = fd
+        v = value
+        isTraversable = true
+        return false
+    }
+    return true
+})
+if !isTraversable {
+    return status.Error(codes.InvalidArgument, "Unable to find nested field")
+}
+{{.OutputName}} = field.Message().Options().ProtoReflect()
