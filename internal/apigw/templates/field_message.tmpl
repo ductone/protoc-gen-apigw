@@ -2,7 +2,7 @@ isTraversable = false
 {{.InputName}}.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
     if fd.Number() == {{.Number}} {
         field = fd
-        v = value
+        value = v
         isTraversable = true
         return false
     }

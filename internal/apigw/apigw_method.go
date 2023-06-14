@@ -132,16 +132,6 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 
 		nestedFields := strings.Split(part.ParamName, ".")
 		nums, edgeField := module.path2fieldNumbers(nestedFields, method.Input())
-		// if len(nums) != 1 {
-		// 	for _, n := range method.Input().Fields() {
-		// 		if n.Descriptor().GetNumber() == 2 {
-		// 			spew.Fdump(os.Stderr, n.Descriptor())
-
-		// 			// for _, n2 := range n.Message().Fields() {
-		// 			// 	spew.Fdump(os.Stderr, n2.Descriptor())
-		// 		}
-		// 	}
-		// }
 
 		paramValueName := vn.String()
 		vn = vn.Next()

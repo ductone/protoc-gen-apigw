@@ -519,7 +519,7 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 	reflection.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
 		if fd.Number() == 2 {
 			field = fd
-			v = value
+			value = v
 			isTraversable = true
 			return false
 		}
@@ -534,7 +534,7 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 	reflection.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
 		if fd.Number() == 1 {
 			field = fd
-			v = value
+			value = v
 			isTraversable = true
 			return false
 		}
