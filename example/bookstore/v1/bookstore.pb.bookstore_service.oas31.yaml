@@ -214,6 +214,286 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.GetAuthorResponse'
           description: Successful response
+        "400":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Bad request
+        "401":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not found
+        "408":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Request timeout
+        "409":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Internal server error
+        "501":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not implemented
+        "503":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unavailable
+        "504":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Context deadline exceeded
       tags:
         - Bookstore
       x-speakeasy-group: Bookstore
@@ -235,6 +515,286 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.CreateShelfResponse'
           description: Successful response
+        "400":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Bad request
+        "401":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not found
+        "408":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Request timeout
+        "409":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Internal server error
+        "501":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not implemented
+        "503":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unavailable
+        "504":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Context deadline exceeded
       tags:
         - Bookstore
       x-speakeasy-group: Bookstore
@@ -252,6 +812,286 @@ paths:
                 $ref: '#/components/schemas/bookstore.v1.ListShelvesResponse'
           description: |2
              Response to ListShelves call.
+        "400":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Bad request
+        "401":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not found
+        "408":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Request timeout
+        "409":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Internal server error
+        "501":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not implemented
+        "503":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unavailable
+        "504":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Context deadline exceeded
       tags:
         - Bookstore
       x-speakeasy-group: Bookstore
@@ -282,6 +1122,286 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.DeleteShelfResponse'
           description: Successful response
+        "400":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Bad request
+        "401":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not found
+        "408":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Request timeout
+        "409":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Internal server error
+        "501":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not implemented
+        "503":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unavailable
+        "504":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Context deadline exceeded
       tags:
         - Bookstore
       x-speakeasy-group: Bookstore
@@ -312,6 +1432,286 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.CreateBookResponse'
           description: Successful response
+        "400":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Bad request
+        "401":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not found
+        "408":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Request timeout
+        "409":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Internal server error
+        "501":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not implemented
+        "503":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unavailable
+        "504":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Context deadline exceeded
       tags:
         - Bookstore
       x-speakeasy-group: Bookstore
@@ -349,6 +1749,286 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.UpdateBookResponse'
           description: Successful response
+        "400":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Bad request
+        "401":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not found
+        "408":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Request timeout
+        "409":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Internal server error
+        "501":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not implemented
+        "503":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unavailable
+        "504":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Context deadline exceeded
       tags:
         - Bookstore
       x-speakeasy-group: Bookstore
@@ -387,6 +2067,286 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.DeleteBookResponse'
           description: Successful response
+        "400":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Bad request
+        "401":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not found
+        "408":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Request timeout
+        "409":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Internal server error
+        "501":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not implemented
+        "503":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unavailable
+        "504":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Context deadline exceeded
       tags:
         - Bookstore
       x-speakeasy-group: Bookstore
@@ -424,6 +2384,286 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.GetBookResponse'
           description: Successful response
+        "400":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Bad request
+        "401":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not found
+        "408":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Request timeout
+        "409":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Internal server error
+        "501":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Not implemented
+        "503":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Unavailable
+        "504":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  details:
+                    description: Array of google.protobuf.Any.
+                    items:
+                      additionalProperties:
+                        oneOf: []
+                      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                      properties:
+                        '@type':
+                          description: The type of the serialized message.
+                          type: string
+                      type: object
+                    type: array
+                description: The RPC status code of the operation, representing a google.rpc.Status.
+                properties:
+                  code:
+                    description: The status code, which should be an enum value of google.rpc.Code.
+                    format: int32
+                    type: integer
+                  message:
+                    description: Developer-facing error message.
+                    type: string
+                type: object
+          description: Context deadline exceeded
       tags:
         - Bookstore
       x-speakeasy-group: Bookstore
