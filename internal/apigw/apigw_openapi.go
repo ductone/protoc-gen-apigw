@@ -110,6 +110,96 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 						},
 					},
 				},
+				"400": {
+					Description: "Bad request",
+					Content: map[string]*dm_v3.MediaType{
+						"application/json": {
+							// Schema has to be for the status message: https://github.com/grpc/grpc/blob/master/src/proto/grpc/status/status.proto#LL80C1-L92C2
+							Schema: dm_base.CreateSchemaProxy(statusSchema),
+						},
+					},
+				},
+				"401": {
+					Description: "Unauthorized",
+					Content: map[string]*dm_v3.MediaType{
+						"application/json": {
+							// Schema has to be for the status message: https://github.com/grpc/grpc/blob/master/src/proto/grpc/status/status.proto#LL80C1-L92C2
+							Schema: dm_base.CreateSchemaProxy(statusSchema),
+						},
+					},
+				},
+				"403": {
+					Description: "Forbidden",
+					Content: map[string]*dm_v3.MediaType{
+						"application/json": {
+							// Schema has to be for the status message: https://github.com/grpc/grpc/blob/master/src/proto/grpc/status/status.proto#LL80C1-L92C2
+							Schema: dm_base.CreateSchemaProxy(statusSchema),
+						},
+					},
+				},
+				"404": {
+					Description: "Not found",
+					Content: map[string]*dm_v3.MediaType{
+						"application/json": {
+							// Schema has to be for the status message: https://github.com/grpc/grpc/blob/master/src/proto/grpc/status/status.proto#LL80C1-L92C2
+							Schema: dm_base.CreateSchemaProxy(statusSchema),
+						},
+					},
+				},
+				"408": {
+					Description: "Request timeout",
+					Content: map[string]*dm_v3.MediaType{
+						"application/json": {
+							// Schema has to be for the status message: https://github.com/grpc/grpc/blob/master/src/proto/grpc/status/status.proto#LL80C1-L92C2
+							Schema: dm_base.CreateSchemaProxy(statusSchema),
+						},
+					},
+				},
+				"409": {
+					Description: "Conflict",
+					Content: map[string]*dm_v3.MediaType{
+						"application/json": {
+							// Schema has to be for the status message: https://github.com/grpc/grpc/blob/master/src/proto/grpc/status/status.proto#LL80C1-L92C2
+							Schema: dm_base.CreateSchemaProxy(statusSchema),
+						},
+					},
+				},
+				"500": {
+					Description: "Internal server error",
+					Content: map[string]*dm_v3.MediaType{
+						"application/json": {
+							// Schema has to be for the status message: https://github.com/grpc/grpc/blob/master/src/proto/grpc/status/status.proto#LL80C1-L92C2
+							Schema: dm_base.CreateSchemaProxy(statusSchema),
+						},
+					},
+				},
+				"501": {
+					Description: "Not implemented",
+					Content: map[string]*dm_v3.MediaType{
+						"application/json": {
+							// Schema has to be for the status message: https://github.com/grpc/grpc/blob/master/src/proto/grpc/status/status.proto#LL80C1-L92C2
+							Schema: dm_base.CreateSchemaProxy(statusSchema),
+						},
+					},
+				},
+				"503": {
+					Description: "Unavailable",
+					Content: map[string]*dm_v3.MediaType{
+						"application/json": {
+							// Schema has to be for the status message: https://github.com/grpc/grpc/blob/master/src/proto/grpc/status/status.proto#LL80C1-L92C2
+							Schema: dm_base.CreateSchemaProxy(statusSchema),
+						},
+					},
+				},
+				"504": {
+					Description: "Context deadline exceeded",
+					Content: map[string]*dm_v3.MediaType{
+						"application/json": {
+							// Schema has to be for the status message: https://github.com/grpc/grpc/blob/master/src/proto/grpc/status/status.proto#LL80C1-L92C2
+							Schema: dm_base.CreateSchemaProxy(statusSchema),
+						},
+					},
+				},
 			},
 		},
 		Extensions: extensions,

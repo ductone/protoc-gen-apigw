@@ -10,21 +10,7 @@ import (
 func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 	switch wkt {
 	case pgs.AnyWKT:
-		return &dm_base.Schema{
-			Type:        []string{"object"},
-			Description: "Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.",
-			Properties: map[string]*dm_base.SchemaProxy{
-				"@type": dm_base.CreateSchemaProxy(&dm_base.Schema{
-					Type:        []string{"string"},
-					Description: "The type of the serialized message.",
-				}),
-			},
-			AdditionalProperties: dm_base.CreateSchemaProxy(&dm_base.Schema{
-				OneOf: []*dm_base.SchemaProxy{
-					// TODO(pquerna): add a tag based annotation for possible Any values.
-				},
-			}),
-		}
+		return anySchema
 	case pgs.DurationWKT:
 		return &dm_base.Schema{
 			Type:   []string{"string"},
@@ -120,4 +106,47 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 	default:
 		panic("Unknown WKT")
 	}
+}
+
+var anySchema = &dm_base.Schema{
+	Type:        []string{"object"},
+	Description: "Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.",
+	Properties: map[string]*dm_base.SchemaProxy{
+		"@type": dm_base.CreateSchemaProxy(&dm_base.Schema{
+			Type:        []string{"string"},
+			Description: "The type of the serialized message.",
+		}),
+	},
+	AdditionalProperties: dm_base.CreateSchemaProxy(&dm_base.Schema{
+		OneOf: []*dm_base.SchemaProxy{
+			// TODO(pquerna): add a tag based annotation for possible Any values.
+		},
+	}),
+}
+
+var statusSchema = &dm_base.Schema{
+	Description: "The RPC status code of the operation, representing a google.rpc.Status.",
+	Type:        []string{"object"},
+	Properties: map[string]*dm_base.SchemaProxy{
+		"code": dm_base.CreateSchemaProxy(&dm_base.Schema{
+			Type:        []string{"integer"},
+			Format:      "int32",
+			Description: "The status code, which should be an enum value of google.rpc.Code.",
+		}),
+		"message": dm_base.CreateSchemaProxy(&dm_base.Schema{
+			Type:        []string{"string"},
+			Description: "Developer-facing error message.",
+		}),
+	},
+	AdditionalProperties: map[string]*dm_base.SchemaProxy{
+		"details": dm_base.CreateSchemaProxy(&dm_base.Schema{
+			Type:        []string{"array"},
+			Description: "Array of google.protobuf.Any.",
+			Items: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{
+				A: dm_base.CreateSchemaProxy(
+					anySchema,
+				),
+			},
+		}),
+	},
 }
