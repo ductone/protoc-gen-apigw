@@ -402,6 +402,7 @@ func (module *Module) generateNestedFieldConverter(method pgs.Method, edgeNumber
 	inputName string,
 	outputName string,
 ) (*paramContext, error) {
+	ix.ProtobufReflect = true
 	const varName = "reflection"
 	converterSubstringRef, err := module.generateNestedFieldConverterStr(method, ix, outputName, edgeNumbers, method.Input(), varName)
 	converterSubstring := *converterSubstringRef

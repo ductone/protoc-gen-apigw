@@ -25,6 +25,7 @@ type importTracker struct {
 	Ogen                      bool
 	ProtobufEncodingJSON      bool
 	ProtobufProto             bool
+	ProtobufReflect           bool
 	ProtobufProtoPack         bool
 	ProtobufEncodingProtowire bool
 	Strconv                   bool
