@@ -153,7 +153,6 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		var fc *paramContext
 		if len(nums) == 1 {
 			fc, err = module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outName)
-
 		} else {
 			fc, err = module.generateNestedFieldConverter(method, nums, ix, routeGetter, paramValueName, outName)
 		}
