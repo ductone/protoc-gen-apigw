@@ -511,6 +511,7 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 		return err
 	}
 
+<<<<<<< HEAD
 	reflection := out.ProtoReflect()
 	var (
 		field         protoreflect.FieldDescriptor
@@ -518,6 +519,12 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 		isTraversable bool
 	)
 
+=======
+	var field protoreflect.FieldDescriptor
+	var value protoreflect.Value
+	var isTraversable bool
+	reflection := out.ProtoReflect()
+>>>>>>> origin/anthony/nested-field-support
 	isTraversable = false
 	reflection.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
 		if fd.Number() == 2 {
@@ -553,20 +560,27 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 		return status.Errorf(codes.InvalidArgument, "id is not a valid int: %s", err)
 	}
 
+<<<<<<< HEAD
 	var (
 		arr [1]protopack.Message
 		vn3 protopack.Message
 	)
 	arr[0] = protopack.Message{
+=======
+	vn3 := protopack.Message{
+>>>>>>> origin/anthony/nested-field-support
 		protopack.Tag{Number: 1, Type: protopack.VarintType},
 		protopack.Varint(vn3tmp),
 	}
 
+<<<<<<< HEAD
 	vn3 = protopack.Message{
 		protopack.Tag{Number: 2, Type: protopack.BytesType},
 		arr[0],
 	}
 
+=======
+>>>>>>> origin/anthony/nested-field-support
 	err = unmarshalOpts.Unmarshal(vn3.Marshal(), out)
 	if err != nil {
 		return err

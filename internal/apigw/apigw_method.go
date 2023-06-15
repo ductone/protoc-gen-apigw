@@ -324,7 +324,10 @@ func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber proto
 		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is unknown '%s'", method.FullyQualifiedName())
 	}
 }
+func (module *Module) generateNestedFieldConverterStr(method pgs.Method, ix *importTracker, outputName string, edgeNumbers []protopack.Number, msg pgs.Message, varName string) (*string, error) {
+	converter := ""
 
+<<<<<<< HEAD
 func (module *Module) generateNestedProtoMessageOutput(idx int, edgeNumbers []protopack.Number, outputName string) string {
 	var inputName string
 
@@ -355,6 +358,8 @@ func (module *Module) generateNestedProtoMessageOutput(idx int, edgeNumbers []pr
 func (module *Module) generateNestedFieldConverterStr(method pgs.Method, ix *importTracker, outputName string, edgeNumbers []protopack.Number, msg pgs.Message, varName string) (*string, error) {
 	converter := ""
 
+=======
+>>>>>>> origin/anthony/nested-field-support
 	var lastField pgs.Field
 	next := edgeNumbers[0]
 	deeper := edgeNumbers[1:]
@@ -404,6 +409,7 @@ func (module *Module) generateNestedFieldConverter(method pgs.Method, edgeNumber
 	outputName string,
 ) (*paramContext, error) {
 	const varName = "reflection"
+<<<<<<< HEAD
 	converterSubstringRef, err := module.generateNestedFieldConverterStr(method, ix, outputName, edgeNumbers, method.Input(), varName)
 	converterSubstring := *converterSubstringRef
 	if err != nil {
@@ -422,20 +428,29 @@ func (module *Module) generateNestedFieldConverter(method pgs.Method, edgeNumber
 		IntialValue: converterSubstring[idx+len(outputStatement):],
 		OutputName:  outputName,
 	})
+=======
+	converterSubstring, err := module.generateNestedFieldConverterStr(method, ix, outputName, edgeNumbers, method.Input(), varName)
+>>>>>>> origin/anthony/nested-field-support
 	if err != nil {
 		panic(err)
 	}
 
+<<<<<<< HEAD
 	// Starts at 1 because the intializer completes the first level
 	protopackMessage := module.generateNestedProtoMessageOutput(0, edgeNumbers, outputName)
 	converterSubstring = converterSubstring[:idx] + ppMessageIntializer + protopackMessage
 	converter := fmt.Sprintf("%s\n%s", intializer, converterSubstring)
+=======
+	intializerStr := fmt.Sprintf("var field protoreflect.FieldDescriptor\nvar value protoreflect.Value\nvar isTraversable bool\n%s:= out.ProtoReflect()", varName)
+	converter := fmt.Sprintf("%s\n%s", intializerStr, *converterSubstring)
+>>>>>>> origin/anthony/nested-field-support
 	return &paramContext{
 		ConverterOutputName: outputName,
 		Converter:           converter,
 	}, nil
 }
 
+<<<<<<< HEAD
 type protopackMessageIntializerContext struct {
 	Size        int
 	IntialValue string
@@ -449,6 +464,8 @@ type protopackMessageContext struct {
 type messageFieldIntializerContext struct {
 	VarName string
 }
+=======
+>>>>>>> origin/anthony/nested-field-support
 type messageFieldContext struct {
 	Number     protopack.Number
 	OutputName string
