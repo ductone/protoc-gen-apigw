@@ -18,6 +18,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protopack"
 )
 
@@ -506,6 +507,67 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 	}
 
 	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
+	reflection := out.ProtoReflect()
+	var (
+		field         protoreflect.FieldDescriptor
+		value         protoreflect.Value
+		isTraversable bool
+	)
+
+	isTraversable = false
+	reflection.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
+		if fd.Number() == 2 {
+			field = fd
+			value = v
+			isTraversable = true
+			return false
+		}
+		return true
+	})
+	if !isTraversable {
+		return status.Error(codes.InvalidArgument, "Unable to find nested field")
+	}
+	reflection = field.Message().Options().ProtoReflect()
+
+	isTraversable = false
+	reflection.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
+		if fd.Number() == 1 {
+			field = fd
+			value = v
+			isTraversable = true
+			return false
+		}
+		return true
+	})
+	if !isTraversable {
+		return status.Error(codes.InvalidArgument, "Unable to find nested field")
+	}
+	reflection = field.Message().Options().ProtoReflect()
+
+	vn3tmp, err := strconv.ParseInt(value.String(), 10, 64)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "id is not a valid int: %s", err)
+	}
+
+	var (
+		arr [1]protopack.Message
+		vn3 protopack.Message
+	)
+	arr[0] = protopack.Message{
+		protopack.Tag{Number: 1, Type: protopack.VarintType},
+		protopack.Varint(vn3tmp),
+	}
+
+	vn3 = protopack.Message{
+		protopack.Tag{Number: 2, Type: protopack.BytesType},
+		arr[0],
+	}
+
+	err = unmarshalOpts.Unmarshal(vn3.Marshal(), out)
 	if err != nil {
 		return err
 	}

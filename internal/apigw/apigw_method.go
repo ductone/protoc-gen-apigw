@@ -34,6 +34,8 @@ type paramContext struct {
 	ConverterOutputName string
 }
 
+const outputSuffix = ":= protopack.Message{\n"
+
 func jsonName(f pgs.Field) string {
 	if f.Descriptor().JsonName != nil {
 		return *f.Descriptor().JsonName
@@ -42,7 +44,7 @@ func jsonName(f pgs.Field) string {
 }
 
 func (module *Module) path2fieldNumbers(path []string, msg pgs.Message) ([]protopack.Number, pgs.Field) {
-	var lasField pgs.Field
+	var lastField pgs.Field
 	if len(path) == 0 {
 		return nil, nil
 	}
@@ -51,7 +53,7 @@ func (module *Module) path2fieldNumbers(path []string, msg pgs.Message) ([]proto
 	deeper := path[1:]
 	for _, f := range msg.Fields() {
 		if next == jsonName(f) || next == f.Name().String() {
-			lasField = f
+			lastField = f
 			rv = append(rv, protopack.Number(f.Descriptor().GetNumber()))
 			if len(deeper) >= 1 {
 				nestedMsg := f.Type().Embed()
@@ -59,7 +61,7 @@ func (module *Module) path2fieldNumbers(path []string, msg pgs.Message) ([]proto
 					panic("apigw: getFieldNumbers: unexpected path: " + strings.Join(path, ".") + " on " + msg.FullyQualifiedName())
 				}
 				nums, edgeField := module.path2fieldNumbers(deeper, nestedMsg)
-				lasField = edgeField
+				lastField = edgeField
 				rv = append(rv, nums...)
 			}
 			break
@@ -68,7 +70,7 @@ func (module *Module) path2fieldNumbers(path []string, msg pgs.Message) ([]proto
 	if len(rv) == 0 {
 		panic("apigw: getFieldNumbers: unexpected path: " + strings.Join(path, ".") + " on " + msg.FullyQualifiedName())
 	}
-	return rv, lasField
+	return rv, lastField
 }
 
 func isInt(pt pgs.ProtoType) bool {
@@ -130,17 +132,8 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 			continue
 		}
 
-		nesteFields := strings.Split(part.ParamName, ".")
-		// TODO(pquerna): support nested fields
-		if len(nesteFields) != 1 {
-			module.Logf("apigw: methodContext: operation.Route invalid: target field is nested (unsupported right now) '%s' for route '%s'", method.FullyQualifiedName(), operation.Route)
-			continue
-		}
-
-		nums, edgeField := module.path2fieldNumbers(nesteFields, method.Input())
-		if len(nums) != 1 {
-			return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target numbers is nested (unsupported right now) '%s': %w", method.FullyQualifiedName(), err)
-		}
+		nestedFields := strings.Split(part.ParamName, ".")
+		nums, edgeField := module.path2fieldNumbers(nestedFields, method.Input())
 
 		paramValueName := vn.String()
 		vn = vn.Next()
@@ -157,7 +150,12 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		outName := vn.String()
 		vn = vn.Next()
 
-		fc, err := module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outName)
+		var fc *paramContext
+		if len(nums) == 1 {
+			fc, err = module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outName)
+		} else {
+			fc, err = module.generateNestedFieldConverter(method, nums, ix, routeGetter, paramValueName, outName)
+		}
 		if err != nil {
 			panic(err)
 		}
@@ -326,6 +324,135 @@ func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber proto
 	}
 }
 
+func (module *Module) generateNestedProtoMessageOutput(idx int, edgeNumbers []protopack.Number, outputName string) string {
+	var inputName string
+
+	// The first edge number is the last step and writes to the output instead of an array
+	if idx == 0 {
+		inputName = outputName
+	} else {
+		inputName = fmt.Sprintf("arr[%d]", idx+1)
+	}
+
+	message, err := templateExecToString("protopack_message.tmpl", &protopackMessageContext{
+		InputName: inputName,
+		Number:    edgeNumbers[idx],
+		// We need to -2 because the last level is the initializer and the second to last level is the base case
+		Index: len(edgeNumbers) - idx - 2,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	// Base case
+	if idx == len(edgeNumbers)-2 {
+		return message
+	}
+	return fmt.Sprintf("%s\n%s", module.generateNestedProtoMessageOutput(idx+1, edgeNumbers, outputName), message)
+}
+
+func (module *Module) generateNestedFieldConverterStr(method pgs.Method, ix *importTracker, outputName string, edgeNumbers []protopack.Number, msg pgs.Message, varName string) (*string, error) {
+	converter := ""
+
+	var lastField pgs.Field
+	next := edgeNumbers[0]
+	deeper := edgeNumbers[1:]
+
+	// Generate the converter part for this level
+	converterPart, err := templateExecToString("field_message.tmpl", &messageFieldContext{
+		Number:     next,
+		InputName:  varName,
+		OutputName: varName,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	// Find the next message
+	for _, f := range msg.Fields() {
+		if next == protopack.Number(f.Descriptor().GetNumber()) {
+			lastField = f
+			break
+		}
+	}
+	var converterSubstring *string
+	if len(edgeNumbers) == 1 {
+		// Base case
+		paramContext, err := module.generateFieldConverter(method, next, lastField, ix, "", "value.String()", outputName)
+		if err != nil {
+			panic(err)
+		}
+		converterSubstring = &paramContext.Converter
+	} else {
+		// Recurse
+		converterSubstring, err = module.generateNestedFieldConverterStr(method, ix, outputName, deeper, lastField.Type().Embed(), varName)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	// Combine the converter substring from this level and the previous levels
+	converter = fmt.Sprintf("%s\n%s", converterPart, *converterSubstring)
+	return &converter, nil
+}
+
+func (module *Module) generateNestedFieldConverter(method pgs.Method, edgeNumbers []protopack.Number,
+	ix *importTracker,
+	valueGetter string,
+	inputName string,
+	outputName string,
+) (*paramContext, error) {
+	ix.ProtobufReflect = true
+	const varName = "reflection"
+	converterSubstringRef, err := module.generateNestedFieldConverterStr(method, ix, outputName, edgeNumbers, method.Input(), varName)
+	converterSubstring := *converterSubstringRef
+	if err != nil {
+		panic(err)
+	}
+	intializer, err := templateExecToString("field_message_intializer.tmpl", &messageFieldIntializerContext{
+		VarName: varName,
+	})
+	if err != nil {
+		panic(err)
+	}
+	outputStatement := fmt.Sprintf("%s %s", outputName, outputSuffix)
+	idx := strings.Index(converterSubstring, outputStatement)
+	ppMessageIntializer, err := templateExecToString("protopack_message_intializer.tmpl", &protopackMessageIntializerContext{
+		Size:        len(edgeNumbers) - 1,
+		IntialValue: converterSubstring[idx+len(outputStatement):],
+		OutputName:  outputName,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	protopackMessage := module.generateNestedProtoMessageOutput(0, edgeNumbers, outputName)
+	converterSubstring = converterSubstring[:idx] + ppMessageIntializer + protopackMessage
+	converter := fmt.Sprintf("%s\n%s", intializer, converterSubstring)
+	return &paramContext{
+		ConverterOutputName: outputName,
+		Converter:           converter,
+	}, nil
+}
+
+type protopackMessageIntializerContext struct {
+	Size        int
+	IntialValue string
+	OutputName  string
+}
+type protopackMessageContext struct {
+	InputName string
+	Number    protopack.Number
+	Index     int
+}
+type messageFieldIntializerContext struct {
+	VarName string
+}
+type messageFieldContext struct {
+	Number     protopack.Number
+	OutputName string
+	InputName  string
+}
 type boolFieldContext struct {
 	FieldName  string
 	Getter     string
