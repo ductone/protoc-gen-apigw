@@ -94,6 +94,10 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		extensions["x-speakeasy-group"] = prefix
 		extensions["x-speakeasy-name-override"] = methodName
 	}
+	terraformEntity := getTerraformEntityOperationExtension(operation)
+	if terraformEntity != "" {
+		extensions["x-speakeasy-entity-operation"] = terraformEntity
+	}
 
 	outputRef := mt.Add(outObj)
 	op := &dm_v3.Operation{
@@ -169,6 +173,28 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		Schemas: sc.schemas,
 	}
 	return r, op, components, nil
+}
+
+func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) string {
+	terraformEntity := ""
+	if operation.TerraformEntity == nil {
+		return ""
+	}
+	switch operation.TerraformEntity.Type {
+	case apigw_v1.TerraformEntityMethodType_TERRAFORM_ENTITY_METHOD_TYPE_UNSPECIFIED:
+		terraformEntity = ""
+	case apigw_v1.TerraformEntityMethodType_TERRAFORM_ENTITY_METHOD_TYPE_CREATE:
+		terraformEntity = fmt.Sprintf("%s#create", operation.TerraformEntity.Name)
+	case apigw_v1.TerraformEntityMethodType_TERRAFORM_ENTITY_METHOD_TYPE_READ:
+		terraformEntity = fmt.Sprintf("%s#read", operation.TerraformEntity.Name)
+	case apigw_v1.TerraformEntityMethodType_TERRAFORM_ENTITY_METHOD_TYPE_UPDATE:
+		terraformEntity = fmt.Sprintf("%s#update", operation.TerraformEntity.Name)
+	case apigw_v1.TerraformEntityMethodType_TERRAFORM_ENTITY_METHOD_TYPE_DELETE:
+		terraformEntity = fmt.Sprintf("%s#delete", operation.TerraformEntity.Name)
+	default:
+		return terraformEntity
+	}
+	return terraformEntity
 }
 
 func addOperation(doc *dm_v3.Document, r *route, op *dm_v3.Operation, comp *dm_v3.Components) {

@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package bookstore.v1;
 
-import "google/protobuf/field_mask.proto";
 import "apigw/v1/apigw.proto";
+import "google/protobuf/field_mask.proto";
 
 option go_package = "github.com/ductone/protoc-gen-apigw/example/bookstore/v1";
 
@@ -39,6 +39,10 @@ service BookstoreService {
     option (apigw.v1.method).operations = {
       method: "POST"
       route: "/shelves/{shelf}/books"
+      terraform_entity: {
+        type: TERRAFORM_ENTITY_METHOD_TYPE_CREATE
+        name: "Book"
+      }
     };
   }
 
@@ -53,6 +57,10 @@ service BookstoreService {
           value: "include_author"
         }
       ];
+      terraform_entity: {
+        type: TERRAFORM_ENTITY_METHOD_TYPE_GET
+        name: "Book"
+      }
     };
   }
   // Deletes a book from a shelf.
@@ -60,6 +68,10 @@ service BookstoreService {
     option (apigw.v1.method).operations = {
       method: "DELETE"
       route: "/shelves/{shelf}/books/{book}"
+      terraform_entity: {
+        type: TERRAFORM_ENTITY_METHOD_TYPE_DELETE
+        name: "Book"
+      }
     };
   }
 
@@ -67,6 +79,10 @@ service BookstoreService {
     option (apigw.v1.method).operations = {
       method: "PATCH"
       route: "/shelves/{shelf}/books/{book.id}"
+      terraform_entity: {
+        type: TERRAFORM_ENTITY_METHOD_TYPE_UPDATE
+        name: "Book"
+      }
     };
   }
 
@@ -126,8 +142,16 @@ message Shelf {
 
 // A book resource.
 message Book {
+  option (apigw.v1.message).message_options = {
+    terraform_entity: {
+      name: "Book"
+    }
+  };
   // A unique book id.
-  int64 id = 1;
+  int64 id = 1 [(apigw.v1.field).field_options = {
+    required: true
+  }];
+
   // An author of the book.
   string author = 2;
   // A book title.

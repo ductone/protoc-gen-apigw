@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 	pgs "github.com/lyft/protoc-gen-star"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 )
@@ -50,6 +51,15 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		return dm_base.CreateSchemaProxy(sc.schemaForWKT(WellKnownType(m)))
 	}
 
+	terraformEntityName := ""
+	mopt := getMessageOptions(m)
+	if mopt != nil {
+		terraformEntity := mopt.GetTerraformEntity()
+		if terraformEntity != nil {
+			terraformEntityName = terraformEntity.Name
+		}
+	}
+
 	fqn := nicerFQN(m)
 	if len(filter) != 0 {
 		fqn += "Input"
@@ -76,6 +86,10 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 			"x-speakeasy-name-override": m.Name().UpperCamelCase().String(),
 		},
 	}
+	if terraformEntityName != "" {
+		obj.Extensions["x-speakeasy-entity"] = terraformEntityName
+	}
+	required := make([]string, 0)
 	for _, f := range m.NonOneOfFields() {
 		jn := jsonName(f)
 		if len(filter) != 0 {
@@ -86,7 +100,22 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 				continue
 			}
 		}
+		mext := &apigw_v1.FieldOptions{}
+		_, err := f.Extension(apigw_v1.E_Field, mext)
+		if err != nil {
+			return nil
+		}
+		if len(mext.FieldOptions) > 0 {
+			fOption := mext.FieldOptions[0]
+			if fOption.Required {
+				required = append(required, jn)
+			}
+		}
+
 		obj.Properties[jn] = sc.Field(f)
+	}
+	if len(required) > 0 {
+		obj.Required = required
 	}
 
 	for _, of := range m.OneOfs() {
@@ -194,6 +223,18 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		sv.Description = description
 		return dm_base.CreateSchemaProxy(sv)
 	}
+}
+
+func getMessageOptions(m pgs.Message) *apigw_v1.MessageOption {
+	mopt := &apigw_v1.MessageOptions{}
+	_, err := m.Extension(apigw_v1.E_Message, mopt)
+	if err != nil {
+		return nil
+	}
+	if len(mopt.MessageOptions) > 0 {
+		return mopt.MessageOptions[0]
+	}
+	return nil
 }
 
 func mergeNullable(s *dm_base.Schema, nullable *bool) {
