@@ -181,15 +181,15 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) string 
 		return ""
 	}
 	switch operation.TerraformEntity.Type {
-	case apigw_v1.TerraformEntityMethodType_TERRAFORM_ENTITY_METHOD_TYPE_UNSPECIFIED:
+	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_UNSPECIFIED:
 		terraformEntity = ""
-	case apigw_v1.TerraformEntityMethodType_TERRAFORM_ENTITY_METHOD_TYPE_CREATE:
+	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_CREATE:
 		terraformEntity = fmt.Sprintf("%s#create", operation.TerraformEntity.Name)
-	case apigw_v1.TerraformEntityMethodType_TERRAFORM_ENTITY_METHOD_TYPE_READ:
+	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_READ:
 		terraformEntity = fmt.Sprintf("%s#read", operation.TerraformEntity.Name)
-	case apigw_v1.TerraformEntityMethodType_TERRAFORM_ENTITY_METHOD_TYPE_UPDATE:
+	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_UPDATE:
 		terraformEntity = fmt.Sprintf("%s#update", operation.TerraformEntity.Name)
-	case apigw_v1.TerraformEntityMethodType_TERRAFORM_ENTITY_METHOD_TYPE_DELETE:
+	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_DELETE:
 		terraformEntity = fmt.Sprintf("%s#delete", operation.TerraformEntity.Name)
 	default:
 		return terraformEntity
