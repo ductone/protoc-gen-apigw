@@ -100,16 +100,10 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 				continue
 			}
 		}
-		mext := &apigw_v1.FieldOptions{}
-		_, err := f.Extension(apigw_v1.E_Field, mext)
-		if err != nil {
-			return nil
-		}
-		if len(mext.FieldOptions) > 0 {
-			fOption := mext.FieldOptions[0]
-			if fOption.Required {
-				required = append(required, jn)
-			}
+
+		fopt := getFieldOptions(f)
+		if fopt != nil && fopt.GetRequired() {
+			required = append(required, jn)
 		}
 
 		obj.Properties[jn] = sc.Field(f)
@@ -233,6 +227,18 @@ func getMessageOptions(m pgs.Message) *apigw_v1.MessageOption {
 	}
 	if len(mopt.MessageOptions) > 0 {
 		return mopt.MessageOptions[0]
+	}
+	return nil
+}
+
+func getFieldOptions(m pgs.Field) *apigw_v1.FieldOption {
+	fopt := &apigw_v1.FieldOptions{}
+	_, err := m.Extension(apigw_v1.E_Field, fopt)
+	if err != nil {
+		return nil
+	}
+	if len(fopt.FieldOptions) > 0 {
+		return fopt.FieldOptions[0]
 	}
 	return nil
 }
