@@ -432,6 +432,7 @@ paths:
           description: Successful response
       tags:
         - Bookstore
+      x-speakeasy-entity-operation: Book#read
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: GetBook
 servers:

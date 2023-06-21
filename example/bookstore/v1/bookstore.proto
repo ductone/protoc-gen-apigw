@@ -58,7 +58,7 @@ service BookstoreService {
         }
       ];
       terraform_entity: {
-        type: TERRAFORM_ENTITY_METHOD_TYPE_GET
+        type: TERRAFORM_ENTITY_METHOD_TYPE_READ
         name: "Book"
       }
     };
