@@ -49,7 +49,10 @@ components:
           description: |2
              A book title.
           type: string
+      required:
+        - id
       type: object
+      x-speakeasy-entity: Book
       x-speakeasy-name-override: Book
     bookstore.v1.CreateBookRequestInput:
       description: |2
@@ -314,6 +317,7 @@ paths:
           description: Successful response
       tags:
         - Bookstore
+      x-speakeasy-entity-operation: Book#create
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: CreateBook
   /shelves/{shelf}/books/{book.id}:
@@ -351,6 +355,7 @@ paths:
           description: Successful response
       tags:
         - Bookstore
+      x-speakeasy-entity-operation: Book#update
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: UpdateBook
   /shelves/{shelf}/books/{book}:
@@ -389,6 +394,7 @@ paths:
           description: Successful response
       tags:
         - Bookstore
+      x-speakeasy-entity-operation: Book#delete
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: DeleteBook
     get:
@@ -426,6 +432,7 @@ paths:
           description: Successful response
       tags:
         - Bookstore
+      x-speakeasy-entity-operation: Book#read
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: GetBook
 servers:

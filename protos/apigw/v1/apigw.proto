@@ -16,6 +16,31 @@ extend google.protobuf.MethodOptions {
   MethodOptions method = 7651;
 }
 
+extend google.protobuf.FieldOptions {
+  FieldOptions field = 7652;
+}
+
+extend google.protobuf.MessageOptions {
+  MessageOptions message = 7653;
+}
+
+message MessageOptions {
+  repeated MessageOption message_options = 1;
+}
+
+message MessageOption {
+  TerraformEntity terraform_entity = 1;
+}
+
+message FieldOption {
+  // Sets the field as required in the generated openAPI spec.
+  bool required_spec = 1;
+}
+
+message FieldOptions {
+  repeated FieldOption field_options = 1;
+}
+
 enum Stability {
   STABILITY_UNSPECIFIED = 0;
   STABILITY_STABLE = 1;
@@ -36,6 +61,19 @@ message Service {
   string docs_path = 2;
 }
 
+message TerraformEntity {
+  enum TerraformEntityMethodType {
+    TERRAFORM_ENTITY_METHOD_TYPE_UNSPECIFIED = 0;
+    TERRAFORM_ENTITY_METHOD_TYPE_CREATE = 1;
+    TERRAFORM_ENTITY_METHOD_TYPE_READ = 2;
+    TERRAFORM_ENTITY_METHOD_TYPE_UPDATE = 3;
+    TERRAFORM_ENTITY_METHOD_TYPE_DELETE = 4;
+  }
+
+  TerraformEntityMethodType type = 1;
+  string name = 2;
+}
+
 message Operation {
   string method = 1;
   string route = 2;
@@ -44,6 +82,7 @@ message Operation {
   string docs_path = 5;
   repeated RequestExample request_examples = 6;
   repeated ResponseExample response_examples = 7;
+  TerraformEntity terraform_entity = 8;
 }
 
 message RequestExample {
