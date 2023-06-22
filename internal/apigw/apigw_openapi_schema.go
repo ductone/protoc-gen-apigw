@@ -102,7 +102,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		}
 
 		fopt := getFieldOptions(f)
-		if fopt != nil && fopt.GetRequired() {
+		if fopt != nil && fopt.GetRequiredSpec() {
 			required = append(required, jn)
 		}
 

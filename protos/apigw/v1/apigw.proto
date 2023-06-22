@@ -33,7 +33,7 @@ message MessageOption {
 }
 
 message FieldOption {
-  bool required = 1;
+  bool required_spec = 1;
 }
 
 message FieldOptions {
