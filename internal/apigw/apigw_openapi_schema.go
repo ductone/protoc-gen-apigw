@@ -119,12 +119,16 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 			of.Name().String(),
 		)
 
+		jn := of.Name().String()
+		sch := &dm_base.Schema{
+			Properties: map[string]*dm_base.SchemaProxy{},
+		}
 		for _, f := range of.Fields() {
 			jn := jsonName(f)
-			obj.Properties[jn] = sc.Field(f)
-
+			sch.Properties[jn] = sc.Field(f)
 			_, _ = fmt.Fprintf(description, "  - %s\n", jn)
 		}
+		obj.Properties[jn] = dm_base.CreateSchemaProxy(sch)
 	}
 	obj.Description = description.String()
 	rv := dm_base.CreateSchemaProxy(obj)
@@ -179,7 +183,6 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		description += "\nThis field is part of the `" + f.OneOf().Name().String() + "` oneof.\n" +
 			"See the documentation for `" + nicerFQN(f.Message()) + "` for more details."
 	}
-
 	switch {
 	case f.Type().IsRepeated():
 		fteSchema := sc.FieldTypeElem(f.Type().Element())
