@@ -121,6 +121,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 
 		jn := of.Name().String()
 		sch := &dm_base.Schema{
+			Type:       []string{"object"},
 			Properties: map[string]*dm_base.SchemaProxy{},
 		}
 		for _, f := range of.Fields() {

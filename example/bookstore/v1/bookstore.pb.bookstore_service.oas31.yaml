@@ -128,6 +128,7 @@ components:
                 See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
               nullable: true
               type: boolean
+          type: object
       type: object
       x-speakeasy-name-override: GetAuthorResponse
     bookstore.v1.GetBookResponse:
