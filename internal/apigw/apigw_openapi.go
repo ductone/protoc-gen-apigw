@@ -8,12 +8,16 @@ import (
 	"reflect"
 	"strings"
 
-	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 	dm_v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/stuart-warren/yamlfmt"
+
+	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type route struct {
@@ -67,9 +71,10 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		return nil, nil, nil, nil
 	}
 	operation := mext.Operations[0]
+	routeStr := operation.Route
 	r := &route{
 		Method: operation.Method,
-		Route:  operation.Route,
+		Route:  routeDotsToCamelCase(operation.Route),
 	}
 
 	outObj := method.Output()
@@ -119,7 +124,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		Extensions: extensions,
 	}
 
-	routeParts, err := apigw_v1.ParseRoute(r.Route)
+	routeParts, err := apigw_v1.ParseRoute(routeStr)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("apigw: failed to parse route '%s': %w", r.Route, err)
 	}
@@ -135,7 +140,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 
 		_, edgeField := module.path2fieldNumbers(strings.Split(p.ParamName, "."), method.Input())
 		pp := &dm_v3.Parameter{
-			Name:     p.ParamName,
+			Name:     dotsToCamelCase(p.ParamName),
 			In:       "path",
 			Required: true,
 			Schema:   sc.Field(edgeField),
@@ -173,6 +178,44 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		Schemas: sc.schemas,
 	}
 	return r, op, components, nil
+}
+
+func routeDotsToCamelCase(s string) string {
+	if !strings.Contains(s, ".") {
+		return s
+	}
+
+	var out strings.Builder
+	parts := strings.Split(s, "/")
+	for _, part := range parts[1:] {
+		out.WriteString("/")
+		if !strings.Contains(part, ".") {
+			out.WriteString(part)
+			continue
+		}
+
+		part = strings.ReplaceAll(part, "{", "")
+		part = strings.ReplaceAll(part, "}", "")
+		out.WriteString("{")
+		out.WriteString(dotsToCamelCase(part))
+		out.WriteString("}")
+	}
+	return out.String()
+}
+
+func dotsToCamelCase(s string) string {
+	if !strings.Contains(s, ".") {
+		return s
+	}
+	var out strings.Builder
+	parts := strings.Split(s, ".")
+	out.WriteString(parts[0])
+
+	cases.Title(language.English)
+	for _, p := range parts[1:] {
+		out.WriteString(cases.Title(language.English).String(p))
+	}
+	return out.String()
 }
 
 func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) string {

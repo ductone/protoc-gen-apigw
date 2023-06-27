@@ -320,7 +320,7 @@ paths:
       x-speakeasy-entity-operation: Book#create
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: CreateBook
-  /shelves/{shelf}/books/{book.id}:
+  /shelves/{shelf}/books/{bookId}:
     patch:
       description: Invokes the bookstore.v1.BookstoreService.UpdateBook method.
       operationId: bookstore.v1.BookstoreService.UpdateBook
@@ -334,7 +334,7 @@ paths:
             format: int64
             type: string
         - in: path
-          name: book.id
+          name: bookId
           required: true
           schema:
             description: |2
