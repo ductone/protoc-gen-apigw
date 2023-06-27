@@ -72,9 +72,13 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	}
 	operation := mext.Operations[0]
 	routeStr := operation.Route
+	camelRoute, err := routeDotsToCamelCase(operation.Route)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 	r := &route{
 		Method: operation.Method,
-		Route:  routeDotsToCamelCase(operation.Route),
+		Route:  camelRoute,
 	}
 
 	outObj := method.Output()
@@ -138,9 +142,13 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 			continue
 		}
 
+		camelParam, err := dotsToCamelCase(p.ParamName)
+		if err != nil {
+			return nil, nil, nil, err
+		}
 		_, edgeField := module.path2fieldNumbers(strings.Split(p.ParamName, "."), method.Input())
 		pp := &dm_v3.Parameter{
-			Name:     dotsToCamelCase(p.ParamName),
+			Name:     camelParam,
 			In:       "path",
 			Required: true,
 			Schema:   sc.Field(edgeField),
@@ -180,42 +188,60 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	return r, op, components, nil
 }
 
-func routeDotsToCamelCase(s string) string {
+func routeDotsToCamelCase(s string) (string, error) {
 	if !strings.Contains(s, ".") {
-		return s
+		return s, nil
 	}
 
 	var out strings.Builder
 	parts := strings.Split(s, "/")
 	for _, part := range parts[1:] {
-		out.WriteString("/")
+		if _, err := out.WriteString("/"); err != nil {
+			return "", err
+		}
 		if !strings.Contains(part, ".") {
-			out.WriteString(part)
+			if _, err := out.WriteString(part); err != nil {
+				return "", err
+			}
 			continue
 		}
 
 		part = strings.ReplaceAll(part, "{", "")
 		part = strings.ReplaceAll(part, "}", "")
-		out.WriteString("{")
-		out.WriteString(dotsToCamelCase(part))
-		out.WriteString("}")
+		if _, err := out.WriteString("{"); err != nil {
+			return "", err
+		}
+		pathFixed, err := dotsToCamelCase(part)
+		if err != nil {
+			return "", err
+		}
+		if _, err := out.WriteString(pathFixed); err != nil {
+			return "", err
+		}
+		if _, err := out.WriteString("}"); err != nil {
+			return "", err
+		}
 	}
-	return out.String()
+	return out.String(), nil
 }
 
-func dotsToCamelCase(s string) string {
+func dotsToCamelCase(s string) (string, error) {
 	if !strings.Contains(s, ".") {
-		return s
+		return s, nil
 	}
 	var out strings.Builder
 	parts := strings.Split(s, ".")
-	out.WriteString(parts[0])
+	if _, err := out.WriteString(parts[0]); err != nil {
+		return "", err
+	}
 
 	cases.Title(language.English)
 	for _, p := range parts[1:] {
-		out.WriteString(cases.Title(language.English).String(p))
+		if _, err := out.WriteString(cases.Title(language.English).String(p)); err != nil {
+			return "", err
+		}
 	}
-	return out.String()
+	return out.String(), nil
 }
 
 func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) string {
