@@ -15,9 +15,6 @@ import (
 	"github.com/stuart-warren/yamlfmt"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
-
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 type route struct {
@@ -142,13 +139,9 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 			continue
 		}
 
-		camelParam, err := dotsToCamelCase(p.ParamName)
-		if err != nil {
-			return nil, nil, nil, err
-		}
 		_, edgeField := module.path2fieldNumbers(strings.Split(p.ParamName, "."), method.Input())
 		pp := &dm_v3.Parameter{
-			Name:     camelParam,
+			Name:     dotsToCamelCase(p.ParamName),
 			In:       "path",
 			Required: true,
 			Schema:   sc.Field(edgeField),
@@ -211,11 +204,7 @@ func routeDotsToCamelCase(s string) (string, error) {
 		if _, err := out.WriteString("{"); err != nil {
 			return "", err
 		}
-		pathFixed, err := dotsToCamelCase(part)
-		if err != nil {
-			return "", err
-		}
-		if _, err := out.WriteString(pathFixed); err != nil {
+		if _, err := out.WriteString(dotsToCamelCase(part)); err != nil {
 			return "", err
 		}
 		if _, err := out.WriteString("}"); err != nil {
@@ -225,23 +214,13 @@ func routeDotsToCamelCase(s string) (string, error) {
 	return out.String(), nil
 }
 
-func dotsToCamelCase(s string) (string, error) {
+func dotsToCamelCase(s string) string {
 	if !strings.Contains(s, ".") {
-		return s, nil
-	}
-	var out strings.Builder
-	parts := strings.Split(s, ".")
-	if _, err := out.WriteString(parts[0]); err != nil {
-		return "", err
+		return s
 	}
 
-	cases.Title(language.English)
-	for _, p := range parts[1:] {
-		if _, err := out.WriteString(cases.Title(language.English).String(p)); err != nil {
-			return "", err
-		}
-	}
-	return out.String(), nil
+	s = strings.ReplaceAll(s, ".", "")
+	return pgs.Name(s).LowerCamelCase().String()
 }
 
 func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) string {
