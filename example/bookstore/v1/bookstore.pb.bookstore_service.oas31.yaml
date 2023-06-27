@@ -112,23 +112,20 @@ components:
       properties:
         author:
           $ref: '#/components/schemas/bookstore.v1.Author'
-        genre:
-          properties:
-            fiction:
-              description: |-
-                The fiction field.
-                This field is part of the `genre` oneof.
-                See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
-              nullable: true
-              type: boolean
-            nonfiction:
-              description: |-
-                The nonfiction field.
-                This field is part of the `genre` oneof.
-                See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
-              nullable: true
-              type: boolean
-          type: object
+        fiction:
+          description: |-
+            The fiction field.
+            This field is part of the `genre` oneof.
+            See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
+          nullable: true
+          type: boolean
+        nonfiction:
+          description: |-
+            The nonfiction field.
+            This field is part of the `genre` oneof.
+            See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
+          nullable: true
+          type: boolean
       type: object
       x-speakeasy-name-override: GetAuthorResponse
     bookstore.v1.GetBookResponse:

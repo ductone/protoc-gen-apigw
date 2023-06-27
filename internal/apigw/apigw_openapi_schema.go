@@ -119,17 +119,11 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 			of.Name().String(),
 		)
 
-		jn := of.Name().String()
-		sch := &dm_base.Schema{
-			Type:       []string{"object"},
-			Properties: map[string]*dm_base.SchemaProxy{},
-		}
 		for _, f := range of.Fields() {
 			jn := jsonName(f)
-			sch.Properties[jn] = sc.Field(f)
+			obj.Properties[jn] = sc.Field(f)
 			_, _ = fmt.Fprintf(description, "  - %s\n", jn)
 		}
-		obj.Properties[jn] = dm_base.CreateSchemaProxy(sch)
 	}
 	obj.Description = description.String()
 	rv := dm_base.CreateSchemaProxy(obj)
