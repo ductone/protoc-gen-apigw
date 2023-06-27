@@ -51,8 +51,8 @@ func TimeoutForRequest(req *http.Request) (time.Duration, bool) {
 type RouteToken struct {
 	IsParam    bool
 	ParamName  string
-	Value      string
 	ParamIndex int
+	Value      string
 }
 
 // Parses a HTP Route path into a list of RouteTokens.
@@ -76,8 +76,8 @@ func ParseRoute(path string) ([]RouteToken, error) {
 		}
 		if strings.HasPrefix(token, "{") && strings.HasSuffix(token, "}") {
 			rv = append(rv, RouteToken{
-				IsParam:   true,
-				ParamName: token[1 : len(token)-1],
+				IsParam:    true,
+				ParamName:  token[1 : len(token)-1],
 				ParamIndex: paramIndex,
 			})
 			paramIndex++
