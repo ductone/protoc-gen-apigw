@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
@@ -68,14 +70,30 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		return nil, nil, nil, nil
 	}
 	operation := mext.Operations[0]
-	routeStr := operation.Route
-	camelRoute, err := routeDotsToCamelCase(operation.Route)
+
+	routeParts, err := apigw_v1.ParseRoute(operation.Route)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, fmt.Errorf("apigw: failed to parse route '%s': %w", operation.Route, err)
+	}
+	var camelRoute strings.Builder
+	spew.Fdump(os.Stderr, routeParts)
+	for _, p := range routeParts {
+		if _, err := camelRoute.WriteString("/"); err != nil {
+			return nil, nil, nil, err
+		}
+		if p.IsParam {
+			if _, err := camelRoute.WriteString(fmt.Sprintf("{%s}", dotsToCamelCase(p.ParamName))); err != nil {
+				return nil, nil, nil, err
+			}
+		} else {
+			if _, err := camelRoute.WriteString(p.Value); err != nil {
+				return nil, nil, nil, err
+			}
+		}
 	}
 	r := &route{
 		Method: operation.Method,
-		Route:  camelRoute,
+		Route:  camelRoute.String(),
 	}
 
 	outObj := method.Output()
@@ -123,11 +141,6 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 			},
 		},
 		Extensions: extensions,
-	}
-
-	routeParts, err := apigw_v1.ParseRoute(routeStr)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("apigw: failed to parse route '%s': %w", r.Route, err)
 	}
 
 	inputFilter := []string{}
@@ -181,45 +194,10 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	return r, op, components, nil
 }
 
-func routeDotsToCamelCase(s string) (string, error) {
-	if !strings.Contains(s, ".") {
-		return s, nil
-	}
-
-	var out strings.Builder
-	parts := strings.Split(s, "/")
-	for _, part := range parts[1:] {
-		if _, err := out.WriteString("/"); err != nil {
-			return "", err
-		}
-		if !strings.Contains(part, ".") {
-			if _, err := out.WriteString(part); err != nil {
-				return "", err
-			}
-			continue
-		}
-
-		part = strings.ReplaceAll(part, "{", "")
-		part = strings.ReplaceAll(part, "}", "")
-		if _, err := out.WriteString("{"); err != nil {
-			return "", err
-		}
-		if _, err := out.WriteString(dotsToCamelCase(part)); err != nil {
-			return "", err
-		}
-		if _, err := out.WriteString("}"); err != nil {
-			return "", err
-		}
-	}
-	return out.String(), nil
-}
-
 func dotsToCamelCase(s string) string {
 	if !strings.Contains(s, ".") {
 		return s
 	}
-
-	s = strings.ReplaceAll(s, ".", "")
 	return pgs.Name(s).LowerCamelCase().String()
 }
 
