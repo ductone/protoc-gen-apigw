@@ -79,7 +79,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 			return nil, nil, nil, err
 		}
 		if p.IsParam {
-			if _, err := camelRoute.WriteString(fmt.Sprintf("{%s}", dotsToCamelCase(p.ParamName))); err != nil {
+			if _, err := camelRoute.WriteString(fmt.Sprintf("{%s}", toSnakeCase(p.ParamName))); err != nil {
 				return nil, nil, nil, err
 			}
 		} else {
@@ -151,7 +151,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 
 		_, edgeField := module.path2fieldNumbers(strings.Split(p.ParamName, "."), method.Input())
 		pp := &dm_v3.Parameter{
-			Name:     dotsToCamelCase(p.ParamName),
+			Name:     toSnakeCase(p.ParamName),
 			In:       "path",
 			Required: true,
 			Schema:   sc.Field(edgeField),
@@ -191,11 +191,12 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	return r, op, components, nil
 }
 
-func dotsToCamelCase(s string) string {
+func toSnakeCase(s string) string {
 	if !strings.Contains(s, ".") {
 		return s
 	}
-	return pgs.Name(s).LowerCamelCase().String()
+
+	return strings.ReplaceAll(s, ".", "_")
 }
 
 func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) string {
