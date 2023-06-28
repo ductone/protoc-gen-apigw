@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"reflect"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
@@ -76,7 +74,6 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		return nil, nil, nil, fmt.Errorf("apigw: failed to parse route '%s': %w", operation.Route, err)
 	}
 	var camelRoute strings.Builder
-	spew.Fdump(os.Stderr, routeParts)
 	for _, p := range routeParts {
 		if _, err := camelRoute.WriteString("/"); err != nil {
 			return nil, nil, nil, err
