@@ -8,12 +8,13 @@ import (
 	"reflect"
 	"strings"
 
-	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 	dm_v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/stuart-warren/yamlfmt"
+
+	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 )
 
 type route struct {
@@ -67,9 +68,29 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		return nil, nil, nil, nil
 	}
 	operation := mext.Operations[0]
+
+	routeParts, err := apigw_v1.ParseRoute(operation.Route)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("apigw: failed to parse route '%s': %w", operation.Route, err)
+	}
+	var camelRoute strings.Builder
+	for _, p := range routeParts {
+		if _, err := camelRoute.WriteString("/"); err != nil {
+			return nil, nil, nil, err
+		}
+		if p.IsParam {
+			if _, err := camelRoute.WriteString(fmt.Sprintf("{%s}", toSnakeCase(p.ParamName))); err != nil {
+				return nil, nil, nil, err
+			}
+		} else {
+			if _, err := camelRoute.WriteString(p.Value); err != nil {
+				return nil, nil, nil, err
+			}
+		}
+	}
 	r := &route{
 		Method: operation.Method,
-		Route:  operation.Route,
+		Route:  camelRoute.String(),
 	}
 
 	outObj := method.Output()
@@ -119,11 +140,6 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		Extensions: extensions,
 	}
 
-	routeParts, err := apigw_v1.ParseRoute(r.Route)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("apigw: failed to parse route '%s': %w", r.Route, err)
-	}
-
 	inputFilter := []string{}
 
 	sc := newSchemaContainer()
@@ -135,7 +151,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 
 		_, edgeField := module.path2fieldNumbers(strings.Split(p.ParamName, "."), method.Input())
 		pp := &dm_v3.Parameter{
-			Name:     p.ParamName,
+			Name:     toSnakeCase(p.ParamName),
 			In:       "path",
 			Required: true,
 			Schema:   sc.Field(edgeField),
@@ -173,6 +189,14 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		Schemas: sc.schemas,
 	}
 	return r, op, components, nil
+}
+
+func toSnakeCase(s string) string {
+	if !strings.Contains(s, ".") {
+		return s
+	}
+
+	return strings.ReplaceAll(s, ".", "_")
 }
 
 func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) string {
