@@ -320,44 +320,6 @@ paths:
       x-speakeasy-entity-operation: Book#create
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: CreateBook
-  /shelves/{shelf}/books/{book_id}:
-    patch:
-      description: Invokes the bookstore.v1.BookstoreService.UpdateBook method.
-      operationId: bookstore.v1.BookstoreService.UpdateBook
-      parameters:
-        - in: path
-          name: shelf
-          required: true
-          schema:
-            description: |2
-               The ID of the shelf from which to retrieve a book.
-            format: int64
-            type: string
-        - in: path
-          name: book_id
-          required: true
-          schema:
-            description: |2
-               A unique book id.
-            format: int64
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/bookstore.v1.UpdateBookRequestInput'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/bookstore.v1.UpdateBookResponse'
-          description: Successful response
-      tags:
-        - Bookstore
-      x-speakeasy-entity-operation: Book#update
-      x-speakeasy-group: Bookstore
-      x-speakeasy-name-override: UpdateBook
   /shelves/{shelf}/books/{book}:
     delete:
       description: |2
@@ -435,6 +397,43 @@ paths:
       x-speakeasy-entity-operation: Book#read
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: GetBook
+    patch:
+      description: Invokes the bookstore.v1.BookstoreService.UpdateBook method.
+      operationId: bookstore.v1.BookstoreService.UpdateBook
+      parameters:
+        - in: path
+          name: shelf
+          required: true
+          schema:
+            description: |2
+               The ID of the shelf from which to retrieve a book.
+            format: int64
+            type: string
+        - in: path
+          name: book
+          required: true
+          schema:
+            description: |2
+               A unique book id.
+            format: int64
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/bookstore.v1.UpdateBookRequestInput'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v1.UpdateBookResponse'
+          description: Successful response
+      tags:
+        - Bookstore
+      x-speakeasy-entity-operation: Book#update
+      x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: UpdateBook
 servers:
   - description: The server for bookstore.v1.BookstoreService.
     url: /

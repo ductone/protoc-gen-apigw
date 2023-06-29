@@ -66,16 +66,18 @@ func (module *Module) storeCanonicalRoute(route string, tokens []apigw_v1.RouteT
 			canonicalRouteStr += fmt.Sprintf("/{%d}", token.ParamIndex)
 			params = append(params, toSnakeCase(token.ParamName))
 		} else {
-			canonicalRouteStr += "/" + token.ParamName
+			canonicalRouteStr += "/" + token.Value
 		}
 	}
 
 	routeData, ok := module.canonicalRouteMapper[canonicalRouteStr]
 	if !ok {
-		module.canonicalRouteMapper[canonicalRouteStr] = &canonicalRoute{
+		canon := &canonicalRoute{
 			oasRoute: route,
 			params:   params,
 		}
+		module.canonicalRouteMapper[canonicalRouteStr] = canon
+		return canon
 	}
 
 	return routeData

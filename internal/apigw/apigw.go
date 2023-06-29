@@ -14,7 +14,7 @@ import (
 )
 
 func New() pgs.Module {
-	return &Module{ModuleBase: &pgs.ModuleBase{}}
+	return &Module{ModuleBase: &pgs.ModuleBase{}, canonicalRouteMapper: map[string]*canonicalRoute{}}
 }
 
 const moduleName = "apigw"
