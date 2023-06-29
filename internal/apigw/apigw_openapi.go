@@ -58,6 +58,29 @@ func (module *Module) buildOpenAPI(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Do
 	return doc, nil
 }
 
+func (module *Module) storeCanonicalRoute(route string, tokens []apigw_v1.RouteToken) *canonicalRoute {
+	canonicalRouteStr := ""
+	params := []string{}
+	for _, token := range tokens {
+		if token.IsParam {
+			canonicalRouteStr += fmt.Sprintf("/{%d}", token.ParamIndex)
+			params = append(params, toSnakeCase(token.ParamName))
+		} else {
+			canonicalRouteStr += "/" + token.ParamName
+		}
+	}
+
+	routeData, ok := module.canonicalRouteMapper[canonicalRouteStr]
+	if !ok {
+		module.canonicalRouteMapper[canonicalRouteStr] = &canonicalRoute{
+			oasRoute: route,
+			params:   params,
+		}
+	}
+
+	return routeData
+}
+
 func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *msgTracker) (*route, *dm_v3.Operation, *dm_v3.Components, error) {
 	mext := &apigw_v1.MethodOptions{}
 	_, err := method.Extension(apigw_v1.E_Method, mext)
@@ -73,24 +96,28 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("apigw: failed to parse route '%s': %w", operation.Route, err)
 	}
-	var camelRoute strings.Builder
+
+	canonicalRouteData := module.storeCanonicalRoute(operation.Route, routeParts)
+
+	var snakeRoute strings.Builder
 	for _, p := range routeParts {
-		if _, err := camelRoute.WriteString("/"); err != nil {
+		if _, err := snakeRoute.WriteString("/"); err != nil {
 			return nil, nil, nil, err
 		}
 		if p.IsParam {
-			if _, err := camelRoute.WriteString(fmt.Sprintf("{%s}", toSnakeCase(p.ParamName))); err != nil {
+			paramName := canonicalRouteData.params[p.ParamIndex]
+			if _, err := snakeRoute.WriteString(fmt.Sprintf("{%s}", paramName)); err != nil {
 				return nil, nil, nil, err
 			}
 		} else {
-			if _, err := camelRoute.WriteString(p.Value); err != nil {
+			if _, err := snakeRoute.WriteString(p.Value); err != nil {
 				return nil, nil, nil, err
 			}
 		}
 	}
 	r := &route{
 		Method: operation.Method,
-		Route:  camelRoute.String(),
+		Route:  snakeRoute.String(),
 	}
 
 	outObj := method.Output()
@@ -143,15 +170,15 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	inputFilter := []string{}
 
 	sc := newSchemaContainer()
-
 	for _, p := range routeParts {
 		if !p.IsParam {
 			continue
 		}
 
+		paramName := canonicalRouteData.params[p.ParamIndex]
 		_, edgeField := module.path2fieldNumbers(strings.Split(p.ParamName, "."), method.Input())
 		pp := &dm_v3.Parameter{
-			Name:     toSnakeCase(p.ParamName),
+			Name:     paramName,
 			In:       "path",
 			Required: true,
 			Schema:   sc.Field(edgeField),
