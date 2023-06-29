@@ -14,7 +14,7 @@ import (
 )
 
 func New() pgs.Module {
-	return &Module{ModuleBase: &pgs.ModuleBase{}}
+	return &Module{ModuleBase: &pgs.ModuleBase{}, canonicalRouteMapper: map[string]*canonicalRoute{}}
 }
 
 const moduleName = "apigw"
@@ -23,6 +23,16 @@ const version = "0.1.0"
 type Module struct {
 	*pgs.ModuleBase
 	ctx pgsgo.Context
+
+	// map of routes of canonical route -> data such that params are converted to numbers
+	// that way overlapping routes can be detected if the param names are different
+	// ex key = /v1/thing/{0}/other_static_path/{1}
+	canonicalRouteMapper map[string]*canonicalRoute
+}
+
+type canonicalRoute struct {
+	oasRoute string
+	params   []string
 }
 
 var _ pgs.Module = (*Module)(nil)
