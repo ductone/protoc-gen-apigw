@@ -60,7 +60,8 @@ type varNamer struct {
 }
 
 func (fn *varNamer) Next() *varNamer {
-	return &varNamer{offset: fn.offset + 1, prefix: fn.prefix}
+	fn.offset += 1
+	return fn
 }
 
 func (fn *varNamer) String() string {
