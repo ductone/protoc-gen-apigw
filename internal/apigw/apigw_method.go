@@ -34,8 +34,6 @@ type paramContext struct {
 	ConverterOutputName string
 }
 
-const outputSuffix = ":= protopack.Message{\n"
-
 func jsonName(f pgs.Field) string {
 	if f.Descriptor().JsonName != nil {
 		return *f.Descriptor().JsonName
@@ -375,28 +373,14 @@ func (module *Module) generateNestedFieldConverter(
 		ConverterOutputName: vn.String(),
 		Converter:           protopackMessage,
 	}, nil
-
 }
 
-type protopackMessageIntializerContext struct {
-	Size        int
-	IntialValue string
-	OutputName  string
-}
 type protopackMessageContext struct {
 	InputName      string
 	Number         protopack.Number
 	PreviousVnName string
 	VnName         string
 	ValueGetter    string
-}
-type messageFieldIntializerContext struct {
-	VarName string
-}
-type messageFieldContext struct {
-	Number     protopack.Number
-	OutputName string
-	InputName  string
 }
 type boolFieldContext struct {
 	FieldName  string
