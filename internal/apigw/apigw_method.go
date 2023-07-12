@@ -34,8 +34,6 @@ type paramContext struct {
 	ConverterOutputName string
 }
 
-const outputSuffix = ":= protopack.Message{\n"
-
 func jsonName(f pgs.Field) string {
 	if f.Descriptor().JsonName != nil {
 		return *f.Descriptor().JsonName
@@ -135,26 +133,25 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		nestedFields := strings.Split(part.ParamName, ".")
 		nums, edgeField := module.path2fieldNumbers(nestedFields, method.Input())
 
-		paramValueName := vn.String()
-		vn = vn.Next()
-
 		ix.ProtobufProtoPack = true
 		routeGetter, err := templateExecToString("route_get_param.tmpl", &routeParseContext{
 			ParamName:  part.ParamName,
-			OutputName: paramValueName,
+			OutputName: vn.String(),
 			ParamIndex: strconv.Itoa(part.ParamIndex),
 		})
 		if err != nil {
 			panic(err)
 		}
-		outName := vn.String()
-		vn = vn.Next()
 
 		var fc *paramContext
 		if len(nums) == 1 {
-			fc, err = module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outName)
+			paramValueName := vn.String()
+			vn.Next()
+			outputName := vn.String()
+			fc, err = module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outputName)
+			vn.Next()
 		} else {
-			fc, err = module.generateNestedFieldConverter(method, nums, ix, routeGetter, paramValueName, outName)
+			fc, err = module.generateNestedFieldConverter(nums, ix, routeGetter, vn)
 		}
 		if err != nil {
 			panic(err)
@@ -171,7 +168,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 			return nil, fmt.Errorf("apigw: methodContext: operation.Query invalid: target is nested (unsupported right now) '%s': %w", method.FullyQualifiedName(), err)
 		}
 		paramValueName := vn.String()
-		vn = vn.Next()
+		vn.Next()
 
 		ix.ProtobufProtoPack = true
 		routeGetter, err := templateExecToString("query_get_param.tmpl", &routeParseContext{
@@ -182,7 +179,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 			panic(err)
 		}
 		outName := vn.String()
-		vn = vn.Next()
+		vn.Next()
 
 		fc, err := module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outName)
 		if err != nil {
@@ -324,134 +321,66 @@ func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber proto
 	}
 }
 
-func (module *Module) generateNestedProtoMessageOutput(idx int, edgeNumbers []protopack.Number, outputName string) string {
-	var inputName string
+func (module *Module) generateNestedProtoMessageOutput(idx int, edgeNumbers []protopack.Number, vn *varNamer, valueGetter string) string {
+	var message string
 
 	// The first edge number is the last step and writes to the output instead of an array
 	if idx == 0 {
-		inputName = outputName
+		inputName := vn.String()
+		vn.Next()
+		packName := vn.String()
+		var err error
+		message, err = templateExecToString("protopack_accessor.tmpl", &protopackMessageContext{
+			InputName:   inputName,
+			Number:      edgeNumbers[idx],
+			VnName:      packName,
+			ValueGetter: valueGetter,
+		})
+		if err != nil {
+			panic(err)
+		}
 	} else {
-		inputName = fmt.Sprintf("arr[%d]", idx+1)
-	}
-
-	message, err := templateExecToString("protopack_message.tmpl", &protopackMessageContext{
-		InputName: inputName,
-		Number:    edgeNumbers[idx],
-		// We need to -2 because the last level is the initializer and the second to last level is the base case
-		Index: len(edgeNumbers) - idx - 2,
-	})
-	if err != nil {
-		panic(err)
+		inputName := vn.String()
+		vn.Next()
+		packName := vn.String()
+		var err error
+		message, err = templateExecToString("protopack_message.tmpl", &protopackMessageContext{
+			Number:         edgeNumbers[idx-1],
+			VnName:         packName,
+			PreviousVnName: inputName,
+		})
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// Base case
-	if idx == len(edgeNumbers)-2 {
+	if idx >= len(edgeNumbers)-1 {
 		return message
 	}
-	return fmt.Sprintf("%s\n%s", module.generateNestedProtoMessageOutput(idx+1, edgeNumbers, outputName), message)
+	return fmt.Sprintf("%s\n%s", message, module.generateNestedProtoMessageOutput(idx+1, edgeNumbers, vn, valueGetter))
 }
 
-func (module *Module) generateNestedFieldConverterStr(method pgs.Method, ix *importTracker, outputName string, edgeNumbers []protopack.Number, msg pgs.Message, varName string) (*string, error) {
-	converter := ""
-
-	var lastField pgs.Field
-	next := edgeNumbers[0]
-	deeper := edgeNumbers[1:]
-
-	// Generate the converter part for this level
-	converterPart, err := templateExecToString("field_message.tmpl", &messageFieldContext{
-		Number:     next,
-		InputName:  varName,
-		OutputName: varName,
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	// Find the next message
-	for _, f := range msg.Fields() {
-		if next == protopack.Number(f.Descriptor().GetNumber()) {
-			lastField = f
-			break
-		}
-	}
-	var converterSubstring *string
-	if len(edgeNumbers) == 1 {
-		// Base case
-		paramContext, err := module.generateFieldConverter(method, next, lastField, ix, "", "value.String()", outputName)
-		if err != nil {
-			panic(err)
-		}
-		converterSubstring = &paramContext.Converter
-	} else {
-		// Recurse
-		converterSubstring, err = module.generateNestedFieldConverterStr(method, ix, outputName, deeper, lastField.Type().Embed(), varName)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	// Combine the converter substring from this level and the previous levels
-	converter = fmt.Sprintf("%s\n%s", converterPart, *converterSubstring)
-	return &converter, nil
-}
-
-func (module *Module) generateNestedFieldConverter(method pgs.Method, edgeNumbers []protopack.Number,
+func (module *Module) generateNestedFieldConverter(
+	edgeNumbers []protopack.Number,
 	ix *importTracker,
 	valueGetter string,
-	inputName string,
-	outputName string,
+	vn *varNamer,
 ) (*paramContext, error) {
-	ix.ProtobufReflect = true
-	const varName = "reflection"
-	converterSubstringRef, err := module.generateNestedFieldConverterStr(method, ix, outputName, edgeNumbers, method.Input(), varName)
-	converterSubstring := *converterSubstringRef
-	if err != nil {
-		panic(err)
-	}
-	intializer, err := templateExecToString("field_message_intializer.tmpl", &messageFieldIntializerContext{
-		VarName: varName,
-	})
-	if err != nil {
-		panic(err)
-	}
-	outputStatement := fmt.Sprintf("%s %s", outputName, outputSuffix)
-	idx := strings.Index(converterSubstring, outputStatement)
-	ppMessageIntializer, err := templateExecToString("protopack_message_intializer.tmpl", &protopackMessageIntializerContext{
-		Size:        len(edgeNumbers) - 1,
-		IntialValue: converterSubstring[idx+len(outputStatement):],
-		OutputName:  outputName,
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	protopackMessage := module.generateNestedProtoMessageOutput(0, edgeNumbers, outputName)
-	converterSubstring = converterSubstring[:idx] + ppMessageIntializer + protopackMessage
-	converter := fmt.Sprintf("%s\n%s", intializer, converterSubstring)
+	ix.ProtobufProtoPack = true
+	protopackMessage := module.generateNestedProtoMessageOutput(0, edgeNumbers, vn, valueGetter)
 	return &paramContext{
-		ConverterOutputName: outputName,
-		Converter:           converter,
+		ConverterOutputName: vn.String(),
+		Converter:           protopackMessage,
 	}, nil
 }
 
-type protopackMessageIntializerContext struct {
-	Size        int
-	IntialValue string
-	OutputName  string
-}
 type protopackMessageContext struct {
-	InputName string
-	Number    protopack.Number
-	Index     int
-}
-type messageFieldIntializerContext struct {
-	VarName string
-}
-type messageFieldContext struct {
-	Number     protopack.Number
-	OutputName string
-	InputName  string
+	InputName      string
+	Number         protopack.Number
+	PreviousVnName string
+	VnName         string
+	ValueGetter    string
 }
 type boolFieldContext struct {
 	FieldName  string
