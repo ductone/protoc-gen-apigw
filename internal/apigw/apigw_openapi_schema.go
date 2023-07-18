@@ -101,8 +101,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 			}
 		}
 
-		fopt := getFieldOptions(f)
-		if fopt != nil && fopt.GetRequiredSpec() {
+		if getRequiredSpec(f) {
 			required = append(required, jn)
 		}
 
@@ -168,6 +167,7 @@ func (sc *schemaContainer) FieldTypeElem(fte pgs.FieldTypeElem) *dm_base.SchemaP
 func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	deprecated := oasBool(f.Descriptor().GetOptions().GetDeprecated())
 	description := f.SourceCodeInfo().LeadingComments()
+	readOnly := getReadOnlySpec(f)
 	if description == "" {
 		jn := jsonName(f)
 		description = "The " + jn + " field."
@@ -185,6 +185,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			Type:        []string{"array"},
 			Description: description,
 			Nullable:    oasTrue(),
+			ReadOnly:    readOnly,
 			Deprecated:  deprecated,
 			Items:       &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
@@ -196,6 +197,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			Deprecated:           deprecated,
 			Description:          description,
 			Nullable:             nullable,
+			ReadOnly:             readOnly,
 			AdditionalProperties: fteSchema,
 		}
 		return dm_base.CreateSchemaProxy(mv)
@@ -203,6 +205,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		ev := sc.Enum(f.Type().Enum())
 		ev.Deprecated = deprecated
 		ev.Description = description
+		ev.ReadOnly = readOnly
 		mergeNullable(ev, nullable)
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
@@ -210,6 +213,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		return sc.Message(f.Type().Embed(), nil, nullable)
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())
+		sv.ReadOnly = readOnly
 		mergeNullable(sv, nullable)
 		sv.Deprecated = deprecated
 		sv.Description = description
@@ -229,16 +233,31 @@ func getMessageOptions(m pgs.Message) *apigw_v1.MessageOption {
 	return nil
 }
 
-func getFieldOptions(m pgs.Field) *apigw_v1.FieldOption {
+func getFieldOptions(m pgs.Field) []*apigw_v1.FieldOption {
 	fopt := &apigw_v1.FieldOptions{}
 	_, err := m.Extension(apigw_v1.E_Field, fopt)
 	if err != nil {
 		return nil
 	}
-	if len(fopt.FieldOptions) > 0 {
-		return fopt.FieldOptions[0]
+	return fopt.FieldOptions
+}
+
+func getRequiredSpec(f pgs.Field) bool {
+	for _, fo := range getFieldOptions(f) {
+		if fo.GetRequiredSpec() {
+			return true
+		}
 	}
-	return nil
+	return false
+}
+
+func getReadOnlySpec(f pgs.Field) bool {
+	for _, fo := range getFieldOptions(f) {
+		if fo.GetReadOnlySpec() {
+			return true
+		}
+	}
+	return false
 }
 
 func mergeNullable(s *dm_base.Schema, nullable *bool) {

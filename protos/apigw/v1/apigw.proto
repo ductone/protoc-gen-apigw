@@ -35,6 +35,8 @@ message MessageOption {
 message FieldOption {
   // Sets the field as required in the generated openAPI spec.
   bool required_spec = 1;
+  // Sets the field as read only in the generated openAPI spec.
+  bool read_only_spec = 2;
 }
 
 message FieldOptions {

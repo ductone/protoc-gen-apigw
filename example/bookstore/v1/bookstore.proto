@@ -173,6 +173,10 @@ message Author {
   Gender gender = 2;
   string first_name = 3;
   string last_name = 4 [json_name = "lname"];
+  string metadata = 5 [(apigw.v1.field).field_options = {
+    read_only_spec: true
+  }];
+
 }
 
 // Response to ListShelves call.
