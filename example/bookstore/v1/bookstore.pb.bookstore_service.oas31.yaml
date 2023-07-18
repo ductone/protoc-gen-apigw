@@ -45,6 +45,9 @@ components:
             type: string
           nullable: true
           type: array
+        shelf:
+          description: The shelf field.
+          type: string
         title:
           description: |2
              A book title.
@@ -180,6 +183,11 @@ components:
       properties:
         book:
           $ref: '#/components/schemas/bookstore.v1.Book'
+        shelf:
+          description: |2
+             The ID of the shelf from which to retrieve a book.
+          format: int64
+          type: string
       type: object
       x-speakeasy-name-override: UpdateBookRequest
     bookstore.v1.UpdateBookResponse:
@@ -405,9 +413,7 @@ paths:
           name: shelf
           required: true
           schema:
-            description: |2
-               The ID of the shelf from which to retrieve a book.
-            format: int64
+            description: The shelf field.
             type: string
         - in: path
           name: book
