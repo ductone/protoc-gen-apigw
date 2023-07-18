@@ -78,7 +78,7 @@ service BookstoreService {
   rpc UpdateBook(UpdateBookRequest) returns (UpdateBookResponse) {
     option (apigw.v1.method).operations = {
       method: "PATCH"
-      route: "/shelves/{shelf}/books/{book.id}"
+      route: "/shelves/{book.shelf}/books/{book.id}"
       terraform_entity: {
         type: TERRAFORM_ENTITY_METHOD_TYPE_UPDATE
         name: "Book"
@@ -158,6 +158,7 @@ message Book {
   string title = 3;
   // Quotes from the book.
   repeated string quotes = 4;
+  string shelf = 5;
 }
 
 // An author resource.

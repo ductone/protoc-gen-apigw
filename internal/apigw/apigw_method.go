@@ -152,6 +152,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 			vn.Next()
 		} else {
 			fc, err = module.generateNestedFieldConverter(nums, ix, routeGetter, vn)
+			vn.Next()
 		}
 		if err != nil {
 			panic(err)
