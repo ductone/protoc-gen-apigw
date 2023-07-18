@@ -23,6 +23,10 @@ components:
         lname:
           description: The lname field.
           type: string
+        metadata:
+          description: The metadata field.
+          readOnly: true
+          type: string
       type: object
       x-speakeasy-name-override: Author
     bookstore.v1.Book:
