@@ -91,7 +91,7 @@ func (mb *mockBookstore) DeleteShelf(ctx context.Context, req *bookstore_v1.Dele
 
 // /shelves/{shelf}/books/{book}
 func (mb *mockBookstore) DeleteBook(ctx context.Context, req *bookstore_v1.DeleteBookRequest) (*bookstore_v1.DeleteBookResponse, error) {
-	require.Equal(mb.t, int64(123), req.Shelf)
-	require.Equal(mb.t, int64(456), req.Book)
+	require.Equal(mb.t, int64(123), req.Book.ShelfId)
+	require.Equal(mb.t, int64(456), req.Book.Id)
 	return &bookstore_v1.DeleteBookResponse{}, nil
 }

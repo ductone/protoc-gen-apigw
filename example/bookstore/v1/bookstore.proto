@@ -68,7 +68,7 @@ service BookstoreService {
   rpc DeleteBook(DeleteBookRequest) returns (DeleteBookResponse) {
     option (apigw.v1.method).operations = {
       method: "DELETE"
-      route: "/shelves/{shelf}/books/{book}"
+      route: "/shelves/{book.shelf_id}/books/{book.id}"
       terraform_entity: {
         type: TERRAFORM_ENTITY_METHOD_TYPE_DELETE
         name: "Book"
@@ -79,7 +79,7 @@ service BookstoreService {
   rpc UpdateBook(UpdateBookRequest) returns (UpdateBookResponse) {
     option (apigw.v1.method).operations = {
       method: "PATCH"
-      route: "/shelves/{book.shelf}/books/{book.id}"
+      route: "/shelves/{book.shelf_id}/books/{book.id}"
       terraform_entity: {
         type: TERRAFORM_ENTITY_METHOD_TYPE_UPDATE
         name: "Book"
@@ -144,14 +144,10 @@ message Shelf {
 // A book resource.
 message Book {
   option (apigw.v1.message).message_options = {
-    terraform_entity: {
-      name: "Book"
-    }
+    terraform_entity: {name: "Book"}
   };
   // A unique book id.
-  int64 id = 1 [(apigw.v1.field).field_options = {
-    required_spec: true
-  }];
+  int64 id = 1 [(apigw.v1.field).field_options = {required_spec: true}];
 
   // An author of the book.
   string author = 2;
@@ -159,7 +155,7 @@ message Book {
   string title = 3;
   // Quotes from the book.
   repeated string quotes = 4;
-  string shelf = 5;
+  int64 shelf_id = 5;
 }
 
 // An author resource.
@@ -174,11 +170,8 @@ message Author {
   Gender gender = 2;
   string first_name = 3;
   string last_name = 4 [json_name = "lname"];
-  string metadata = 5 [(apigw.v1.field).field_options = {
-    read_only_spec: true
-  }];
-  google.protobuf.Timestamp created_at = 6 [(apigw.v1.field).field_options = {read_only_spec: true }];
-
+  string metadata = 5 [(apigw.v1.field).field_options = {read_only_spec: true}];
+  google.protobuf.Timestamp created_at = 6 [(apigw.v1.field).field_options = {read_only_spec: true}];
 }
 
 // Response to ListShelves call.
@@ -239,10 +232,8 @@ message UpdateBookRequest {
 
 // Request message for DeleteBook method.
 message DeleteBookRequest {
-  // The ID of the shelf from which to delete a book.
-  int64 shelf = 1;
-  // The ID of the book to delete.
-  int64 book = 2;
+  // The book resource to delete.
+  Book book = 1;
 }
 
 // Request message for GetAuthor method.

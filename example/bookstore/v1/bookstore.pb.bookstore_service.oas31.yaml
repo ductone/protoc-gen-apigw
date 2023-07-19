@@ -53,8 +53,9 @@ components:
             type: string
           nullable: true
           type: array
-        shelf:
-          description: The shelf field.
+        shelfId:
+          description: The shelfId field.
+          format: int64
           type: string
         title:
           description: |2
@@ -98,6 +99,9 @@ components:
     bookstore.v1.DeleteBookRequestInput:
       description: |2
          Request message for DeleteBook method.
+      properties:
+        book:
+          $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
       x-speakeasy-name-override: DeleteBookRequest
     bookstore.v1.DeleteBookResponse:
@@ -346,8 +350,7 @@ paths:
           name: shelf
           required: true
           schema:
-            description: |2
-               The ID of the shelf from which to delete a book.
+            description: The shelfId field.
             format: int64
             type: string
         - in: path
@@ -355,7 +358,7 @@ paths:
           required: true
           schema:
             description: |2
-               The ID of the book to delete.
+               A unique book id.
             format: int64
             type: string
       requestBody:
@@ -421,7 +424,8 @@ paths:
           name: shelf
           required: true
           schema:
-            description: The shelf field.
+            description: The shelfId field.
+            format: int64
             type: string
         - in: path
           name: book
