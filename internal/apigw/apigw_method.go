@@ -68,7 +68,11 @@ func (module *Module) path2fieldNumbers(path []string, msg pgs.Message) ([]proto
 	if len(rv) == 0 {
 		panic("apigw: getFieldNumbers: unexpected path: " + strings.Join(path, ".") + " on " + msg.FullyQualifiedName())
 	}
-	return rv, lastField
+	reversed := make([]protopack.Number, 0, len(rv))
+	for i := len(rv) - 1; i >= 0; i-- {
+		reversed = append(reversed, rv[i])
+	}
+	return reversed, lastField
 }
 
 func isInt(pt pgs.ProtoType) bool {
@@ -151,7 +155,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 			fc, err = module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outputName)
 			vn.Next()
 		} else {
-			fc, err = module.generateNestedFieldConverter(nums, ix, routeGetter, vn)
+			fc, err = module.generateNestedFieldConverter(nums, ix, routeGetter, vn, part.ParamName)
 			vn.Next()
 		}
 		if err != nil {
@@ -322,7 +326,7 @@ func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber proto
 	}
 }
 
-func (module *Module) generateNestedProtoMessageOutput(idx int, edgeNumbers []protopack.Number, vn *varNamer, valueGetter string) string {
+func (module *Module) generateNestedProtoMessageOutput(idx int, edgeNumbers []protopack.Number, vn *varNamer, valueGetter string, paramName string) string {
 	var message string
 
 	// The first edge number is the last step and writes to the output instead of an array
@@ -336,6 +340,7 @@ func (module *Module) generateNestedProtoMessageOutput(idx int, edgeNumbers []pr
 			Number:      edgeNumbers[idx],
 			VnName:      packName,
 			ValueGetter: valueGetter,
+			ParamName:   paramName,
 		})
 		if err != nil {
 			panic(err)
@@ -346,9 +351,10 @@ func (module *Module) generateNestedProtoMessageOutput(idx int, edgeNumbers []pr
 		packName := vn.String()
 		var err error
 		message, err = templateExecToString("protopack_message.tmpl", &protopackMessageContext{
-			Number:         edgeNumbers[idx-1],
+			Number:         edgeNumbers[idx],
 			VnName:         packName,
 			PreviousVnName: inputName,
+			ParamName:      paramName,
 		})
 		if err != nil {
 			panic(err)
@@ -359,7 +365,7 @@ func (module *Module) generateNestedProtoMessageOutput(idx int, edgeNumbers []pr
 	if idx >= len(edgeNumbers)-1 {
 		return message
 	}
-	return fmt.Sprintf("%s\n%s", message, module.generateNestedProtoMessageOutput(idx+1, edgeNumbers, vn, valueGetter))
+	return fmt.Sprintf("%s\n%s", message, module.generateNestedProtoMessageOutput(idx+1, edgeNumbers, vn, valueGetter, paramName))
 }
 
 func (module *Module) generateNestedFieldConverter(
@@ -367,9 +373,10 @@ func (module *Module) generateNestedFieldConverter(
 	ix *importTracker,
 	valueGetter string,
 	vn *varNamer,
+	paramName string,
 ) (*paramContext, error) {
 	ix.ProtobufProtoPack = true
-	protopackMessage := module.generateNestedProtoMessageOutput(0, edgeNumbers, vn, valueGetter)
+	protopackMessage := module.generateNestedProtoMessageOutput(0, edgeNumbers, vn, valueGetter, paramName)
 	return &paramContext{
 		ConverterOutputName: vn.String(),
 		Converter:           protopackMessage,
@@ -382,6 +389,7 @@ type protopackMessageContext struct {
 	PreviousVnName string
 	VnName         string
 	ValueGetter    string
+	ParamName      string
 }
 type boolFieldContext struct {
 	FieldName  string

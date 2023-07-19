@@ -44,7 +44,6 @@ components:
         id:
           description: |2
              A unique book id.
-          format: int64
           type: string
         quotes:
           description: |2
@@ -53,8 +52,8 @@ components:
             type: string
           nullable: true
           type: array
-        shelf:
-          description: The shelf field.
+        shelfId:
+          description: The shelfId field.
           type: string
         title:
           description: |2
@@ -98,6 +97,9 @@ components:
     bookstore.v1.DeleteBookRequestInput:
       description: |2
          Request message for DeleteBook method.
+      properties:
+        book:
+          $ref: '#/components/schemas/bookstore.v1.Book'
       type: object
       x-speakeasy-name-override: DeleteBookRequest
     bookstore.v1.DeleteBookResponse:
@@ -169,7 +171,6 @@ components:
         id:
           description: |2
              A unique shelf id.
-          format: int64
           type: string
         search%5Bencoded%5D:
           description: |2
@@ -194,7 +195,6 @@ components:
         shelf:
           description: |2
              The ID of the shelf from which to retrieve a book.
-          format: int64
           type: string
       type: object
       x-speakeasy-name-override: UpdateBookRequest
@@ -287,7 +287,6 @@ paths:
           schema:
             description: |2
                The ID of the shelf to delete.
-            format: int64
             type: string
       requestBody:
         content:
@@ -317,7 +316,6 @@ paths:
           schema:
             description: |2
                The ID of the shelf on which to create a book.
-            format: int64
             type: string
       requestBody:
         content:
@@ -346,17 +344,14 @@ paths:
           name: shelf
           required: true
           schema:
-            description: |2
-               The ID of the shelf from which to delete a book.
-            format: int64
+            description: The shelfId field.
             type: string
         - in: path
           name: book
           required: true
           schema:
             description: |2
-               The ID of the book to delete.
-            format: int64
+               A unique book id.
             type: string
       requestBody:
         content:
@@ -386,7 +381,6 @@ paths:
           schema:
             description: |2
                The ID of the shelf from which to retrieve a book.
-            format: int64
             type: string
         - in: path
           name: book
@@ -421,7 +415,7 @@ paths:
           name: shelf
           required: true
           schema:
-            description: The shelf field.
+            description: The shelfId field.
             type: string
         - in: path
           name: book
@@ -429,7 +423,6 @@ paths:
           schema:
             description: |2
                A unique book id.
-            format: int64
             type: string
       requestBody:
         content:
