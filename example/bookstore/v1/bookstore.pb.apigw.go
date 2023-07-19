@@ -211,14 +211,9 @@ func _BookstoreService_DeleteShelf_APIGW_Decoder(ctx context.Context, input apig
 
 	vn0 := input.PathParam("0")
 
-	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "shelf is not a valid int: %s", err)
-	}
-
 	vn1 := protopack.Message{
-		protopack.Tag{Number: 1, Type: protopack.VarintType},
-		protopack.Varint(vn1tmp),
+		protopack.Tag{Number: 1, Type: protopack.BytesType},
+		protopack.String(vn0),
 	}
 
 	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
@@ -272,14 +267,9 @@ func _BookstoreService_CreateBook_APIGW_Decoder(ctx context.Context, input apigw
 
 	vn0 := input.PathParam("0")
 
-	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "shelf is not a valid int: %s", err)
-	}
-
 	vn1 := protopack.Message{
-		protopack.Tag{Number: 1, Type: protopack.VarintType},
-		protopack.Varint(vn1tmp),
+		protopack.Tag{Number: 1, Type: protopack.BytesType},
+		protopack.String(vn0),
 	}
 
 	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
@@ -339,14 +329,9 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 
 	vn0 := input.PathParam("0")
 
-	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "shelf is not a valid int: %s", err)
-	}
-
 	vn1 := protopack.Message{
-		protopack.Tag{Number: 1, Type: protopack.VarintType},
-		protopack.Varint(vn1tmp),
+		protopack.Tag{Number: 1, Type: protopack.BytesType},
+		protopack.String(vn0),
 	}
 
 	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
@@ -417,10 +402,12 @@ func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw
 
 	vn0 := input.PathParam("0")
 
+	// book.shelf_id
 	vn1 := protopack.Message{
-		protopack.Tag{Number: 1, Type: protopack.BytesType},
+		protopack.Tag{Number: 5, Type: protopack.BytesType},
 		protopack.String(vn0),
 	}
+	// book.shelf_id
 	vn2 := protopack.Message{
 		protopack.Tag{Number: 1, Type: protopack.BytesType},
 		protopack.Bytes(vn1.Marshal()),
@@ -433,10 +420,12 @@ func _BookstoreService_DeleteBook_APIGW_Decoder(ctx context.Context, input apigw
 
 	vn3 := input.PathParam("1")
 
+	// book.id
 	vn4 := protopack.Message{
 		protopack.Tag{Number: 1, Type: protopack.BytesType},
 		protopack.String(vn3),
 	}
+	// book.id
 	vn5 := protopack.Message{
 		protopack.Tag{Number: 1, Type: protopack.BytesType},
 		protopack.Bytes(vn4.Marshal()),
@@ -493,10 +482,12 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 
 	vn0 := input.PathParam("0")
 
+	// book.shelf_id
 	vn1 := protopack.Message{
-		protopack.Tag{Number: 2, Type: protopack.BytesType},
+		protopack.Tag{Number: 5, Type: protopack.BytesType},
 		protopack.String(vn0),
 	}
+	// book.shelf_id
 	vn2 := protopack.Message{
 		protopack.Tag{Number: 2, Type: protopack.BytesType},
 		protopack.Bytes(vn1.Marshal()),
@@ -509,10 +500,12 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 
 	vn3 := input.PathParam("1")
 
+	// book.id
 	vn4 := protopack.Message{
-		protopack.Tag{Number: 2, Type: protopack.BytesType},
+		protopack.Tag{Number: 1, Type: protopack.BytesType},
 		protopack.String(vn3),
 	}
+	// book.id
 	vn5 := protopack.Message{
 		protopack.Tag{Number: 2, Type: protopack.BytesType},
 		protopack.Bytes(vn4.Marshal()),

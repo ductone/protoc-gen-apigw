@@ -35,7 +35,7 @@ func TestGinRouter(t *testing.T) {
 	w = httptest.NewRecorder()
 	engine.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/shelf", jsonify(t, map[string]interface{}{
 		"shelf": map[string]interface{}{
-			"id":                  123,
+			"id":                  "123",
 			"theme":               "test",
 			"search[decoded]":     "sd",
 			"search%5Bencoded%5D": "se",
@@ -45,7 +45,7 @@ func TestGinRouter(t *testing.T) {
 	rb := &bookstore_v1.CreateShelfResponse{}
 	err := protojson.Unmarshal(w.Body.Bytes(), rb)
 	require.NoError(t, err)
-	require.True(t, proto.Equal(&bookstore_v1.Shelf{Id: 123, Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"}, rb.Shelf))
+	require.True(t, proto.Equal(&bookstore_v1.Shelf{Id: "123", Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"}, rb.Shelf))
 
 	w = httptest.NewRecorder()
 	engine.ServeHTTP(w, httptest.NewRequest(http.MethodDelete, "/shelves/123", nil))
@@ -73,10 +73,10 @@ type mockBookstore struct {
 var _ bookstore_v1.BookstoreServiceServer = (*mockBookstore)(nil)
 
 func (mb *mockBookstore) CreateShelf(ctx context.Context, req *bookstore_v1.CreateShelfRequest) (*bookstore_v1.CreateShelfResponse, error) {
-	//	require.Equal(mb.t, &bookstore_v1.Shelf{Id: 123, Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"}, req.Shelf)
-	require.True(mb.t, proto.Equal(&bookstore_v1.Shelf{Id: 123, Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"}, req.Shelf))
+	// require.Equal(mb.t, &bookstore_v1.Shelf{Id: "123", Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"}, req.Shelf)
+	require.True(mb.t, proto.Equal(&bookstore_v1.Shelf{Id: "123", Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"}, req.Shelf))
 	return &bookstore_v1.CreateShelfResponse{
-		Shelf: &bookstore_v1.Shelf{Id: 123, Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"},
+		Shelf: &bookstore_v1.Shelf{Id: "123", Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"},
 	}, nil
 }
 
@@ -85,13 +85,13 @@ func (mb *mockBookstore) DeleteShelf(ctx context.Context, req *bookstore_v1.Dele
 	if err != nil {
 		return nil, err
 	}
-	require.Equal(mb.t, int64(123), req.Shelf)
+	require.Equal(mb.t, "123", req.Shelf)
 	return &bookstore_v1.DeleteShelfResponse{}, nil
 }
 
 // /shelves/{shelf}/books/{book}
 func (mb *mockBookstore) DeleteBook(ctx context.Context, req *bookstore_v1.DeleteBookRequest) (*bookstore_v1.DeleteBookResponse, error) {
-	require.Equal(mb.t, int64(123), req.Book.ShelfId)
-	require.Equal(mb.t, int64(456), req.Book.Id)
+	require.Equal(mb.t, "123", req.Book.ShelfId)
+	require.Equal(mb.t, "456", req.Book.Id)
 	return &bookstore_v1.DeleteBookResponse{}, nil
 }

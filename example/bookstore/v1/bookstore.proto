@@ -130,7 +130,7 @@ message GetAuthorResponse {
 // A shelf resource.
 message Shelf {
   // A unique shelf id.
-  int64 id = 1;
+  string id = 1;
   // A theme of the shelf (fiction, poetry, etc).
   string theme = 2;
 
@@ -147,7 +147,7 @@ message Book {
     terraform_entity: {name: "Book"}
   };
   // A unique book id.
-  int64 id = 1 [(apigw.v1.field).field_options = {required_spec: true}];
+  string id = 1 [(apigw.v1.field).field_options = {required_spec: true}];
 
   // An author of the book.
   string author = 2;
@@ -155,7 +155,7 @@ message Book {
   string title = 3;
   // Quotes from the book.
   repeated string quotes = 4;
-  int64 shelf_id = 5;
+  string shelf_id = 5;
 }
 
 // An author resource.
@@ -190,25 +190,25 @@ message CreateShelfRequest {
 // Request message for GetShelf method.
 message GetShelfRequest {
   // The ID of the shelf resource to retrieve.
-  int64 shelf = 1;
+  string shelf = 1;
 }
 
 // Request message for DeleteShelf method.
 message DeleteShelfRequest {
   // The ID of the shelf to delete.
-  int64 shelf = 1;
+  string shelf = 1;
 }
 
 // Request message for ListBooks method.
 message ListBooksRequest {
   // ID of the shelf which books to list.
-  int64 shelf = 1;
+  string shelf = 1;
 }
 
 // Request message for CreateBook method.
 message CreateBookRequest {
   // The ID of the shelf on which to create a book.
-  int64 shelf = 1;
+  string shelf = 1;
   // A book resource to create on the shelf.
   Book book = 2;
 }
@@ -216,7 +216,7 @@ message CreateBookRequest {
 // Request message for GetBook method.
 message GetBookRequest {
   // The ID of the shelf from which to retrieve a book.
-  int64 shelf = 1;
+  string shelf = 1;
   // The ID of the book to retrieve.
   int64 book = 2;
   bool include_author = 3;
@@ -225,7 +225,7 @@ message GetBookRequest {
 // Request message for UpdateBook method
 message UpdateBookRequest {
   // The ID of the shelf from which to retrieve a book.
-  int64 shelf = 1;
+  string shelf = 1;
   // A book resource to update on the shelf.
   Book book = 2;
 }
