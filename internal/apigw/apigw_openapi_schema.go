@@ -44,11 +44,13 @@ func WellKnownType(m pgs.Message) pgs.WellKnownType {
 	return pgs.UnknownWKT
 }
 
-func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool) *dm_base.SchemaProxy {
+func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool, readOnly bool) *dm_base.SchemaProxy {
 	if IsWellKnown(m) {
 		// TODO(pquera): we may want to customize this some day,
 		// but right now WKTs are just rendered inline, and not a Ref.
-		return dm_base.CreateSchemaProxy(sc.schemaForWKT(WellKnownType(m)))
+		s := sc.schemaForWKT(WellKnownType(m))
+		s.ReadOnly = readOnly
+		return dm_base.CreateSchemaProxy(s)
 	}
 
 	terraformEntityName := ""
@@ -153,10 +155,10 @@ func (sc *schemaContainer) Enum(e pgs.Enum) *dm_base.Schema {
 	}
 }
 
-func (sc *schemaContainer) FieldTypeElem(fte pgs.FieldTypeElem) *dm_base.SchemaProxy {
+func (sc *schemaContainer) FieldTypeElem(fte pgs.FieldTypeElem, readOnly bool) *dm_base.SchemaProxy {
 	switch {
 	case fte.IsEmbed():
-		return sc.Message(fte.Embed(), nil, nil)
+		return sc.Message(fte.Embed(), nil, nil, readOnly)
 	case fte.IsEnum():
 		return dm_base.CreateSchemaProxy(sc.Enum(fte.Enum()))
 	default:
@@ -180,7 +182,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	}
 	switch {
 	case f.Type().IsRepeated():
-		fteSchema := sc.FieldTypeElem(f.Type().Element())
+		fteSchema := sc.FieldTypeElem(f.Type().Element(), readOnly)
 		arraySchema := &dm_base.Schema{
 			Type:        []string{"array"},
 			Description: description,
@@ -191,7 +193,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		}
 		return dm_base.CreateSchemaProxy(arraySchema)
 	case f.Type().IsMap():
-		fteSchema := sc.FieldTypeElem(f.Type().Element())
+		fteSchema := sc.FieldTypeElem(f.Type().Element(), readOnly)
 		mv := &dm_base.Schema{
 			Type:                 []string{"object"},
 			Deprecated:           deprecated,
@@ -210,7 +212,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
 		// todo: nested filters
-		return sc.Message(f.Type().Embed(), nil, nullable)
+		return sc.Message(f.Type().Embed(), nil, nullable, readOnly)
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())
 		sv.ReadOnly = readOnly
