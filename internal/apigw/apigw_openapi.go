@@ -212,7 +212,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		}
 	}
 	for _, sd := range mt.messages {
-		_ = sc.Message(sd.msg, sd.filter, nil)
+		_ = sc.Message(sd.msg, sd.filter, nil, false)
 	}
 	components := &dm_v3.Components{
 		Schemas: sc.schemas,

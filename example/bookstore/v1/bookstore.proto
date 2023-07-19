@@ -4,6 +4,7 @@ package bookstore.v1;
 
 import "apigw/v1/apigw.proto";
 import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/ductone/protoc-gen-apigw/example/bookstore/v1";
 
@@ -176,6 +177,7 @@ message Author {
   string metadata = 5 [(apigw.v1.field).field_options = {
     read_only_spec: true
   }];
+  google.protobuf.Timestamp created_at = 6 [(apigw.v1.field).field_options = {read_only_spec: true }];
 
 }
 

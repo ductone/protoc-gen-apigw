@@ -5,6 +5,10 @@ components:
       description: |2
          An author resource.
       properties:
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
         firstName:
           description: The firstName field.
           type: string
