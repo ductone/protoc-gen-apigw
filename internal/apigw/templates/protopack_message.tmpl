@@ -1,3 +1,4 @@
+// {{.ParamName}}
 {{.VnName}} := protopack.Message{
     protopack.Tag{Number: {{- .Number -}}, Type: protopack.BytesType},
     protopack.Bytes({{.PreviousVnName}}.Marshal()),
