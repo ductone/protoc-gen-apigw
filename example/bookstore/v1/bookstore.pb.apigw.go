@@ -82,11 +82,11 @@ var apigw_desc_BookstoreServiceServer = apigw_v1.ServiceDesc{
 			Decoder: _BookstoreService_UpdateBook_APIGW_Decoder,
 		},
 		{
-			Name:    BookstoreService_GetAuthorPerson_FullMethodName,
+			Name:    BookstoreService_GetAuthor_FullMethodName,
 			Method:  http.MethodGet,
 			Route:   "/authors/{author}",
-			Handler: _BookstoreService_GetAuthorPerson_APIGW_Handler,
-			Decoder: _BookstoreService_GetAuthorPerson_APIGW_Decoder,
+			Handler: _BookstoreService_GetAuthor_APIGW_Handler,
+			Decoder: _BookstoreService_GetAuthor_APIGW_Decoder,
 		},
 	},
 }
@@ -519,20 +519,20 @@ func _BookstoreService_UpdateBook_APIGW_Decoder(ctx context.Context, input apigw
 	return nil
 }
 
-func _BookstoreService_GetAuthorPerson_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
-	in := new(GetAuthorPersonRequest)
+func _BookstoreService_GetAuthor_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
+	in := new(GetAuthorRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BookstoreServiceServer).GetAuthorPerson(ctx, in)
+		return srv.(BookstoreServiceServer).GetAuthor(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BookstoreService_GetAuthorPerson_FullMethodName,
+		FullMethod: BookstoreService_GetAuthor_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreServiceServer).GetAuthorPerson(ctx, req.(*GetAuthorPersonRequest))
+		return srv.(BookstoreServiceServer).GetAuthor(ctx, req.(*GetAuthorRequest))
 	}
 
 	rv, err := interceptor(ctx, in, info, handler)
@@ -542,7 +542,7 @@ func _BookstoreService_GetAuthorPerson_APIGW_Handler(srv interface{}, ctx contex
 	return rv.(proto.Message), nil
 }
 
-func _BookstoreService_GetAuthorPerson_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+func _BookstoreService_GetAuthor_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
 	var err error
 	_ = err
 

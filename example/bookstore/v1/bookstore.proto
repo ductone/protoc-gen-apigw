@@ -89,7 +89,7 @@ service BookstoreService {
   }
 
   // Returns a specific author.
-  rpc GetAuthorPerson(GetAuthorPersonRequest) returns (GetAuthorPersonResponse) {
+  rpc GetAuthor(GetAuthorRequest) returns (GetAuthorResponse) {
     option (apigw.v1.method).operations = {
       method: "GET"
       route: "/authors/{author}"
@@ -119,8 +119,8 @@ message UpdateBookResponse {
   Book book = 1;
 }
 
-message GetAuthorPersonResponse {
-  AuthorPerson author = 1;
+message GetAuthorResponse {
+  Author author = 1;
 
   oneof genre {
     bool fiction = 2;
@@ -163,7 +163,7 @@ message Book {
 }
 
 // An author resource.
-message AuthorPerson {
+message Author {
   // A unique author id.
   int64 id = 1;
   enum Gender {
@@ -240,8 +240,8 @@ message DeleteBookRequest {
   Book book = 1;
 }
 
-// Request message for GetAuthorPerson method.
-message GetAuthorPersonRequest {
+// Request message for GetAuthor method.
+message GetAuthorRequest {
   // The ID of the author resource to retrieve.
   int64 author = 1;
 }
