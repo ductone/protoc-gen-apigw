@@ -100,7 +100,7 @@ func (module *Module) getOperationTags(prefix string, operation *apigw_v1.Operat
 		return []string{operation.Group}
 	}
 
-	return []string{prefix}
+	return []string{strings.Join(camelcase.Split(prefix), " ")}
 }
 
 func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *msgTracker) (*route, *dm_v3.Operation, *dm_v3.Components, error) {
