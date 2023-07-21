@@ -7,7 +7,6 @@ require (
 	github.com/ductone/protoc-gen-apigw/routers/ginapi v0.0.0-20230719224916-5119b8509632
 	github.com/fatih/camelcase v1.0.0
 	github.com/gin-gonic/gin v1.9.1
-	github.com/golang/protobuf v1.5.3
 	github.com/lyft/protoc-gen-star v0.6.2
 	github.com/pb33f/libopenapi v0.9.4
 	github.com/pb33f/libopenapi-validator v0.0.10
@@ -28,6 +27,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect

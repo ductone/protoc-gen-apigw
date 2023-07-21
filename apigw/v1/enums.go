@@ -5,13 +5,13 @@ import "strings"
 func EnumValuesAsString(e map[string]int32) string {
 	sb := strings.Builder{}
 	first := true
-	for k, _ := range e {
+	for k := range e {
 		if first {
 			first = false
 		} else {
-			sb.WriteString(", ")
+			_, _ = sb.WriteString(", ")
 		}
-		sb.WriteString(k)
+		_, _ = sb.WriteString(k)
 	}
 	return sb.String()
 }
