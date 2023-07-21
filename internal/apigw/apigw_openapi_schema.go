@@ -7,7 +7,11 @@ import (
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 	pgs "github.com/lyft/protoc-gen-star"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
+
+var caser = cases.Title(language.AmericanEnglish)
 
 const FieldMaskWKT pgs.WellKnownType = "FieldMask"
 
@@ -84,6 +88,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		Properties: map[string]*dm_base.SchemaProxy{},
 		Nullable:   nullable,
 		Deprecated: deprecated,
+		Title:      m.Name().Transform(caser.String, caser.String, " ").String(),
 		Extensions: map[string]any{
 			"x-speakeasy-name-override": m.Name().UpperCamelCase().String(),
 		},

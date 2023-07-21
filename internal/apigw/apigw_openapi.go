@@ -152,6 +152,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	outputRef := mt.Add(outObj)
 	op := &dm_v3.Operation{
 		OperationId: nicerFQN(method),
+		Summary:     method.Name().Transform(caser.String, caser.String, " ").String(),
 		Description: methodDescription,
 		Deprecated:  oasBool(method.Descriptor().GetOptions().GetDeprecated()),
 		Responses: &dm_v3.Responses{
