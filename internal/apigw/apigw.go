@@ -18,7 +18,7 @@ func New() pgs.Module {
 }
 
 const moduleName = "apigw"
-const version = "0.1.24"
+const version = "0.1.25"
 
 type Module struct {
 	*pgs.ModuleBase
