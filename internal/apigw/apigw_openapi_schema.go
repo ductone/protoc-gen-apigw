@@ -58,7 +58,11 @@ func (sc *schemaContainer) messageDocName(title string, m pgs.Message) string {
 		return title
 	}
 
-	ret := m.Name().Transform(caser.String, caser.String, " ").String()
+	return transformName(m.Name())
+}
+
+func transformName(name pgs.Name) string {
+	ret := name.Transform(caser.String, caser.String, " ").String()
 	ret = strings.Join(camelcase.Split(ret), " ")
 	ret = space.ReplaceAllString(ret, " ")
 	return ret

@@ -89,10 +89,7 @@ func (module *Module) operationSummary(operation *apigw_v1.Operation, method pgs
 		return operation.Summary
 	}
 
-	ret := method.Name().Transform(caser.String, caser.String, " ").String()
-	ret = strings.Join(camelcase.Split(ret), " ")
-	ret = space.ReplaceAllString(ret, " ")
-	return ret
+	return transformName(method.Name())
 }
 
 func (module *Module) getOpGroup(prefix string, operation *apigw_v1.Operation) string {
