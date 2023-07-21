@@ -17,6 +17,7 @@ service BookstoreService {
     option (apigw.v1.method).operations = {
       method: "GET"
       route: "/shelves"
+      group: "Shelves"
     };
   }
   // Creates a new shelf in the bookstore.
@@ -25,6 +26,7 @@ service BookstoreService {
       method: "POST"
       route: "/shelf"
       summary: "Create a New Shelf"
+      group: "Shelves"
     };
   }
 
@@ -33,7 +35,9 @@ service BookstoreService {
     option (apigw.v1.method).operations = {
       method: "DELETE"
       route: "/shelves/{shelf}"
+      group: "Shelves"
     };
+
   }
 
   // Creates a new book.
@@ -45,6 +49,7 @@ service BookstoreService {
         type: TERRAFORM_ENTITY_METHOD_TYPE_CREATE
         name: "Book"
       }
+      group: "Books"
     };
   }
 
@@ -63,6 +68,7 @@ service BookstoreService {
         type: TERRAFORM_ENTITY_METHOD_TYPE_READ
         name: "Book"
       }
+      group: "Books"
     };
   }
   // Deletes a book from a shelf.
@@ -74,6 +80,7 @@ service BookstoreService {
         type: TERRAFORM_ENTITY_METHOD_TYPE_DELETE
         name: "Book"
       }
+      group: "Books"
     };
   }
 
@@ -85,6 +92,7 @@ service BookstoreService {
         type: TERRAFORM_ENTITY_METHOD_TYPE_UPDATE
         name: "Book"
       }
+      group: "Books"
     };
   }
 
@@ -93,6 +101,7 @@ service BookstoreService {
     option (apigw.v1.method).operations = {
       method: "GET"
       route: "/authors/{author}"
+      group: "Authors"
     };
   }
 }

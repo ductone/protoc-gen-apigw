@@ -251,7 +251,7 @@ paths:
           description: Successful response
       summary: Get Author
       tags:
-        - Bookstore
+        - Authors
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: GetAuthor
   /shelf:
@@ -273,7 +273,7 @@ paths:
           description: Successful response
       summary: Create a New Shelf
       tags:
-        - Bookstore
+        - Shelves
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: CreateShelf
   /shelves:
@@ -291,7 +291,7 @@ paths:
              Response to ListShelves call.
       summary: List Shelves
       tags:
-        - Bookstore
+        - Shelves
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: ListShelves
   /shelves/{shelf}:
@@ -321,7 +321,7 @@ paths:
           description: Successful response
       summary: Delete Shelf
       tags:
-        - Bookstore
+        - Shelves
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: DeleteShelf
   /shelves/{shelf}/books:
@@ -351,7 +351,7 @@ paths:
           description: Successful response
       summary: Create Book
       tags:
-        - Bookstore
+        - Books
       x-speakeasy-entity-operation: Book#create
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: CreateBook
@@ -388,7 +388,7 @@ paths:
           description: Successful response
       summary: Delete Book
       tags:
-        - Bookstore
+        - Books
       x-speakeasy-entity-operation: Book#delete
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: DeleteBook
@@ -426,7 +426,7 @@ paths:
           description: Successful response
       summary: Get Book
       tags:
-        - Bookstore
+        - Books
       x-speakeasy-entity-operation: Book#read
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: GetBook
@@ -461,7 +461,7 @@ paths:
           description: Successful response
       summary: Update Book
       tags:
-        - Bookstore
+        - Books
       x-speakeasy-entity-operation: Book#update
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: UpdateBook

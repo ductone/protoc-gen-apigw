@@ -87,6 +87,7 @@ message Operation {
   repeated ResponseExample response_examples = 7;
   TerraformEntity terraform_entity = 8;
   string summary = 9;
+  string group = 10;
 }
 
 message RequestExample {

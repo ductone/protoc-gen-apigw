@@ -95,6 +95,14 @@ func (module *Module) operationSummary(operation *apigw_v1.Operation, method pgs
 	return ret
 }
 
+func (module *Module) getOperationTags(prefix string, operation *apigw_v1.Operation) []string {
+	if operation.Group != "" {
+		return []string{operation.Group}
+	}
+
+	return []string{prefix}
+}
+
 func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *msgTracker) (*route, *dm_v3.Operation, *dm_v3.Components, error) {
 	mext := &apigw_v1.MethodOptions{}
 	_, err := method.Extension(apigw_v1.E_Method, mext)
@@ -152,7 +160,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		methodName := fqn[len(fqn)-1]
 		// Remove `Service` from method name
 		prefix = strings.ReplaceAll(prefix, "Service", "")
-		extensions["tags"] = []string{strings.Join(camelcase.Split(prefix), " ")}
+		extensions["tags"] = module.getOperationTags(prefix, operation)
 		extensions["x-speakeasy-group"] = prefix
 		extensions["x-speakeasy-name-override"] = methodName
 	}
