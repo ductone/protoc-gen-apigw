@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/fatih/camelcase"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
@@ -83,6 +84,17 @@ func (module *Module) storeCanonicalRoute(route string, tokens []apigw_v1.RouteT
 	return routeData
 }
 
+func (module *Module) operationSummary(operation *apigw_v1.Operation, method pgs.Method) string {
+	if operation.Summary != "" {
+		return operation.Summary
+	}
+
+	ret := method.Name().Transform(caser.String, caser.String, " ").String()
+	ret = strings.Join(camelcase.Split(ret), " ")
+	ret = space.ReplaceAllString(ret, " ")
+	return ret
+}
+
 func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *msgTracker) (*route, *dm_v3.Operation, *dm_v3.Components, error) {
 	mext := &apigw_v1.MethodOptions{}
 	_, err := method.Extension(apigw_v1.E_Method, mext)
@@ -152,7 +164,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	outputRef := mt.Add(outObj)
 	op := &dm_v3.Operation{
 		OperationId: nicerFQN(method),
-		Summary:     method.Name().Transform(caser.String, caser.String, " ").String(),
+		Summary:     module.operationSummary(operation, method),
 		Description: methodDescription,
 		Deprecated:  oasBool(method.Descriptor().GetOptions().GetDeprecated()),
 		Responses: &dm_v3.Responses{

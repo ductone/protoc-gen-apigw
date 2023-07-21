@@ -1,7 +1,7 @@
 ---
 components:
   schemas:
-    bookstore.v1.Author:
+    bookstore.v1.AuthorPerson:
       description: |2
          An author resource.
       properties:
@@ -31,9 +31,9 @@ components:
           description: The metadata field.
           readOnly: true
           type: string
-      title: Author
+      title: Author Person
       type: object
-      x-speakeasy-name-override: Author
+      x-speakeasy-name-override: AuthorPerson
     bookstore.v1.Book:
       description: |2
          A book resource.
@@ -125,33 +125,33 @@ components:
       title: Delete Shelf Response
       type: object
       x-speakeasy-name-override: DeleteShelfResponse
-    bookstore.v1.GetAuthorResponse:
+    bookstore.v1.GetAuthorPersonResponse:
       description: |
-        The GetAuthorResponse message.
+        The GetAuthorPersonResponse message.
 
         This message contains a oneof named genre. Only a single field of the following list may be set at a time:
           - fiction
           - nonfiction
       properties:
         author:
-          $ref: '#/components/schemas/bookstore.v1.Author'
+          $ref: '#/components/schemas/bookstore.v1.AuthorPerson'
         fiction:
           description: |-
             The fiction field.
             This field is part of the `genre` oneof.
-            See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
+            See the documentation for `bookstore.v1.GetAuthorPersonResponse` for more details.
           nullable: true
           type: boolean
         nonfiction:
           description: |-
             The nonfiction field.
             This field is part of the `genre` oneof.
-            See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
+            See the documentation for `bookstore.v1.GetAuthorPersonResponse` for more details.
           nullable: true
           type: boolean
-      title: Get Author Response
+      title: Get Author Person Response
       type: object
-      x-speakeasy-name-override: GetAuthorResponse
+      x-speakeasy-name-override: GetAuthorPersonResponse
     bookstore.v1.GetBookResponse:
       description: The GetBookResponse message.
       properties:
@@ -197,7 +197,7 @@ components:
           description: |2
              A theme of the shelf (fiction, poetry, etc).
           type: string
-      title: Shelf
+      title: Bookshelf
       type: object
       x-speakeasy-name-override: Shelf
     bookstore.v1.UpdateBookRequestInput:
@@ -232,7 +232,7 @@ paths:
     get:
       description: |2
          Returns a specific author.
-      operationId: bookstore.v1.BookstoreService.GetAuthor
+      operationId: bookstore.v1.BookstoreService.GetAuthorPerson
       parameters:
         - in: path
           name: author
@@ -247,13 +247,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/bookstore.v1.GetAuthorResponse'
+                $ref: '#/components/schemas/bookstore.v1.GetAuthorPersonResponse'
           description: Successful response
-      summary: Get Author
+      summary: Get Author Person
       tags:
         - Bookstore
       x-speakeasy-group: Bookstore
-      x-speakeasy-name-override: GetAuthor
+      x-speakeasy-name-override: GetAuthorPerson
   /shelf:
     post:
       description: |2
@@ -271,7 +271,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.CreateShelfResponse'
           description: Successful response
-      summary: Create Shelf
+      summary: Create a New Shelf
       tags:
         - Bookstore
       x-speakeasy-group: Bookstore

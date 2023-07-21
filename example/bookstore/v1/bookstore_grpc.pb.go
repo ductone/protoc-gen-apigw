@@ -19,14 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	BookstoreService_ListShelves_FullMethodName = "/bookstore.v1.BookstoreService/ListShelves"
-	BookstoreService_CreateShelf_FullMethodName = "/bookstore.v1.BookstoreService/CreateShelf"
-	BookstoreService_DeleteShelf_FullMethodName = "/bookstore.v1.BookstoreService/DeleteShelf"
-	BookstoreService_CreateBook_FullMethodName  = "/bookstore.v1.BookstoreService/CreateBook"
-	BookstoreService_GetBook_FullMethodName     = "/bookstore.v1.BookstoreService/GetBook"
-	BookstoreService_DeleteBook_FullMethodName  = "/bookstore.v1.BookstoreService/DeleteBook"
-	BookstoreService_UpdateBook_FullMethodName  = "/bookstore.v1.BookstoreService/UpdateBook"
-	BookstoreService_GetAuthor_FullMethodName   = "/bookstore.v1.BookstoreService/GetAuthor"
+	BookstoreService_ListShelves_FullMethodName     = "/bookstore.v1.BookstoreService/ListShelves"
+	BookstoreService_CreateShelf_FullMethodName     = "/bookstore.v1.BookstoreService/CreateShelf"
+	BookstoreService_DeleteShelf_FullMethodName     = "/bookstore.v1.BookstoreService/DeleteShelf"
+	BookstoreService_CreateBook_FullMethodName      = "/bookstore.v1.BookstoreService/CreateBook"
+	BookstoreService_GetBook_FullMethodName         = "/bookstore.v1.BookstoreService/GetBook"
+	BookstoreService_DeleteBook_FullMethodName      = "/bookstore.v1.BookstoreService/DeleteBook"
+	BookstoreService_UpdateBook_FullMethodName      = "/bookstore.v1.BookstoreService/UpdateBook"
+	BookstoreService_GetAuthorPerson_FullMethodName = "/bookstore.v1.BookstoreService/GetAuthorPerson"
 )
 
 // BookstoreServiceClient is the client API for BookstoreService service.
@@ -47,7 +47,7 @@ type BookstoreServiceClient interface {
 	DeleteBook(ctx context.Context, in *DeleteBookRequest, opts ...grpc.CallOption) (*DeleteBookResponse, error)
 	UpdateBook(ctx context.Context, in *UpdateBookRequest, opts ...grpc.CallOption) (*UpdateBookResponse, error)
 	// Returns a specific author.
-	GetAuthor(ctx context.Context, in *GetAuthorRequest, opts ...grpc.CallOption) (*GetAuthorResponse, error)
+	GetAuthorPerson(ctx context.Context, in *GetAuthorPersonRequest, opts ...grpc.CallOption) (*GetAuthorPersonResponse, error)
 }
 
 type bookstoreServiceClient struct {
@@ -121,9 +121,9 @@ func (c *bookstoreServiceClient) UpdateBook(ctx context.Context, in *UpdateBookR
 	return out, nil
 }
 
-func (c *bookstoreServiceClient) GetAuthor(ctx context.Context, in *GetAuthorRequest, opts ...grpc.CallOption) (*GetAuthorResponse, error) {
-	out := new(GetAuthorResponse)
-	err := c.cc.Invoke(ctx, BookstoreService_GetAuthor_FullMethodName, in, out, opts...)
+func (c *bookstoreServiceClient) GetAuthorPerson(ctx context.Context, in *GetAuthorPersonRequest, opts ...grpc.CallOption) (*GetAuthorPersonResponse, error) {
+	out := new(GetAuthorPersonResponse)
+	err := c.cc.Invoke(ctx, BookstoreService_GetAuthorPerson_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ type BookstoreServiceServer interface {
 	DeleteBook(context.Context, *DeleteBookRequest) (*DeleteBookResponse, error)
 	UpdateBook(context.Context, *UpdateBookRequest) (*UpdateBookResponse, error)
 	// Returns a specific author.
-	GetAuthor(context.Context, *GetAuthorRequest) (*GetAuthorResponse, error)
+	GetAuthorPerson(context.Context, *GetAuthorPersonRequest) (*GetAuthorPersonResponse, error)
 	mustEmbedUnimplementedBookstoreServiceServer()
 }
 
@@ -177,8 +177,8 @@ func (UnimplementedBookstoreServiceServer) DeleteBook(context.Context, *DeleteBo
 func (UnimplementedBookstoreServiceServer) UpdateBook(context.Context, *UpdateBookRequest) (*UpdateBookResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBook not implemented")
 }
-func (UnimplementedBookstoreServiceServer) GetAuthor(context.Context, *GetAuthorRequest) (*GetAuthorResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAuthor not implemented")
+func (UnimplementedBookstoreServiceServer) GetAuthorPerson(context.Context, *GetAuthorPersonRequest) (*GetAuthorPersonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuthorPerson not implemented")
 }
 func (UnimplementedBookstoreServiceServer) mustEmbedUnimplementedBookstoreServiceServer() {}
 
@@ -319,20 +319,20 @@ func _BookstoreService_UpdateBook_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BookstoreService_GetAuthor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAuthorRequest)
+func _BookstoreService_GetAuthorPerson_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAuthorPersonRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BookstoreServiceServer).GetAuthor(ctx, in)
+		return srv.(BookstoreServiceServer).GetAuthorPerson(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BookstoreService_GetAuthor_FullMethodName,
+		FullMethod: BookstoreService_GetAuthorPerson_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreServiceServer).GetAuthor(ctx, req.(*GetAuthorRequest))
+		return srv.(BookstoreServiceServer).GetAuthorPerson(ctx, req.(*GetAuthorPersonRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -373,8 +373,8 @@ var BookstoreService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _BookstoreService_UpdateBook_Handler,
 		},
 		{
-			MethodName: "GetAuthor",
-			Handler:    _BookstoreService_GetAuthor_Handler,
+			MethodName: "GetAuthorPerson",
+			Handler:    _BookstoreService_GetAuthorPerson_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
