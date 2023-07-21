@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/fatih/camelcase"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
@@ -83,6 +84,22 @@ func (module *Module) storeCanonicalRoute(route string, tokens []apigw_v1.RouteT
 	return routeData
 }
 
+func (module *Module) operationSummary(operation *apigw_v1.Operation, method pgs.Method) string {
+	if operation.Summary != "" {
+		return operation.Summary
+	}
+
+	return transformName(method.Name())
+}
+
+func (module *Module) getOpGroup(prefix string, operation *apigw_v1.Operation) string {
+	if operation.Group != "" {
+		return operation.Group
+	}
+
+	return strings.Join(camelcase.Split(prefix), " ")
+}
+
 func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *msgTracker) (*route, *dm_v3.Operation, *dm_v3.Components, error) {
 	mext := &apigw_v1.MethodOptions{}
 	_, err := method.Extension(apigw_v1.E_Method, mext)
@@ -140,7 +157,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		methodName := fqn[len(fqn)-1]
 		// Remove `Service` from method name
 		prefix = strings.ReplaceAll(prefix, "Service", "")
-		extensions["tags"] = []string{prefix}
+		extensions["tags"] = []string{module.getOpGroup(prefix, operation)}
 		extensions["x-speakeasy-group"] = prefix
 		extensions["x-speakeasy-name-override"] = methodName
 	}
@@ -152,6 +169,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	outputRef := mt.Add(outObj)
 	op := &dm_v3.Operation{
 		OperationId: nicerFQN(method),
+		Summary:     module.operationSummary(operation, method),
 		Description: methodDescription,
 		Deprecated:  oasBool(method.Descriptor().GetOptions().GetDeprecated()),
 		Responses: &dm_v3.Responses{

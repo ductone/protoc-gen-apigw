@@ -14,12 +14,13 @@ package index
 
 import (
 	"fmt"
+	"strings"
+	"sync"
+
 	"github.com/pb33f/libopenapi/utils"
 	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/yaml.v3"
-	"strings"
-	"sync"
 )
 
 // NewSpecIndexWithConfig will create a new index of an OpenAPI or Swagger spec. It uses the same logic as NewSpecIndex
@@ -38,7 +39,7 @@ func NewSpecIndexWithConfig(rootNode *yaml.Node, config *SpecIndexConfig) *SpecI
 		return index
 	}
 	boostrapIndexCollections(rootNode, index)
-	return createNewIndex(rootNode, index)
+	return createNewIndex(rootNode, index, config.AvoidBuildIndex)
 }
 
 // NewSpecIndex will create a new index of an OpenAPI or Swagger spec. It's not resolved or converted into anything
@@ -54,10 +55,10 @@ func NewSpecIndex(rootNode *yaml.Node) *SpecIndex {
 	index := new(SpecIndex)
 	index.config = CreateOpenAPIIndexConfig()
 	boostrapIndexCollections(rootNode, index)
-	return createNewIndex(rootNode, index)
+	return createNewIndex(rootNode, index, false)
 }
 
-func createNewIndex(rootNode *yaml.Node, index *SpecIndex) *SpecIndex {
+func createNewIndex(rootNode *yaml.Node, index *SpecIndex, avoidBuildOut bool) *SpecIndex {
 	// there is no node! return an empty index.
 	if rootNode == nil {
 		return index
@@ -81,6 +82,23 @@ func createNewIndex(rootNode *yaml.Node, index *SpecIndex) *SpecIndex {
 	index.ExtractExternalDocuments(index.root)
 	index.GetPathCount()
 
+	// build out the index.
+	if !avoidBuildOut {
+		index.BuildIndex()
+	}
+
+	// do a copy!
+	index.config.seenRemoteSources.Range(func(k, v any) bool {
+		index.seenRemoteSources[k.(string)] = v.(*yaml.Node)
+		return true
+	})
+	return index
+}
+
+// BuildIndex will run all of the count operations required to build up maps of everything. It's what makes the index
+// useful for looking up things, the count operations are all run in parallel and then the final calculations are run
+// the index is ready.
+func (index *SpecIndex) BuildIndex() {
 	countFuncs := []func() int{
 		index.GetOperationCount,
 		index.GetComponentSchemaCount,
@@ -110,13 +128,6 @@ func createNewIndex(rootNode *yaml.Node, index *SpecIndex) *SpecIndex {
 	index.GetInlineDuplicateParamCount()
 	index.GetAllDescriptionsCount()
 	index.GetTotalTagsCount()
-
-	// do a copy!
-	index.config.seenRemoteSources.Range(func(k, v any) bool {
-		index.seenRemoteSources[k.(string)] = v.(*yaml.Node)
-		return true
-	})
-	return index
 }
 
 // GetRootNode returns document root node.
@@ -215,7 +226,6 @@ func (index *SpecIndex) GetOperationParameterReferences() map[string]map[string]
 // The first elements of at the top of the slice, are all the inline references (using GetAllInlineSchemas),
 // and then following on are all the references extracted from the components section (using GetAllComponentSchemas).
 func (index *SpecIndex) GetAllSchemas() []*Reference {
-
 	componentSchemas := index.GetAllComponentSchemas()
 	inlineSchemas := index.GetAllInlineSchemas()
 
@@ -929,6 +939,8 @@ func (index *SpecIndex) GetOperationCount() int {
 							Definition: m.Value,
 							Name:       m.Value,
 							Node:       method.Content[y+1],
+							Path:       fmt.Sprintf("$.paths.%s.%s", p.Value, m.Value),
+							ParentNode: m,
 						}
 						index.pathRefsLock.Lock()
 						if index.pathRefs[p.Value] == nil {

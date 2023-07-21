@@ -30,7 +30,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: go tests
-        run: go test -v -covermode=count -json ./... ./example/... > test.json
+        run: go test -v -covermode=count -json ./... > test.json
       - name: annotate go tests
         if: always()
         uses: guyarb/golang-test-annotations@v0.6.0

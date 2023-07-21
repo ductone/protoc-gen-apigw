@@ -30,6 +30,7 @@ message MessageOptions {
 
 message MessageOption {
   TerraformEntity terraform_entity = 1;
+  string title = 2;
 }
 
 message FieldOption {
@@ -85,6 +86,8 @@ message Operation {
   repeated RequestExample request_examples = 6;
   repeated ResponseExample response_examples = 7;
   TerraformEntity terraform_entity = 8;
+  string summary = 9;
+  string group = 10;
 }
 
 message RequestExample {

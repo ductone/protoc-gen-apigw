@@ -12,11 +12,11 @@ import (
 	bookstore_v1 "github.com/ductone/protoc-gen-apigw/example/bookstore/v1"
 	"github.com/ductone/protoc-gen-apigw/routers/ginapi"
 	"github.com/gin-gonic/gin"
-	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestGinRouter(t *testing.T) {
@@ -89,7 +89,7 @@ func (mb *mockBookstore) DeleteShelf(ctx context.Context, req *bookstore_v1.Dele
 	return &bookstore_v1.DeleteShelfResponse{}, nil
 }
 
-// /shelves/{shelf}/books/{book}
+// /shelves/{shelf}/books/{book}.
 func (mb *mockBookstore) DeleteBook(ctx context.Context, req *bookstore_v1.DeleteBookRequest) (*bookstore_v1.DeleteBookResponse, error) {
 	require.Equal(mb.t, "123", req.Book.ShelfId)
 	require.Equal(mb.t, "456", req.Book.Id)

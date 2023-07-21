@@ -2,11 +2,20 @@ package apigw
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
+	"github.com/fatih/camelcase"
 	pgs "github.com/lyft/protoc-gen-star"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+)
+
+var (
+	caser = cases.Title(language.AmericanEnglish)
+	space = regexp.MustCompile(`\s+`)
 )
 
 const FieldMaskWKT pgs.WellKnownType = "FieldMask"
@@ -44,6 +53,21 @@ func WellKnownType(m pgs.Message) pgs.WellKnownType {
 	return pgs.UnknownWKT
 }
 
+func (sc *schemaContainer) messageDocName(title string, m pgs.Message) string {
+	if title != "" {
+		return title
+	}
+
+	return transformName(m.Name())
+}
+
+func transformName(name pgs.Name) string {
+	ret := name.Transform(caser.String, caser.String, " ").String()
+	ret = strings.Join(camelcase.Split(ret), " ")
+	ret = space.ReplaceAllString(ret, " ")
+	return ret
+}
+
 func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool, readOnly bool) *dm_base.SchemaProxy {
 	if IsWellKnown(m) {
 		// TODO(pquera): we may want to customize this some day,
@@ -55,11 +79,13 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 
 	terraformEntityName := ""
 	mopt := getMessageOptions(m)
+	title := ""
 	if mopt != nil {
 		terraformEntity := mopt.GetTerraformEntity()
 		if terraformEntity != nil {
 			terraformEntityName = terraformEntity.Name
 		}
+		title = mopt.GetTitle()
 	}
 
 	fqn := nicerFQN(m)
@@ -78,12 +104,14 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	} else {
 		_, _ = description.WriteString(comments)
 	}
+
 	deprecated := oasBool(m.Descriptor().GetOptions().GetDeprecated())
 	obj := &dm_base.Schema{
 		Type:       []string{"object"},
 		Properties: map[string]*dm_base.SchemaProxy{},
 		Nullable:   nullable,
 		Deprecated: deprecated,
+		Title:      sc.messageDocName(title, m),
 		Extensions: map[string]any{
 			"x-speakeasy-name-override": m.Name().UpperCamelCase().String(),
 		},

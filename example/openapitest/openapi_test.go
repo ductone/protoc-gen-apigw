@@ -15,7 +15,6 @@ import (
 )
 
 func TestOpenAPISpec(t *testing.T) {
-
 	listShelvesResponseRef := dm_base.CreateSchemaProxyRef("#/components/schemas/ListShelvesResponse")
 	shelfRef := dm_base.CreateSchemaProxyRef("#/components/schemas/Shelf")
 
@@ -91,7 +90,8 @@ func TestOpenAPISpec(t *testing.T) {
 	y, err := doc.Render()
 	require.NoError(t, err)
 
-	io.Copy(os.Stderr, bytes.NewReader(y))
+	_, err = io.Copy(os.Stderr, bytes.NewReader(y))
+	require.NoError(t, err)
 
 	document, err := libopenapi.NewDocument(y)
 	require.NoError(t, err)
