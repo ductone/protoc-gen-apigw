@@ -3,11 +3,12 @@ package v1
 
 import (
 	"context"
-	_ "embed"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+
+	_ "embed"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 
@@ -340,6 +341,10 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 
 	vn8 := input.Query().Get("page_size")
 
+	if vn8 == "" {
+		vn8 = "0"
+	}
+
 	vn9tmp, err := strconv.ParseInt(vn8, 10, 64)
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, "pageSize is not a valid int: %s", err)
@@ -368,6 +373,10 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 	}
 
 	vn2 := input.PathParam("1")
+
+	if vn2 == "" {
+		vn2 = "0"
+	}
 
 	vn3tmp, err := strconv.ParseInt(vn2, 10, 64)
 	if err != nil {
@@ -578,6 +587,10 @@ func _BookstoreService_GetAuthor_APIGW_Decoder(ctx context.Context, input apigw_
 	_ = unmarshalOpts
 
 	vn0 := input.PathParam("0")
+
+	if vn0 == "" {
+		vn0 = "0"
+	}
 
 	vn1tmp, err := strconv.ParseInt(vn0, 10, 64)
 	if err != nil {
