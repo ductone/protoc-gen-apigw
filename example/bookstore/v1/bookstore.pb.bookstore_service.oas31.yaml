@@ -413,10 +413,21 @@ paths:
             format: int64
             type: string
         - in: query
+          name: page_token
+          schema:
+            description: The pageToken field.
+            type: string
+        - in: query
           name: author
           schema:
             description: The includeAuthor field.
             type: boolean
+        - in: query
+          name: page_size
+          schema:
+            description: The pageSize field.
+            format: int32
+            type: number
       responses:
         "200":
           content:

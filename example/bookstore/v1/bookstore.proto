@@ -62,6 +62,14 @@ service BookstoreService {
         {
           key: "author",
           value: "include_author"
+        },
+        {
+          key: "page_size",
+          value: "page_size"
+        },
+        {
+          key: "page_token",
+          value: "page_token"
         }
       ];
       terraform_entity: {
@@ -233,6 +241,8 @@ message GetBookRequest {
   // The ID of the book to retrieve.
   int64 book = 2;
   bool include_author = 3;
+  int32 page_size = 4;
+  string page_token = 5;
 }
 
 // Request message for UpdateBook method
