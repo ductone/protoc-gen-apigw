@@ -138,12 +138,6 @@ components:
       title: Delete Shelf Response
       type: object
       x-speakeasy-name-override: DeleteShelfResponse
-    bookstore.v1.GetAuthorRequestInput:
-      description: |2
-         Request message for GetAuthor method.
-      title: Get Author Request
-      type: object
-      x-speakeasy-name-override: GetAuthorRequest
     bookstore.v1.GetAuthorResponse:
       description: |
         The GetAuthorResponse message.
@@ -171,12 +165,6 @@ components:
       title: Get Author Response
       type: object
       x-speakeasy-name-override: GetAuthorResponse
-    bookstore.v1.GetBookRequestInput:
-      description: |2
-         Request message for GetBook method.
-      title: Get Book Request
-      type: object
-      x-speakeasy-name-override: GetBookRequest
     bookstore.v1.GetBookResponse:
       description: The GetBookResponse message.
       properties:
@@ -185,21 +173,6 @@ components:
       title: Get Book Response
       type: object
       x-speakeasy-name-override: GetBookResponse
-    bookstore.v1.ListBooksOnShelfRequestInput:
-      description: The ListBooksOnShelfRequest message.
-      properties:
-        expandMask:
-          $ref: '#/components/schemas/bookstore.v1.BookExpandMask'
-        pageSize:
-          description: The pageSize field.
-          format: int32
-          type: number
-        pageToken:
-          description: The pageToken field.
-          type: string
-      title: List Books On Shelf Request
-      type: object
-      x-speakeasy-name-override: ListBooksOnShelfRequest
     bookstore.v1.ListBooksOnShelfResponse:
       description: The ListBooksOnShelfResponse message.
       properties:
@@ -228,11 +201,6 @@ components:
       title: List Books On Shelf Response
       type: object
       x-speakeasy-name-override: ListBooksOnShelfResponse
-    bookstore.v1.ListShelvesRequest:
-      description: The ListShelvesRequest message.
-      title: List Shelves Request
-      type: object
-      x-speakeasy-name-override: ListShelvesRequest
     bookstore.v1.ListShelvesResponse:
       description: |2
          Response to ListShelves call.
@@ -317,11 +285,6 @@ paths:
                The ID of the author resource to retrieve.
             format: int64
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/bookstore.v1.GetAuthorRequestInput'
       responses:
         "200":
           content:
@@ -361,11 +324,6 @@ paths:
       description: |2
          Returns a list of all shelves in the bookstore.
       operationId: bookstore.v1.BookstoreService.ListShelves
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/bookstore.v1.ListShelvesRequest'
       responses:
         "200":
           content:
@@ -420,11 +378,6 @@ paths:
           schema:
             description: The shelf field.
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/bookstore.v1.ListBooksOnShelfRequestInput'
       responses:
         "200":
           content:
@@ -529,11 +482,6 @@ paths:
           schema:
             description: The includeAuthor field.
             type: boolean
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/bookstore.v1.GetBookRequestInput'
       responses:
         "200":
           content:
