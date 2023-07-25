@@ -258,6 +258,8 @@ func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber proto
 		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is map '%s'", method.FullyQualifiedName())
 	case isInt(edgeField.Type().ProtoType()):
 		ix.Strconv = true
+		ix.GRPCStatus = true
+		ix.GRPCCodes = true
 		converter, err := templateExecToString("field_int.tmpl", &intFieldContext{
 			FieldName:  jsonName(edgeField),
 			Getter:     valueGetter,
