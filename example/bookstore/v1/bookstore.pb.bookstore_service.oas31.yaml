@@ -66,6 +66,19 @@ components:
       type: object
       x-speakeasy-entity: Book
       x-speakeasy-name-override: Book
+    bookstore.v1.BookExpandMask:
+      description: The BookExpandMask message.
+      properties:
+        paths:
+          description: |2
+             The fields to expand in the response.
+          items:
+            type: string
+          nullable: true
+          type: array
+      title: Book Expand Mask
+      type: object
+      x-speakeasy-name-override: BookExpandMask
     bookstore.v1.CreateBookRequestInput:
       description: |2
          Request message for CreateBook method.
@@ -160,6 +173,34 @@ components:
       title: Get Book Response
       type: object
       x-speakeasy-name-override: GetBookResponse
+    bookstore.v1.ListBooksOnShelfResponse:
+      description: The ListBooksOnShelfResponse message.
+      properties:
+        expanded:
+          description: The expanded field.
+          items:
+            additionalProperties:
+              oneOf: []
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+            properties:
+              '@type':
+                description: The type of the serialized message.
+                type: string
+            type: object
+          nullable: true
+          type: array
+        list:
+          description: The list field.
+          items:
+            $ref: '#/components/schemas/bookstore.v1.Book'
+          nullable: true
+          type: array
+        nextPageToken:
+          description: The nextPageToken field.
+          type: string
+      title: List Books On Shelf Response
+      type: object
+      x-speakeasy-name-override: ListBooksOnShelfResponse
     bookstore.v1.ListShelvesResponse:
       description: |2
          Response to ListShelves call.
@@ -206,6 +247,8 @@ components:
       properties:
         book:
           $ref: '#/components/schemas/bookstore.v1.Book'
+        mask:
+          $ref: '#/components/schemas/bookstore.v1.BookExpandMask'
         shelf:
           description: |2
              The ID of the shelf from which to retrieve a book.
@@ -325,6 +368,28 @@ paths:
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: DeleteShelf
   /shelves/{shelf}/books:
+    get:
+      description: Invokes the bookstore.v1.BookstoreService.ListBooksOnShelf method.
+      operationId: bookstore.v1.BookstoreService.ListBooksOnShelf
+      parameters:
+        - in: path
+          name: shelf
+          required: true
+          schema:
+            description: The shelf field.
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v1.ListBooksOnShelfResponse'
+          description: Successful response
+      summary: List Books On Shelf
+      tags:
+        - Books
+      x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: ListBooksOnShelf
     post:
       description: |2
          Creates a new book.

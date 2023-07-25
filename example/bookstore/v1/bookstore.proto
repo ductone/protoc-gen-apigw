@@ -5,6 +5,9 @@ package bookstore.v1;
 import "apigw/v1/apigw.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "validate/validate.proto";
+
 
 option go_package = "github.com/ductone/protoc-gen-apigw/example/bookstore/v1";
 
@@ -92,6 +95,14 @@ service BookstoreService {
         type: TERRAFORM_ENTITY_METHOD_TYPE_UPDATE
         name: "Book"
       }
+      group: "Books"
+    };
+  }
+
+  rpc ListBooksOnShelf(ListBooksOnShelfRequest) returns (ListBooksOnShelfResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/shelves/{shelf}/books"
       group: "Books"
     };
   }
@@ -241,6 +252,7 @@ message UpdateBookRequest {
   string shelf = 1;
   // A book resource to update on the shelf.
   Book book = 2;
+  BookExpandMask mask = 3;
 }
 
 // Request message for DeleteBook method.
@@ -253,4 +265,41 @@ message DeleteBookRequest {
 message GetAuthorRequest {
   // The ID of the author resource to retrieve.
   int64 author = 1;
+}
+
+message ListBooksOnShelfRequest {
+  string shelf = 1 [(validate.rules).string = {pattern: "^[a-zA-Z0-9]{27}$"}];
+  int32 page_size = 2 [(validate.rules).int32 = {
+    gte: 0
+    lte: 100
+  }];
+  string page_token = 3 [(validate.rules).string = {
+    min_bytes: 0
+    max_bytes: 1024
+  }];
+  BookExpandMask expand_mask = 4;
+}
+
+message ListBooksOnShelfResponse {
+  repeated Book list = 1;
+  repeated google.protobuf.Any expanded = 2;
+  string next_page_token = 3;
+}
+
+
+message BookExpandMask {
+  // The fields to expand in the response.
+  repeated string paths = 1 [(validate.rules).repeated = {
+    ignore_empty: true
+    unique: true
+    items: {
+      string: {
+        in: [
+          "*",
+          "author_id",
+          "genre_id"
+        ]
+      }
+    }
+  }];
 }

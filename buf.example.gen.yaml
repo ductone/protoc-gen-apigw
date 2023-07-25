@@ -6,6 +6,9 @@ plugins:
   - name: go-grpc
     out: example
     opt: paths=source_relative
+  - name: validate
+    out: example
+    opt: paths=source_relative,lang=go
   - name: apigw
     out: example
     opt: paths=source_relative
