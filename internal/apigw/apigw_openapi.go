@@ -219,7 +219,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		inputFilter = append(inputFilter, fieldName)
 	}
 
-	if operation.Method != http.MethodGet && operation.Method != http.MethodHead {
+	if /* operation.Method != http.MethodGet &&*/ operation.Method != http.MethodHead {
 		inputRef := mt.AddInput(method.Input(), inputFilter)
 		op.RequestBody = &dm_v3.RequestBody{
 			Content: map[string]*dm_v3.MediaType{
