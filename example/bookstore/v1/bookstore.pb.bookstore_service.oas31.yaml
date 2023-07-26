@@ -2,8 +2,7 @@
 components:
   schemas:
     bookstore.v1.Author:
-      description: |2
-         An author resource.
+      description: An author resource.
       properties:
         createdAt:
           format: date-time
@@ -20,8 +19,7 @@ components:
             - GENDER_FEMALE
           type: string
         id:
-          description: |2
-             A unique author id.
+          description: A unique author id.
           format: int64
           type: string
         lname:
@@ -35,20 +33,16 @@ components:
       type: object
       x-speakeasy-name-override: Author
     bookstore.v1.Book:
-      description: |2
-         A book resource.
+      description: A book resource.
       properties:
         author:
-          description: |2
-             An author of the book.
+          description: An author of the book.
           type: string
         id:
-          description: |2
-             A unique book id.
+          description: A unique book id.
           type: string
         quotes:
-          description: |2
-             Quotes from the book.
+          description: Quotes from the book.
           items:
             type: string
           nullable: true
@@ -57,8 +51,7 @@ components:
           description: The shelfId field.
           type: string
         title:
-          description: |2
-             A book title.
+          description: A book title.
           type: string
       required:
         - id
@@ -67,8 +60,7 @@ components:
       x-speakeasy-entity: Book
       x-speakeasy-name-override: Book
     bookstore.v1.CreateBookRequestInput:
-      description: |2
-         Request message for CreateBook method.
+      description: Request message for CreateBook method.
       properties:
         book:
           $ref: '#/components/schemas/bookstore.v1.Book'
@@ -84,8 +76,7 @@ components:
       type: object
       x-speakeasy-name-override: CreateBookResponse
     bookstore.v1.CreateShelfRequest:
-      description: |2
-         Request message for CreateShelf method.
+      description: Request message for CreateShelf method.
       properties:
         shelf:
           $ref: '#/components/schemas/bookstore.v1.Shelf'
@@ -101,8 +92,7 @@ components:
       type: object
       x-speakeasy-name-override: CreateShelfResponse
     bookstore.v1.DeleteBookRequestInput:
-      description: |2
-         Request message for DeleteBook method.
+      description: Request message for DeleteBook method.
       properties:
         book:
           $ref: '#/components/schemas/bookstore.v1.Book'
@@ -115,8 +105,7 @@ components:
       type: object
       x-speakeasy-name-override: DeleteBookResponse
     bookstore.v1.DeleteShelfRequestInput:
-      description: |2
-         Request message for DeleteShelf method.
+      description: Request message for DeleteShelf method.
       title: Delete Shelf Request
       type: object
       x-speakeasy-name-override: DeleteShelfRequest
@@ -161,15 +150,13 @@ components:
       type: object
       x-speakeasy-name-override: GetBookResponse
     bookstore.v1.ListShelvesResponse:
-      description: |2
-         Response to ListShelves call.
+      description: Response to ListShelves call.
       properties:
         mask:
           nullable: true
           type: string
         shelves:
-          description: |2
-             Shelves in the bookstore.
+          description: Shelves in the bookstore.
           items:
             $ref: '#/components/schemas/bookstore.v1.Shelf'
           nullable: true
@@ -178,37 +165,30 @@ components:
       type: object
       x-speakeasy-name-override: ListShelvesResponse
     bookstore.v1.Shelf:
-      description: |2
-         A shelf resource.
+      description: A shelf resource.
       properties:
         id:
-          description: |2
-             A unique shelf id.
+          description: A unique shelf id.
           type: string
         search%5Bencoded%5D:
-          description: |2
-             To test json name is percentage encoded
+          description: To test json name is percentage encoded
           type: string
         search[decoded]:
-          description: |2
-             To test json name is percentage decoded
+          description: To test json name is percentage decoded
           type: string
         theme:
-          description: |2
-             A theme of the shelf (fiction, poetry, etc).
+          description: A theme of the shelf (fiction, poetry, etc).
           type: string
       title: Bookshelf
       type: object
       x-speakeasy-name-override: Shelf
     bookstore.v1.UpdateBookRequestInput:
-      description: |2
-         Request message for UpdateBook method
+      description: Request message for UpdateBook method
       properties:
         book:
           $ref: '#/components/schemas/bookstore.v1.Book'
         shelf:
-          description: |2
-             The ID of the shelf from which to retrieve a book.
+          description: The ID of the shelf from which to retrieve a book.
           type: string
       title: Update Book Request
       type: object
@@ -230,16 +210,14 @@ openapi: 3.1.0
 paths:
   /authors/{author}:
     get:
-      description: |2
-         Returns a specific author.
+      description: Returns a specific author.
       operationId: bookstore.v1.BookstoreService.GetAuthor
       parameters:
         - in: path
           name: author
           required: true
           schema:
-            description: |2
-               The ID of the author resource to retrieve.
+            description: The ID of the author resource to retrieve.
             format: int64
             type: string
       responses:
@@ -256,8 +234,7 @@ paths:
       x-speakeasy-name-override: GetAuthor
   /shelf:
     post:
-      description: |2
-         Creates a new shelf in the bookstore.
+      description: Creates a new shelf in the bookstore.
       operationId: bookstore.v1.BookstoreService.CreateShelf
       requestBody:
         content:
@@ -278,8 +255,7 @@ paths:
       x-speakeasy-name-override: CreateShelf
   /shelves:
     get:
-      description: |2
-         Returns a list of all shelves in the bookstore.
+      description: Returns a list of all shelves in the bookstore.
       operationId: bookstore.v1.BookstoreService.ListShelves
       responses:
         "200":
@@ -287,8 +263,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.ListShelvesResponse'
-          description: |2
-             Response to ListShelves call.
+          description: Response to ListShelves call.
       summary: List Shelves
       tags:
         - Shelves
@@ -296,16 +271,14 @@ paths:
       x-speakeasy-name-override: ListShelves
   /shelves/{shelf}:
     delete:
-      description: |2
-         Deletes a shelf, including all books that are stored on the shelf.
+      description: Deletes a shelf, including all books that are stored on the shelf.
       operationId: bookstore.v1.BookstoreService.DeleteShelf
       parameters:
         - in: path
           name: shelf
           required: true
           schema:
-            description: |2
-               The ID of the shelf to delete.
+            description: The ID of the shelf to delete.
             type: string
       requestBody:
         content:
@@ -326,16 +299,14 @@ paths:
       x-speakeasy-name-override: DeleteShelf
   /shelves/{shelf}/books:
     post:
-      description: |2
-         Creates a new book.
+      description: Creates a new book.
       operationId: bookstore.v1.BookstoreService.CreateBook
       parameters:
         - in: path
           name: shelf
           required: true
           schema:
-            description: |2
-               The ID of the shelf on which to create a book.
+            description: The ID of the shelf on which to create a book.
             type: string
       requestBody:
         content:
@@ -357,8 +328,7 @@ paths:
       x-speakeasy-name-override: CreateBook
   /shelves/{shelf}/books/{book}:
     delete:
-      description: |2
-         Deletes a book from a shelf.
+      description: Deletes a book from a shelf.
       operationId: bookstore.v1.BookstoreService.DeleteBook
       parameters:
         - in: path
@@ -371,8 +341,7 @@ paths:
           name: book
           required: true
           schema:
-            description: |2
-               A unique book id.
+            description: A unique book id.
             type: string
       requestBody:
         content:
@@ -393,29 +362,21 @@ paths:
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: DeleteBook
     get:
-      description: |2
-         Returns a specific book.
+      description: Returns a specific book.
       operationId: bookstore.v1.BookstoreService.GetBook
       parameters:
         - in: path
           name: shelf
           required: true
           schema:
-            description: |2
-               The ID of the shelf from which to retrieve a book.
+            description: The ID of the shelf from which to retrieve a book.
             type: string
         - in: path
           name: book
           required: true
           schema:
-            description: |2
-               The ID of the book to retrieve.
+            description: The ID of the book to retrieve.
             format: int64
-            type: string
-        - in: query
-          name: page_token
-          schema:
-            description: The pageToken field.
             type: string
         - in: query
           name: author
@@ -428,6 +389,11 @@ paths:
             description: The pageSize field.
             format: int32
             type: number
+        - in: query
+          name: page_token
+          schema:
+            description: The pageToken field.
+            type: string
       responses:
         "200":
           content:
@@ -455,8 +421,7 @@ paths:
           name: book
           required: true
           schema:
-            description: |2
-               A unique book id.
+            description: A unique book id.
             type: string
       requestBody:
         content:

@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
-	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	"google.golang.org/protobuf/testing/protopack"
+
+	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 )
 
 type methodTemplateContext struct {
@@ -193,6 +195,9 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		fc.ParamName = k
 		qpc = append(qpc, fc)
 	}
+	sort.Slice(qpc, func(i, j int) bool {
+		return qpc[i].ParamName < qpc[j].ParamName
+	})
 
 	var httpMethod string
 	switch operation.Method {

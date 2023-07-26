@@ -5,12 +5,13 @@ import (
 	"regexp"
 	"strings"
 
-	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 	"github.com/fatih/camelcase"
 	pgs "github.com/lyft/protoc-gen-star"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
+	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 )
 
 var (
@@ -98,7 +99,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	}
 
 	description := &strings.Builder{}
-	comments := m.SourceCodeInfo().LeadingComments()
+	comments := strings.TrimSpace(m.SourceCodeInfo().LeadingComments())
 	if comments == "" {
 		_, _ = fmt.Fprintf(description, "The %s message.", m.Name().String())
 	} else {
@@ -196,7 +197,7 @@ func (sc *schemaContainer) FieldTypeElem(fte pgs.FieldTypeElem, readOnly bool) *
 
 func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	deprecated := oasBool(f.Descriptor().GetOptions().GetDeprecated())
-	description := f.SourceCodeInfo().LeadingComments()
+	description := strings.TrimSpace(f.SourceCodeInfo().LeadingComments())
 	readOnly := getReadOnlySpec(f)
 	if description == "" {
 		jn := jsonName(f)
