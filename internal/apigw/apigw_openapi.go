@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/fatih/camelcase"
@@ -208,16 +209,27 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		op.Parameters = append(op.Parameters, pp)
 		inputFilter = append(inputFilter, p.ParamName)
 	}
+
+	queryParmas := []*dm_v3.Parameter{}
+	queryInputFilter := []string{}
 	for qp, fieldName := range operation.Query {
 		_, edgeField := module.path2fieldNumbers(strings.Split(fieldName, "."), method.Input())
 		// TODO(pquerna): get docs, types, and schema from the field on the input object
-		op.Parameters = append(op.Parameters, &dm_v3.Parameter{
+		queryParmas = append(queryParmas, &dm_v3.Parameter{
 			Name:   qp,
 			In:     "query",
 			Schema: sc.Field(edgeField),
 		})
-		inputFilter = append(inputFilter, fieldName)
+		queryInputFilter = append(queryInputFilter, fieldName)
 	}
+	sort.Slice(queryParmas, func(i, j int) bool {
+		return queryParmas[i].Name < queryParmas[j].Name
+	})
+	sort.Slice(queryInputFilter, func(i, j int) bool {
+		return queryInputFilter[i] < queryInputFilter[j]
+	})
+	op.Parameters = append(op.Parameters, queryParmas...)
+	inputFilter = append(inputFilter, queryInputFilter...)
 
 	if operation.Method != http.MethodGet && operation.Method != http.MethodHead {
 		inputRef := mt.AddInput(method.Input(), inputFilter)
