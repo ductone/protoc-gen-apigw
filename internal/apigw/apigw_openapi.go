@@ -140,12 +140,12 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	}
 
 	outObj := method.Output()
-	outDescription := outObj.SourceCodeInfo().LeadingComments()
+	outDescription := strings.TrimSpace(outObj.SourceCodeInfo().LeadingComments())
 	if outDescription == "" {
 		outDescription = "Successful response"
 	}
 
-	methodDescription := method.SourceCodeInfo().LeadingComments()
+	methodDescription := strings.TrimSpace(method.SourceCodeInfo().LeadingComments())
 	if methodDescription == "" {
 		methodDescription = "Invokes the " + nicerFQN(method) + " method."
 	}
