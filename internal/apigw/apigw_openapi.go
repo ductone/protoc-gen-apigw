@@ -210,26 +210,27 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		inputFilter = append(inputFilter, p.ParamName)
 	}
 
-	queryParmas := []*dm_v3.Parameter{}
-	queryInputFilter := []string{}
+	paramsWithFieldNames := make([]queryWithParamName, 0, len(operation.Query))
 	for qp, fieldName := range operation.Query {
-		_, edgeField := module.path2fieldNumbers(strings.Split(fieldName, "."), method.Input())
+		paramsWithFieldNames = append(paramsWithFieldNames, queryWithParamName{
+			param: qp,
+			field: fieldName,
+		})
+	}
+	sort.Slice(paramsWithFieldNames, func(i, j int) bool {
+		return paramsWithFieldNames[i].param < paramsWithFieldNames[j].param
+	})
+
+	for _, paramWithName := range paramsWithFieldNames {
+		_, edgeField := module.path2fieldNumbers(strings.Split(paramWithName.field, "."), method.Input())
 		// TODO(pquerna): get docs, types, and schema from the field on the input object
-		queryParmas = append(queryParmas, &dm_v3.Parameter{
-			Name:   qp,
+		op.Parameters = append(op.Parameters, &dm_v3.Parameter{
+			Name:   paramWithName.param,
 			In:     "query",
 			Schema: sc.Field(edgeField),
 		})
-		queryInputFilter = append(queryInputFilter, fieldName)
+		inputFilter = append(inputFilter, paramWithName.field)
 	}
-	sort.Slice(queryParmas, func(i, j int) bool {
-		return queryParmas[i].Name < queryParmas[j].Name
-	})
-	sort.Slice(queryInputFilter, func(i, j int) bool {
-		return queryInputFilter[i] < queryInputFilter[j]
-	})
-	op.Parameters = append(op.Parameters, queryParmas...)
-	inputFilter = append(inputFilter, queryInputFilter...)
 
 	if operation.Method != http.MethodGet && operation.Method != http.MethodHead {
 		inputRef := mt.AddInput(method.Input(), inputFilter)

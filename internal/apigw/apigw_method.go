@@ -95,6 +95,11 @@ func isUint(pt pgs.ProtoType) bool {
 	}
 }
 
+type queryWithParamName struct {
+	param string
+	field string
+}
+
 func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, service pgs.Service, method pgs.Method, ix *importTracker) (*methodTemplateContext, error) {
 	vn := &varNamer{prefix: "vn", offset: 0}
 
@@ -167,10 +172,21 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		rpc = append(rpc, fc)
 	}
 
-	qpc := make([]*paramContext, 0)
+	paramsWithNames := make([]queryWithParamName, 0)
 	for k, v := range operation.Query {
+		paramsWithNames = append(paramsWithNames, queryWithParamName{
+			param: k,
+			field: v,
+		})
+	}
+	sort.Slice(paramsWithNames, func(i, j int) bool {
+		return paramsWithNames[i].param < paramsWithNames[j].param
+	})
+
+	qpc := make([]*paramContext, 0)
+	for _, p := range paramsWithNames {
 		// TODO: support nested fields
-		nums, edgeField := module.path2fieldNumbers([]string{v}, method.Input())
+		nums, edgeField := module.path2fieldNumbers([]string{p.field}, method.Input())
 		if len(nums) != 1 {
 			return nil, fmt.Errorf("apigw: methodContext: operation.Query invalid: target is nested (unsupported right now) '%s': %w", method.FullyQualifiedName(), err)
 		}
@@ -179,7 +195,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 
 		ix.ProtobufProtoPack = true
 		routeGetter, err := templateExecToString("query_get_param.tmpl", &routeParseContext{
-			ParamName:  k,
+			ParamName:  p.param,
 			OutputName: paramValueName,
 		})
 		if err != nil {
@@ -192,7 +208,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		if err != nil {
 			panic(err)
 		}
-		fc.ParamName = k
+		fc.ParamName = p.param
 		qpc = append(qpc, fc)
 	}
 	sort.Slice(qpc, func(i, j int) bool {
