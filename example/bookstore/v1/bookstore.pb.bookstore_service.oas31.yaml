@@ -4,6 +4,18 @@ components:
     bookstore.v1.Author:
       description: An author resource.
       properties:
+        books:
+          description: The books field.
+          items:
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+            properties:
+              '@type':
+                description: The type of the serialized message.
+                type: string
+            type: object
+          nullable: true
+          type: array
         createdAt:
           format: date-time
           readOnly: true
