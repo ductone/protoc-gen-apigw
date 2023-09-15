@@ -22,6 +22,7 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 			AdditionalProperties: dm_base.CreateSchemaProxy(&dm_base.Schema{
 				OneOf: []*dm_base.SchemaProxy{
 					// TODO(pquerna): add a tag based annotation for possible Any values.
+
 				},
 			}),
 		}
