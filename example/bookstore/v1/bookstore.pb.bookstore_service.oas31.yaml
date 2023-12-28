@@ -400,7 +400,7 @@ paths:
           schema:
             description: The pageSize field.
             format: int32
-            type: number
+            type: integer
         - in: query
           name: page_token
           schema:

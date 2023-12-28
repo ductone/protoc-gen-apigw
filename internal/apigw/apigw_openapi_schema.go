@@ -95,7 +95,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	}
 
 	if sc.schemas[fqn] != nil {
-		return dm_base.CreateSchemaProxyRef("#/components/schemas/" + fqn)
+		return dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix + fqn)
 	}
 
 	description := &strings.Builder{}
@@ -158,7 +158,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	obj.Description = description.String()
 	rv := dm_base.CreateSchemaProxy(obj)
 	sc.schemas[fqn] = rv
-	return dm_base.CreateSchemaProxyRef("#/components/schemas/" + fqn)
+	return dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix + fqn)
 }
 
 func (sc *schemaContainer) OneOf(of pgs.OneOf) []*dm_base.SchemaProxy {

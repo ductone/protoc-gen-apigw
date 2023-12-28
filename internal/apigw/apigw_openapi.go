@@ -24,6 +24,8 @@ type route struct {
 	Method string
 }
 
+const SchemaProxyRefPrefix = "#/components/schemas/"
+
 func (module *Module) buildOpenAPI(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Document, error) {
 	doc := &dm_v3.Document{
 		Version: "3.1.0",
@@ -365,7 +367,7 @@ func (mt *msgTracker) AddInput(m pgs.Message, filter []string) *dm_base.SchemaPr
 		mt.messages[fqn] = &schemaData{path: fqn, msg: m, filter: filter}
 	}
 
-	return dm_base.CreateSchemaProxyRef("#/components/schemas/" + fqn)
+	return dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix + fqn)
 }
 
 func (mt *msgTracker) Add(m pgs.Message) *dm_base.SchemaProxy {
@@ -374,7 +376,7 @@ func (mt *msgTracker) Add(m pgs.Message) *dm_base.SchemaProxy {
 	}
 	fqn := nicerFQN(m)
 	mt.messages[fqn] = &schemaData{path: fqn, msg: m}
-	return dm_base.CreateSchemaProxyRef("#/components/schemas/" + fqn)
+	return dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix + fqn)
 }
 
 func contains[T comparable](needle T, haystack []T) bool {

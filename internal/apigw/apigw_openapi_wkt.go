@@ -80,13 +80,13 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 		}
 	case pgs.Int32ValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"number"},
+			Type:     []string{"integer"},
 			Format:   "int32",
 			Nullable: oasTrue(),
 		}
 	case pgs.UInt32ValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"number"},
+			Type:     []string{"integer"},
 			Format:   "int64",
 			Nullable: oasTrue(),
 		}
