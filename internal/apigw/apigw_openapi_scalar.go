@@ -19,7 +19,7 @@ func (sc *schemaContainer) schemaForScalar(pt pgs.ProtoType) *dm_base.Schema {
 		}
 	case pgs.Int32T, pgs.SFixed32, pgs.SInt32:
 		return &dm_base.Schema{
-			Type:   []string{"number"},
+			Type:   []string{"integer"},
 			Format: "int32",
 		}
 	case pgs.UInt64T, pgs.Fixed64T:
@@ -29,7 +29,7 @@ func (sc *schemaContainer) schemaForScalar(pt pgs.ProtoType) *dm_base.Schema {
 		}
 	case pgs.UInt32T, pgs.Fixed32T:
 		return &dm_base.Schema{
-			Type:   []string{"number"},
+			Type:   []string{"integer"},
 			Format: "uint32",
 		}
 	case pgs.StringT:
