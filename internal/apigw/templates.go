@@ -15,7 +15,9 @@ var (
 	templates     map[string]*template.Template
 )
 
+//nolint:nolintlint // don't lint the no lint lint the lint no lints and lint the no lint lint the init lint no lint, cus we need it lininited
 //nolint:gochecknoinits // compling templates from embed
+//nolint:init // compling templates from embed
 func init() {
 	err := loadTemplates()
 	if err != nil {
