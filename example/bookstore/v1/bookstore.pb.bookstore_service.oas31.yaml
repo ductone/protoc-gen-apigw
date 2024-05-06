@@ -179,6 +179,9 @@ components:
     bookstore.v1.RecursiveBookResponse:
       description: The RecursiveBookResponse message.
       properties:
+        anotherProp:
+          description: The anotherProp field.
+          type: string
         page:
           $ref: '#/components/schemas/bookstore.v1.RecursivePage'
       title: Recursive Book Response
@@ -189,6 +192,18 @@ components:
       properties:
         books:
           $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
+        extraPages:
+          description: The extraPages field.
+          items:
+            $ref: '#/components/schemas/bookstore.v1.RecursivePage'
+          nullable: true
+          type: array
+        pages:
+          description: The pages field.
+          items:
+            $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
+          nullable: true
+          type: array
       title: Recursive Page
       type: object
       x-speakeasy-name-override: RecursivePage

@@ -281,8 +281,11 @@ message RecursiveBookRequest {
 
 message RecursiveBookResponse {
   RecursivePage page = 1;
+  string another_prop = 2;
 }
 
 message RecursivePage {
   RecursiveBookResponse books = 1;
+  repeated RecursiveBookResponse pages = 2;
+  repeated RecursivePage extra_pages = 3;
 }
