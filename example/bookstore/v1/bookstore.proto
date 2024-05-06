@@ -275,17 +275,28 @@ message GetAuthorRequest {
   int64 author = 1;
 }
 
+// A recursive comment for the recursive request
 message RecursiveBookRequest {
+  // A book ID!
   string book_id = 1;
 }
 
+// A recursive comment for the recursive response
 message RecursiveBookResponse {
+  // This is a recursive page
   RecursivePage page = 1;
+  // This is a non recursive secondary prop
   string another_prop = 2;
 }
 
+// A recursive page for the recursive response
 message RecursivePage {
+  // This is a recursive book
   RecursiveBookResponse books = 1;
+  // This is a list of recursive books
   repeated RecursiveBookResponse pages = 2;
+  // This is a list of recursive pages
   repeated RecursivePage extra_pages = 3;
+  // This is a non recursive prop
+  string prop = 4;
 }

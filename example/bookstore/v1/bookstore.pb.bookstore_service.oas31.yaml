@@ -177,10 +177,10 @@ components:
       type: object
       x-speakeasy-name-override: ListShelvesResponse
     bookstore.v1.RecursiveBookResponse:
-      description: The RecursiveBookResponse message.
+      description: A recursive comment for the recursive response
       properties:
         anotherProp:
-          description: The anotherProp field.
+          description: This is a non recursive secondary prop
           type: string
         page:
           $ref: '#/components/schemas/bookstore.v1.RecursivePage'
@@ -188,22 +188,25 @@ components:
       type: object
       x-speakeasy-name-override: RecursiveBookResponse
     bookstore.v1.RecursivePage:
-      description: The RecursivePage message.
+      description: A recursive page for the recursive response
       properties:
         books:
           $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
         extraPages:
-          description: The extraPages field.
+          description: This is a list of recursive pages
           items:
             $ref: '#/components/schemas/bookstore.v1.RecursivePage'
           nullable: true
           type: array
         pages:
-          description: The pages field.
+          description: This is a list of recursive books
           items:
             $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
           nullable: true
           type: array
+        prop:
+          description: This is a non recursive prop
+          type: string
       title: Recursive Page
       type: object
       x-speakeasy-name-override: RecursivePage
@@ -285,7 +288,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
-          description: Successful response
+          description: A recursive comment for the recursive response
       summary: Recursive Book
       tags:
         - Recursive
