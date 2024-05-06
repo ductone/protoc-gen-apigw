@@ -97,6 +97,9 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	if sc.schemas[fqn] != nil {
 		return dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix + fqn)
 	}
+	// This prevents infinite recursion when a message references itself.
+	// This should be overwritten at the bottom by the object schema once it's resolved
+	sc.schemas[fqn] = dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix + fqn)
 
 	description := &strings.Builder{}
 	comments := strings.TrimSpace(m.SourceCodeInfo().LeadingComments())

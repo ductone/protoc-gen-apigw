@@ -88,6 +88,13 @@ var apigw_desc_BookstoreServiceServer = apigw_v1.ServiceDesc{
 			Handler: _BookstoreService_GetAuthor_APIGW_Handler,
 			Decoder: _BookstoreService_GetAuthor_APIGW_Decoder,
 		},
+		{
+			Name:    BookstoreService_RecursiveBook_FullMethodName,
+			Method:  http.MethodGet,
+			Route:   "/recursive",
+			Handler: _BookstoreService_RecursiveBook_APIGW_Handler,
+			Decoder: _BookstoreService_RecursiveBook_APIGW_Decoder,
+		},
 	},
 }
 
@@ -606,6 +613,39 @@ func _BookstoreService_GetAuthor_APIGW_Decoder(ctx context.Context, input apigw_
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func _BookstoreService_RecursiveBook_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
+	in := new(RecursiveBookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).RecursiveBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_RecursiveBook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).RecursiveBook(ctx, req.(*RecursiveBookRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
+}
+
+func _BookstoreService_RecursiveBook_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
+
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
 
 	return nil
 }

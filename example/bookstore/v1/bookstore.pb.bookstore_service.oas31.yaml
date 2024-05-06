@@ -176,6 +176,22 @@ components:
       title: List Shelves Response
       type: object
       x-speakeasy-name-override: ListShelvesResponse
+    bookstore.v1.RecursiveBookResponse:
+      description: The RecursiveBookResponse message.
+      properties:
+        page:
+          $ref: '#/components/schemas/bookstore.v1.RecursivePage'
+      title: Recursive Book Response
+      type: object
+      x-speakeasy-name-override: RecursiveBookResponse
+    bookstore.v1.RecursivePage:
+      description: The RecursivePage message.
+      properties:
+        books:
+          $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
+      title: Recursive Page
+      type: object
+      x-speakeasy-name-override: RecursivePage
     bookstore.v1.Shelf:
       description: A shelf resource.
       properties:
@@ -244,6 +260,22 @@ paths:
         - Authors
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: GetAuthor
+  /recursive:
+    get:
+      description: Invokes the bookstore.v1.BookstoreService.RecursiveBook method.
+      operationId: bookstore.v1.BookstoreService.RecursiveBook
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
+          description: Successful response
+      summary: Recursive Book
+      tags:
+        - Recursive
+      x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: RecursiveBook
   /shelf:
     post:
       description: Creates a new shelf in the bookstore.

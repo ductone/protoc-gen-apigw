@@ -113,6 +113,14 @@ service BookstoreService {
       group: "Authors"
     };
   }
+
+  rpc RecursiveBook(RecursiveBookRequest) returns (RecursiveBookResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/recursive"
+      group: "Recursive"
+    };
+  }
 }
 
 message DeleteShelfResponse {}
@@ -265,4 +273,16 @@ message DeleteBookRequest {
 message GetAuthorRequest {
   // The ID of the author resource to retrieve.
   int64 author = 1;
+}
+
+message RecursiveBookRequest {
+  string book_id = 1;
+}
+
+message RecursiveBookResponse {
+  RecursivePage page = 1;
+}
+
+message RecursivePage {
+  RecursiveBookResponse books = 1;
 }
