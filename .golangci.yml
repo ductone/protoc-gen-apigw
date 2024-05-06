@@ -74,6 +74,7 @@ linters:
     - exhaustive # check exhaustiveness of enum switch statements
     - exportloopref # checks for pointers to enclosing loop variables
     - forbidigo # Forbids identifiers
+#    - gochecknoinits # Checks that no init functions are present in Go code # This linter is currently broken https://github.com/golangci/golangci-lint/issues/4697
     - goconst # Finds repeated strings that could be replaced by a constant
     - gocritic # Provides diagnostics that check for bugs, performance and style issues.
     - godot # Check if comments end in a period
@@ -84,6 +85,7 @@ linters:
     - nakedret # Finds naked returns in functions greater than a specified function length
     - nilerr # Finds the code that returns nil even if it checks that the error is not nil.
     - noctx # noctx finds sending http request without context.Context
+    - nolintlint # Reports ill-formed or insufficient nolint directives
     - nonamedreturns # Reports all named returns
     - nosprintfhostport # Checks for misuse of Sprintf to construct a host with port in a URL.
     - predeclared # find code that shadows one of Go's predeclared identifiers
