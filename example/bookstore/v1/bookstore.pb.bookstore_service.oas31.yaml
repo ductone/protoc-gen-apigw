@@ -176,6 +176,40 @@ components:
       title: List Shelves Response
       type: object
       x-speakeasy-name-override: ListShelvesResponse
+    bookstore.v1.RecursiveBookResponse:
+      description: A recursive comment for the recursive response
+      properties:
+        anotherProp:
+          description: This is a non recursive secondary prop
+          type: string
+        page:
+          $ref: '#/components/schemas/bookstore.v1.RecursivePage'
+      title: Recursive Book Response
+      type: object
+      x-speakeasy-name-override: RecursiveBookResponse
+    bookstore.v1.RecursivePage:
+      description: A recursive page for the recursive response
+      properties:
+        books:
+          $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
+        extraPages:
+          description: This is a list of recursive pages
+          items:
+            $ref: '#/components/schemas/bookstore.v1.RecursivePage'
+          nullable: true
+          type: array
+        pages:
+          description: This is a list of recursive books
+          items:
+            $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
+          nullable: true
+          type: array
+        prop:
+          description: This is a non recursive prop
+          type: string
+      title: Recursive Page
+      type: object
+      x-speakeasy-name-override: RecursivePage
     bookstore.v1.Shelf:
       description: A shelf resource.
       properties:
@@ -244,6 +278,22 @@ paths:
         - Authors
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: GetAuthor
+  /recursive:
+    get:
+      description: Invokes the bookstore.v1.BookstoreService.RecursiveBook method.
+      operationId: bookstore.v1.BookstoreService.RecursiveBook
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
+          description: A recursive comment for the recursive response
+      summary: Recursive Book
+      tags:
+        - Recursive
+      x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: RecursiveBook
   /shelf:
     post:
       description: Creates a new shelf in the bookstore.

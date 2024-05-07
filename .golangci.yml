@@ -74,7 +74,7 @@ linters:
     - exhaustive # check exhaustiveness of enum switch statements
     - exportloopref # checks for pointers to enclosing loop variables
     - forbidigo # Forbids identifiers
-    - gochecknoinits # Checks that no init functions are present in Go code
+#    - gochecknoinits # Checks that no init functions are present in Go code # This linter is currently broken https://github.com/golangci/golangci-lint/issues/4697
     - goconst # Finds repeated strings that could be replaced by a constant
     - gocritic # Provides diagnostics that check for bugs, performance and style issues.
     - godot # Check if comments end in a period

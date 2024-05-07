@@ -15,7 +15,7 @@ var (
 	templates     map[string]*template.Template
 )
 
-//nolint:gochecknoinits // compling templates from embed
+//nolint:gochecknoinits // compling templates from embed // This linter is broken currently https://github.com/golangci/golangci-lint/issues/4697
 func init() {
 	err := loadTemplates()
 	if err != nil {

@@ -19,14 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	BookstoreService_ListShelves_FullMethodName = "/bookstore.v1.BookstoreService/ListShelves"
-	BookstoreService_CreateShelf_FullMethodName = "/bookstore.v1.BookstoreService/CreateShelf"
-	BookstoreService_DeleteShelf_FullMethodName = "/bookstore.v1.BookstoreService/DeleteShelf"
-	BookstoreService_CreateBook_FullMethodName  = "/bookstore.v1.BookstoreService/CreateBook"
-	BookstoreService_GetBook_FullMethodName     = "/bookstore.v1.BookstoreService/GetBook"
-	BookstoreService_DeleteBook_FullMethodName  = "/bookstore.v1.BookstoreService/DeleteBook"
-	BookstoreService_UpdateBook_FullMethodName  = "/bookstore.v1.BookstoreService/UpdateBook"
-	BookstoreService_GetAuthor_FullMethodName   = "/bookstore.v1.BookstoreService/GetAuthor"
+	BookstoreService_ListShelves_FullMethodName   = "/bookstore.v1.BookstoreService/ListShelves"
+	BookstoreService_CreateShelf_FullMethodName   = "/bookstore.v1.BookstoreService/CreateShelf"
+	BookstoreService_DeleteShelf_FullMethodName   = "/bookstore.v1.BookstoreService/DeleteShelf"
+	BookstoreService_CreateBook_FullMethodName    = "/bookstore.v1.BookstoreService/CreateBook"
+	BookstoreService_GetBook_FullMethodName       = "/bookstore.v1.BookstoreService/GetBook"
+	BookstoreService_DeleteBook_FullMethodName    = "/bookstore.v1.BookstoreService/DeleteBook"
+	BookstoreService_UpdateBook_FullMethodName    = "/bookstore.v1.BookstoreService/UpdateBook"
+	BookstoreService_GetAuthor_FullMethodName     = "/bookstore.v1.BookstoreService/GetAuthor"
+	BookstoreService_RecursiveBook_FullMethodName = "/bookstore.v1.BookstoreService/RecursiveBook"
 )
 
 // BookstoreServiceClient is the client API for BookstoreService service.
@@ -48,6 +49,7 @@ type BookstoreServiceClient interface {
 	UpdateBook(ctx context.Context, in *UpdateBookRequest, opts ...grpc.CallOption) (*UpdateBookResponse, error)
 	// Returns a specific author.
 	GetAuthor(ctx context.Context, in *GetAuthorRequest, opts ...grpc.CallOption) (*GetAuthorResponse, error)
+	RecursiveBook(ctx context.Context, in *RecursiveBookRequest, opts ...grpc.CallOption) (*RecursiveBookResponse, error)
 }
 
 type bookstoreServiceClient struct {
@@ -130,6 +132,15 @@ func (c *bookstoreServiceClient) GetAuthor(ctx context.Context, in *GetAuthorReq
 	return out, nil
 }
 
+func (c *bookstoreServiceClient) RecursiveBook(ctx context.Context, in *RecursiveBookRequest, opts ...grpc.CallOption) (*RecursiveBookResponse, error) {
+	out := new(RecursiveBookResponse)
+	err := c.cc.Invoke(ctx, BookstoreService_RecursiveBook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BookstoreServiceServer is the server API for BookstoreService service.
 // All implementations must embed UnimplementedBookstoreServiceServer
 // for forward compatibility
@@ -149,6 +160,7 @@ type BookstoreServiceServer interface {
 	UpdateBook(context.Context, *UpdateBookRequest) (*UpdateBookResponse, error)
 	// Returns a specific author.
 	GetAuthor(context.Context, *GetAuthorRequest) (*GetAuthorResponse, error)
+	RecursiveBook(context.Context, *RecursiveBookRequest) (*RecursiveBookResponse, error)
 	mustEmbedUnimplementedBookstoreServiceServer()
 }
 
@@ -179,6 +191,9 @@ func (UnimplementedBookstoreServiceServer) UpdateBook(context.Context, *UpdateBo
 }
 func (UnimplementedBookstoreServiceServer) GetAuthor(context.Context, *GetAuthorRequest) (*GetAuthorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAuthor not implemented")
+}
+func (UnimplementedBookstoreServiceServer) RecursiveBook(context.Context, *RecursiveBookRequest) (*RecursiveBookResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecursiveBook not implemented")
 }
 func (UnimplementedBookstoreServiceServer) mustEmbedUnimplementedBookstoreServiceServer() {}
 
@@ -337,6 +352,24 @@ func _BookstoreService_GetAuthor_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookstoreService_RecursiveBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecursiveBookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).RecursiveBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_RecursiveBook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).RecursiveBook(ctx, req.(*RecursiveBookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BookstoreService_ServiceDesc is the grpc.ServiceDesc for BookstoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -375,6 +408,10 @@ var BookstoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAuthor",
 			Handler:    _BookstoreService_GetAuthor_Handler,
+		},
+		{
+			MethodName: "RecursiveBook",
+			Handler:    _BookstoreService_RecursiveBook_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
