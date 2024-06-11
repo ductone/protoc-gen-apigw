@@ -274,7 +274,7 @@ func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber proto
 ) (*paramContext, error) {
 	switch {
 	case edgeField.Type().IsRepeated():
-		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is repeatd '%s'", method.FullyQualifiedName())
+		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is repeated '%s'", method.FullyQualifiedName())
 	case edgeField.Type().IsMap():
 		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is map '%s'", method.FullyQualifiedName())
 	case isInt(edgeField.Type().ProtoType()):
