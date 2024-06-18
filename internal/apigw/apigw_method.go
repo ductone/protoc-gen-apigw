@@ -248,7 +248,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 			serviceShortName,
 			ctx.Name(method).String(),
 		),
-		HasBody: operation.Method != "GET",
+		HasBody: operation.Method != http.MethodGet,
 
 		ServerName:  ctx.ServerName(service).String(),
 		RequestType: ctx.Name(method.Input()).String(),
