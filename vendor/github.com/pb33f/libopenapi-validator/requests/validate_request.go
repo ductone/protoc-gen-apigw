@@ -23,7 +23,7 @@ import (
 
 var instanceLocationRegex = regexp.MustCompile(`^/(\d+)`)
 
-// ValidateRequestSchema will validate an http.Request pointer against a schema.
+// ValidateRequestSchema will validate a http.Request pointer against a schema.
 // If validation fails, it will return a list of validation errors as the second return value.
 func ValidateRequestSchema(
 	request *http.Request,
@@ -33,25 +33,94 @@ func ValidateRequestSchema(
 
 	var validationErrors []*errors.ValidationError
 
-	requestBody, _ := io.ReadAll(request.Body)
+	var requestBody []byte
+	if request != nil && request.Body != nil {
+		requestBody, _ = io.ReadAll(request.Body)
 
-	// close the request body, so it can be re-read later by another player in the chain
-	_ = request.Body.Close()
-	request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
+		// close the request body, so it can be re-read later by another player in the chain
+		_ = request.Body.Close()
+		request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
+
+	}
 
 	var decodedObj interface{}
-	_ = json.Unmarshal(requestBody, &decodedObj)
 
-	// no request body? failed to decode anything? nothing to do here.
-	if requestBody == nil || decodedObj == nil {
-		return true, nil
+	if len(requestBody) > 0 {
+		err := json.Unmarshal(requestBody, &decodedObj)
+
+		if err != nil {
+			// cannot decode the request body, so it's not valid
+			violation := &errors.SchemaValidationFailure{
+				Reason:          err.Error(),
+				Location:        "unavailable",
+				ReferenceSchema: string(renderedSchema),
+				ReferenceObject: string(requestBody),
+			}
+			validationErrors = append(validationErrors, &errors.ValidationError{
+				ValidationType:    helpers.RequestBodyValidation,
+				ValidationSubType: helpers.Schema,
+				Message: fmt.Sprintf("%s request body for '%s' failed to validate schema",
+					request.Method, request.URL.Path),
+				Reason:                 fmt.Sprintf("The request body cannot be decoded: %s", err.Error()),
+				SpecLine:               1,
+				SpecCol:                0,
+				SchemaValidationErrors: []*errors.SchemaValidationFailure{violation},
+				HowToFix:               errors.HowToFixInvalidSchema,
+				Context:                string(renderedSchema), // attach the rendered schema to the error
+			})
+			return false, validationErrors
+		}
+	}
+
+	// no request body? but we do have a schema?
+	if len(requestBody) <= 0 && len(jsonSchema) > 0 {
+
+		line := -1
+		col := -1
+		if schema.Type != nil {
+			line = schema.GoLow().Type.KeyNode.Line
+			col = schema.GoLow().Type.KeyNode.Column
+		} else {
+			line = schema.ParentProxy.GetSchemaKeyNode().Line
+			col = schema.ParentProxy.GetSchemaKeyNode().Line
+		}
+
+		// cannot decode the request body, so it's not valid
+		violation := &errors.SchemaValidationFailure{
+			Reason:          "request body is empty, but there is a schema defined",
+			ReferenceSchema: string(renderedSchema),
+			ReferenceObject: string(requestBody),
+		}
+		validationErrors = append(validationErrors, &errors.ValidationError{
+			ValidationType:    helpers.RequestBodyValidation,
+			ValidationSubType: helpers.Schema,
+			Message: fmt.Sprintf("%s request body is empty for '%s'",
+				request.Method, request.URL.Path),
+			Reason:                 "The request body is empty but there is a schema defined",
+			SpecLine:               line,
+			SpecCol:                col,
+			SchemaValidationErrors: []*errors.SchemaValidationFailure{violation},
+			HowToFix:               errors.HowToFixInvalidSchema,
+			Context:                string(renderedSchema), // attach the rendered schema to the error
+		})
+		return false, validationErrors
 	}
 
 	compiler := jsonschema.NewCompiler()
 	_ = compiler.AddResource("requestBody.json", strings.NewReader(string(jsonSchema)))
-	jsch, _ := compiler.Compile("requestBody.json")
+	jsch, err := compiler.Compile("requestBody.json")
+	if err != nil {
+		validationErrors = append(validationErrors, &errors.ValidationError{
+			ValidationType:    helpers.RequestBodyValidation,
+			ValidationSubType: helpers.Schema,
+			Message:           err.Error(),
+			Reason:            "Failed to compile the request body for validation.",
+			Context:           string(renderedSchema),
+		})
+		return false, validationErrors
+	}
 
-	// 4. validate the object against the schema
+	// validate the object against the schema
 	scErrs := jsch.Validate(decodedObj)
 	if scErrs != nil {
 		jk := scErrs.(*jsonschema.ValidationError)
@@ -116,6 +185,13 @@ func ValidateRequestSchema(
 			}
 		}
 
+		line := 1
+		col := 0
+		if schema.GoLow().Type.KeyNode != nil {
+			line = schema.GoLow().Type.KeyNode.Line
+			col = schema.GoLow().Type.KeyNode.Column
+		}
+
 		// add the error to the list
 		validationErrors = append(validationErrors, &errors.ValidationError{
 			ValidationType:    helpers.RequestBodyValidation,
@@ -124,8 +200,8 @@ func ValidateRequestSchema(
 				request.Method, request.URL.Path),
 			Reason: "The request body is defined as an object. " +
 				"However, it does not meet the schema requirements of the specification",
-			SpecLine:               schema.GoLow().Type.KeyNode.Line,
-			SpecCol:                schema.GoLow().Type.KeyNode.Column,
+			SpecLine:               line,
+			SpecCol:                col,
 			SchemaValidationErrors: schemaValidationErrors,
 			HowToFix:               errors.HowToFixInvalidSchema,
 			Context:                string(renderedSchema), // attach the rendered schema to the error

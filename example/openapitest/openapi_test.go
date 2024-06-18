@@ -11,6 +11,7 @@ import (
 	validator "github.com/pb33f/libopenapi-validator"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 	dm_v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/pb33f/libopenapi/orderedmap"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,26 +26,26 @@ func TestOpenAPISpec(t *testing.T) {
 			Version: "1.0.0",
 		},
 		Paths: &dm_v3.Paths{
-			PathItems: map[string]*dm_v3.PathItem{
+			PathItems: orderedmap.ToOrderedMap(map[string]*dm_v3.PathItem{
 				"/shelves": {
 					Get: &dm_v3.Operation{
 						OperationId: bookstore_v1.BookstoreService_ListShelves_FullMethodName,
 						Parameters:  []*dm_v3.Parameter{},
 						Responses: &dm_v3.Responses{
-							Codes: map[string]*dm_v3.Response{
+							Codes: orderedmap.ToOrderedMap(map[string]*dm_v3.Response{
 								"200": {
 									Description: "OK",
-									Content: map[string]*dm_v3.MediaType{
+									Content: orderedmap.ToOrderedMap(map[string]*dm_v3.MediaType{
 										"application/json": {
 											Schema: listShelvesResponseRef,
 										},
-									},
+									}),
 								},
-							},
+							}),
 						},
 					},
 				},
-			},
+			}),
 		},
 		Servers: []*dm_v3.Server{
 			{
@@ -52,10 +53,10 @@ func TestOpenAPISpec(t *testing.T) {
 			},
 		},
 		Components: &dm_v3.Components{
-			Schemas: map[string]*dm_base.SchemaProxy{
+			Schemas: orderedmap.ToOrderedMap(map[string]*dm_base.SchemaProxy{
 				"Shelf": dm_base.CreateSchemaProxy(&dm_base.Schema{
 					Type: []string{"object"},
-					Properties: map[string]*dm_base.SchemaProxy{
+					Properties: orderedmap.ToOrderedMap(map[string]*dm_base.SchemaProxy{
 						"id": dm_base.CreateSchemaProxy(&dm_base.Schema{
 							Type:   []string{"integer"},
 							Format: "int64",
@@ -69,22 +70,22 @@ func TestOpenAPISpec(t *testing.T) {
 						`search%5Bencoded%5D`: dm_base.CreateSchemaProxy(&dm_base.Schema{
 							Type: []string{"string"},
 						}),
-					},
+					}),
 				}),
 				"ListShelvesResponse": dm_base.CreateSchemaProxy(
 					&dm_base.Schema{
 						Type: []string{"object"},
-						Properties: map[string]*dm_base.SchemaProxy{
+						Properties: orderedmap.ToOrderedMap(map[string]*dm_base.SchemaProxy{
 							"shelves": dm_base.CreateSchemaProxy(
 								&dm_base.Schema{
 									Type:  []string{"array"},
 									Items: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: shelfRef},
 								},
 							),
-						},
+						}),
 					},
 				),
-			},
+			}),
 		},
 	}
 	y, err := doc.Render()

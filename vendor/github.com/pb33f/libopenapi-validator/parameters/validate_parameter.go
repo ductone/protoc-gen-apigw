@@ -5,15 +5,51 @@ package parameters
 
 import (
 	"encoding/json"
+	stdError "errors"
 	"fmt"
+	"net/url"
+	"reflect"
+	"strings"
+
 	"github.com/pb33f/libopenapi-validator/errors"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/utils"
 	"github.com/santhosh-tekuri/jsonschema/v5"
-	"net/url"
-	"reflect"
-	"strings"
 )
+
+func ValidateSingleParameterSchema(
+	schema *base.Schema,
+	rawObject any,
+	entity string,
+	reasonEntity string,
+	name string,
+	validationType string,
+	subValType string,
+) (validationErrors []*errors.ValidationError) {
+	jsch := compileSchema(name, buildJsonRender(schema))
+
+	scErrs := jsch.Validate(rawObject)
+	var werras *jsonschema.ValidationError
+	if stdError.As(scErrs, &werras) {
+		validationErrors = formatJsonSchemaValidationError(schema, werras, entity, reasonEntity, name, validationType, subValType)
+	}
+	return validationErrors
+}
+
+// compileSchema create a new json schema compiler and add the schema to it.
+func compileSchema(name string, jsonSchema []byte) *jsonschema.Schema {
+	compiler := jsonschema.NewCompiler()
+	_ = compiler.AddResource(fmt.Sprintf("%s.json", name), strings.NewReader(string(jsonSchema)))
+	jsch, _ := compiler.Compile(fmt.Sprintf("%s.json", name))
+	return jsch
+}
+
+// buildJsonRender build a JSON render of the schema.
+func buildJsonRender(schema *base.Schema) []byte {
+	renderedSchema, _ := schema.Render()
+	jsonSchema, _ := utils.ConvertYAMLtoJSON(renderedSchema)
+	return jsonSchema
+}
 
 // ValidateParameterSchema will validate a parameter against a raw object, or a blob of json/yaml.
 // It will return a list of validation errors, if any.
@@ -39,7 +75,7 @@ func ValidateParameterSchema(
 	var validationErrors []*errors.ValidationError
 
 	// 1. build a JSON render of the schema.
-	renderedSchema, _ := schema.Render()
+	renderedSchema, _ := schema.RenderInline()
 	jsonSchema, _ := utils.ConvertYAMLtoJSON(renderedSchema)
 
 	// 2. decode the object into a json blob.
@@ -72,37 +108,45 @@ func ValidateParameterSchema(
 	// 4. validate the object against the schema
 	var scErrs error
 	if validEncoding {
-		scErrs = jsch.Validate(decodedObj)
-	}
-	if scErrs != nil {
-		jk := scErrs.(*jsonschema.ValidationError)
-
-		// flatten the validationErrors
-		schFlatErrs := jk.BasicOutput().Errors
-		var schemaValidationErrors []*errors.SchemaValidationFailure
-		for q := range schFlatErrs {
-			er := schFlatErrs[q]
-			if er.KeywordLocation == "" || strings.HasPrefix(er.Error, "doesn't validate with") {
-				continue // ignore this error, it's not useful
+		p := decodedObj
+		if rawIsMap {
+			if g, ko := rawObject.(map[string]interface{}); ko {
+				if len(g) == 0 {
+					p = nil
+				}
 			}
-			schemaValidationErrors = append(schemaValidationErrors, &errors.SchemaValidationFailure{
-				Reason:        er.Error,
-				Location:      er.KeywordLocation,
-				OriginalError: jk,
-			})
 		}
-		// add the error to the list
-		validationErrors = append(validationErrors, &errors.ValidationError{
-			ValidationType:    validationType,
-			ValidationSubType: subValType,
-			Message:           fmt.Sprintf("%s '%s' failed to validate", entity, name),
-			Reason: fmt.Sprintf("%s '%s' is defined as an object, "+
-				"however it failed to pass a schema validation", reasonEntity, name),
-			SpecLine:               schema.GoLow().Type.KeyNode.Line,
-			SpecCol:                schema.GoLow().Type.KeyNode.Column,
-			SchemaValidationErrors: schemaValidationErrors,
-			HowToFix:               errors.HowToFixInvalidSchema,
-		})
+		if p != nil {
+
+			// check if any of the items have an empty key
+			skip := false
+			if rawIsMap {
+				for k := range p.(map[string]interface{}) {
+					if k == "" {
+						validationErrors = append(validationErrors, &errors.ValidationError{
+							ValidationType:    validationType,
+							ValidationSubType: subValType,
+							Message:           fmt.Sprintf("%s '%s' failed to validate", entity, name),
+							Reason: fmt.Sprintf("%s '%s' is defined as an object, "+
+								"however it failed to pass a schema validation", reasonEntity, name),
+							SpecLine:               schema.GoLow().Type.KeyNode.Line,
+							SpecCol:                schema.GoLow().Type.KeyNode.Column,
+							SchemaValidationErrors: nil,
+							HowToFix:               errors.HowToFixInvalidSchema,
+						})
+						skip = true
+						break
+					}
+				}
+			}
+			if !skip {
+				scErrs = jsch.Validate(p)
+			}
+		}
+	}
+	var werras *jsonschema.ValidationError
+	if stdError.As(scErrs, &werras) {
+		validationErrors = formatJsonSchemaValidationError(schema, werras, entity, reasonEntity, name, validationType, subValType)
 	}
 
 	// if there are no validationErrors, check that the supplied value is even JSON
@@ -123,5 +167,46 @@ func ValidateParameterSchema(
 			}
 		}
 	}
+	return validationErrors
+}
+
+func formatJsonSchemaValidationError(schema *base.Schema, scErrs *jsonschema.ValidationError, entity string, reasonEntity string, name string, validationType string, subValType string) (validationErrors []*errors.ValidationError) {
+	// flatten the validationErrors
+	schFlatErrs := scErrs.BasicOutput().Errors
+	var schemaValidationErrors []*errors.SchemaValidationFailure
+	for q := range schFlatErrs {
+		er := schFlatErrs[q]
+		if er.KeywordLocation == "" || strings.HasPrefix(er.Error, "doesn't validate with") {
+			continue // ignore this error, it's not useful
+		}
+
+		fail := &errors.SchemaValidationFailure{
+			Reason:        er.Error,
+			Location:      er.KeywordLocation,
+			OriginalError: scErrs,
+		}
+		if schema != nil {
+			rendered, err := schema.RenderInline()
+			if err == nil && rendered != nil {
+				fail.ReferenceSchema = fmt.Sprintf("%s", rendered)
+			}
+		}
+		schemaValidationErrors = append(schemaValidationErrors, fail)
+	}
+	schemaType := "undefined"
+	if len(schema.Type) > 0 {
+		schemaType = schema.Type[0]
+	}
+	validationErrors = append(validationErrors, &errors.ValidationError{
+		ValidationType:    validationType,
+		ValidationSubType: subValType,
+		Message:           fmt.Sprintf("%s '%s' failed to validate", entity, name),
+		Reason: fmt.Sprintf("%s '%s' is defined as an %s, "+
+			"however it failed to pass a schema validation", reasonEntity, name, schemaType),
+		SpecLine:               schema.GoLow().Type.KeyNode.Line,
+		SpecCol:                schema.GoLow().Type.KeyNode.Column,
+		SchemaValidationErrors: schemaValidationErrors,
+		HowToFix:               errors.HowToFixInvalidSchema,
+	})
 	return validationErrors
 }

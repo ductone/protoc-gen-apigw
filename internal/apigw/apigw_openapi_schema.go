@@ -8,8 +8,10 @@ import (
 	"github.com/fatih/camelcase"
 	pgs "github.com/lyft/protoc-gen-star"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
+	"github.com/pb33f/libopenapi/orderedmap"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+	"gopkg.in/yaml.v3"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 )
@@ -23,12 +25,12 @@ const FieldMaskWKT pgs.WellKnownType = "FieldMask"
 
 func newSchemaContainer() *schemaContainer {
 	return &schemaContainer{
-		schemas: map[string]*dm_base.SchemaProxy{},
+		schemas: orderedmap.New[string, *dm_base.SchemaProxy](),
 	}
 }
 
 type schemaContainer struct {
-	schemas map[string]*dm_base.SchemaProxy
+	schemas *orderedmap.Map[string, *dm_base.SchemaProxy]
 }
 
 func IsWellKnown(m pgs.Message) bool {
@@ -69,12 +71,30 @@ func transformName(name pgs.Name) string {
 	return ret
 }
 
+func yamlString(in string) *yaml.Node {
+	rv := &yaml.Node{}
+	rv.SetString(in)
+	return rv
+}
+
+func yamlStringSlice(in []string) *yaml.Node {
+	inner := make([]*yaml.Node, 0, len(in))
+	for _, s := range in {
+		inner = append(inner, yamlString(s))
+	}
+	rv := &yaml.Node{
+		Kind:    yaml.SequenceNode,
+		Content: inner,
+	}
+	return rv
+}
+
 func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool, readOnly bool) *dm_base.SchemaProxy {
 	if IsWellKnown(m) {
 		// TODO(pquera): we may want to customize this some day,
 		// but right now WKTs are just rendered inline, and not a Ref.
 		s := sc.schemaForWKT(WellKnownType(m))
-		s.ReadOnly = readOnly
+		s.ReadOnly = &readOnly
 		return dm_base.CreateSchemaProxy(s)
 	}
 
@@ -94,12 +114,12 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		fqn += "Input"
 	}
 
-	if sc.schemas[fqn] != nil {
+	if sc.schemas.Value(fqn) != nil {
 		return dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix + fqn)
 	}
 	// This prevents infinite recursion when a message references itself.
 	// This should be overwritten at the bottom by the object schema once it's resolved
-	sc.schemas[fqn] = dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix + fqn)
+	sc.schemas.Set(fqn, dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix+fqn))
 
 	description := &strings.Builder{}
 	comments := strings.TrimSpace(m.SourceCodeInfo().LeadingComments())
@@ -110,19 +130,21 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	}
 
 	deprecated := oasBool(m.Descriptor().GetOptions().GetDeprecated())
+	extensions := orderedmap.New[string, *yaml.Node]()
+	extensions.Set("x-speakeasy-name-override", yamlString(m.Name().UpperCamelCase().String()))
 	obj := &dm_base.Schema{
 		Type:       []string{"object"},
-		Properties: map[string]*dm_base.SchemaProxy{},
+		Properties: &orderedmap.Map[string, *dm_base.SchemaProxy]{},
 		Nullable:   nullable,
 		Deprecated: deprecated,
 		Title:      sc.messageDocName(title, m),
-		Extensions: map[string]any{
-			"x-speakeasy-name-override": m.Name().UpperCamelCase().String(),
-		},
+
+		Extensions: extensions,
 	}
 	if terraformEntityName != "" {
-		obj.Extensions["x-speakeasy-entity"] = terraformEntityName
+		extensions.Set("x-speakeasy-entity", yamlString(terraformEntityName))
 	}
+
 	required := make([]string, 0)
 	for _, f := range m.NonOneOfFields() {
 		jn := jsonName(f)
@@ -139,7 +161,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 			required = append(required, jn)
 		}
 
-		obj.Properties[jn] = sc.Field(f)
+		obj.Properties.Set(jn, sc.Field(f))
 	}
 	if len(required) > 0 {
 		obj.Required = required
@@ -154,13 +176,13 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 
 		for _, f := range of.Fields() {
 			jn := jsonName(f)
-			obj.Properties[jn] = sc.Field(f)
+			obj.Properties.Set(jn, sc.Field(f))
 			_, _ = fmt.Fprintf(description, "  - %s\n", jn)
 		}
 	}
 	obj.Description = description.String()
 	rv := dm_base.CreateSchemaProxy(obj)
-	sc.schemas[fqn] = rv
+	sc.schemas.Set(fqn, rv)
 	return dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix + fqn)
 }
 
@@ -175,11 +197,11 @@ func (sc *schemaContainer) OneOf(of pgs.OneOf) []*dm_base.SchemaProxy {
 
 func (sc *schemaContainer) Enum(e pgs.Enum) *dm_base.Schema {
 	values := e.Values()
-	enumValues := make([]any, 0, len(values))
+	enumValues := make([]*yaml.Node, 0, len(values))
 	for _, v := range values {
 		// TODO(pquerna): verify this is the right way to get the name
 		// in the JSON format
-		enumValues = append(enumValues, v.Name().String())
+		enumValues = append(enumValues, yamlString(v.Name().String()))
 	}
 	return &dm_base.Schema{
 		Type: []string{"string"},
@@ -219,7 +241,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			Type:        []string{"array"},
 			Description: description,
 			Nullable:    oasTrue(),
-			ReadOnly:    readOnly,
+			ReadOnly:    &readOnly,
 			Deprecated:  deprecated,
 			Items:       &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
@@ -231,15 +253,15 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			Deprecated:           deprecated,
 			Description:          description,
 			Nullable:             nullable,
-			ReadOnly:             readOnly,
-			AdditionalProperties: fteSchema,
+			ReadOnly:             &readOnly,
+			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
 		return dm_base.CreateSchemaProxy(mv)
 	case f.Type().IsEnum():
 		ev := sc.Enum(f.Type().Enum())
 		ev.Deprecated = deprecated
 		ev.Description = description
-		ev.ReadOnly = readOnly
+		ev.ReadOnly = &readOnly
 		mergeNullable(ev, nullable)
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
@@ -247,7 +269,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		return sc.Message(f.Type().Embed(), nil, nullable, readOnly)
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())
-		sv.ReadOnly = readOnly
+		sv.ReadOnly = &readOnly
 		mergeNullable(sv, nullable)
 		sv.Deprecated = deprecated
 		sv.Description = description

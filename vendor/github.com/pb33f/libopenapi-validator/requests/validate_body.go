@@ -4,94 +4,103 @@
 package requests
 
 import (
-    "github.com/pb33f/libopenapi-validator/errors"
-    "github.com/pb33f/libopenapi-validator/helpers"
-    "github.com/pb33f/libopenapi-validator/paths"
-    "github.com/pb33f/libopenapi/datamodel/high/base"
-    v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
-    "github.com/pb33f/libopenapi/utils"
-    "net/http"
-    "strings"
+	"net/http"
+	"strings"
+
+	"github.com/pb33f/libopenapi-validator/errors"
+	"github.com/pb33f/libopenapi-validator/helpers"
+	"github.com/pb33f/libopenapi-validator/paths"
+	"github.com/pb33f/libopenapi/datamodel/high/base"
+	"github.com/pb33f/libopenapi/utils"
 )
 
 func (v *requestBodyValidator) ValidateRequestBody(request *http.Request) (bool, []*errors.ValidationError) {
+	// find path
+	var pathItem = v.pathItem
+	var foundPath string
+	if v.pathItem == nil {
+		var validationErrors []*errors.ValidationError
+		pathItem, validationErrors, foundPath = paths.FindPath(request, v.document)
+		if pathItem == nil || validationErrors != nil {
+			v.errors = validationErrors
+			return false, validationErrors
+		}
+	} else {
+		foundPath = v.pathValue
+	}
 
-    // find path
-    var pathItem *v3.PathItem
-    var errs []*errors.ValidationError
-    if v.pathItem == nil {
-        pathItem, errs, _ = paths.FindPath(request, v.document)
-        if pathItem == nil || errs != nil {
-            v.errors = errs
-            return false, errs
-        }
-    } else {
-        pathItem = v.pathItem
-    }
+	operation := helpers.ExtractOperation(request, pathItem)
+	if operation == nil {
+		return false, []*errors.ValidationError{errors.OperationNotFound(pathItem, request, request.Method, foundPath)}
+	}
+	if operation.RequestBody == nil {
+		return true, nil
+	}
 
-    var validationErrors []*errors.ValidationError
-    operation := helpers.ExtractOperation(request, pathItem)
+	// extract the content type from the request
+	contentType := request.Header.Get(helpers.ContentTypeHeader)
+	required := false
+	if operation.RequestBody.Required != nil {
+		required = *operation.RequestBody.Required
+	}
+	if contentType == "" {
+		if !required {
+			// request body is not required, the validation stop there.
+			return true, nil
+		}
+		return false, []*errors.ValidationError{errors.RequestContentTypeNotFound(operation, request, foundPath)}
+	}
 
-    var contentType string
-    // extract the content type from the request
+	// extract the media type from the content type header.
+	ct, _, _ := helpers.ExtractContentType(contentType)
+	mediaType, ok := operation.RequestBody.Content.Get(ct)
+	if !ok {
+		return false, []*errors.ValidationError{errors.RequestContentTypeNotFound(operation, request, foundPath)}
+	}
 
-    if contentType = request.Header.Get(helpers.ContentTypeHeader); contentType != "" {
+	// we currently only support JSON validation for request bodies
+	// this will capture *everything* that contains some form of 'json' in the content type
+	if !strings.Contains(strings.ToLower(contentType), helpers.JSONType) {
+		return true, nil
+	}
 
-        // extract the media type from the content type header.
-        ct, _, _ := helpers.ExtractContentType(contentType)
-        if operation.RequestBody != nil {
-            if mediaType, ok := operation.RequestBody.Content[ct]; ok {
+	// Nothing to validate
+	if mediaType.Schema == nil {
+		return true, nil
+	}
 
-                // we currently only support JSON validation for request bodies
-                // this will capture *everything* that contains some form of 'json' in the content type
-                if strings.Contains(strings.ToLower(contentType), helpers.JSONType) {
+	// extract schema from media type
+	var schema *base.Schema
+	var renderedInline, renderedJSON []byte
 
-                    // extract schema from media type
-                    if mediaType.Schema != nil {
+	// have we seen this schema before? let's hash it and check the cache.
+	hash := mediaType.GoLow().Schema.Value.Hash()
 
-                        var schema *base.Schema
-                        var renderedInline, renderedJSON []byte
+	// perform work only once and cache the result in the validator.
+	if cacheHit, ch := v.schemaCache.Load(hash); ch {
+		// got a hit, use cached values
+		schema = cacheHit.(*schemaCache).schema
+		renderedInline = cacheHit.(*schemaCache).renderedInline
+		renderedJSON = cacheHit.(*schemaCache).renderedJSON
 
-                        // have we seen this schema before? let's hash it and check the cache.
-                        hash := mediaType.GoLow().Schema.Value.Hash()
+	} else {
 
-                        // perform work only once and cache the result in the validator.
-                        if cacheHit, ch := v.schemaCache[hash]; ch {
+		// render the schema inline and perform the intensive work of rendering and converting
+		// this is only performed once per schema and cached in the validator.
+		schema = mediaType.Schema.Schema()
+		renderedInline, _ = schema.RenderInline()
+		renderedJSON, _ = utils.ConvertYAMLtoJSON(renderedInline)
+		v.schemaCache.Store(hash, &schemaCache{
+			schema:         schema,
+			renderedInline: renderedInline,
+			renderedJSON:   renderedJSON,
+		})
+	}
 
-                            // got a hit, use cached values
-                            schema = cacheHit.schema
-                            renderedInline = cacheHit.renderedInline
-                            renderedJSON = cacheHit.renderedJSON
+	// render the schema, to be used for validation
+	validationSucceeded, validationErrors := ValidateRequestSchema(request, schema, renderedInline, renderedJSON)
 
-                        } else {
+	errors.PopulateValidationErrors(validationErrors, request, foundPath)
 
-                            // render the schema inline and perform the intensive work of rendering and converting
-                            // this is only performed once per schema and cached in the validator.
-                            schema = mediaType.Schema.Schema()
-                            renderedInline, _ = schema.RenderInline()
-                            renderedJSON, _ = utils.ConvertYAMLtoJSON(renderedInline)
-                            v.schemaCache[hash] = &schemaCache{
-                                schema:         schema,
-                                renderedInline: renderedInline,
-                                renderedJSON:   renderedJSON,
-                            }
-                        }
-
-                        //render the schema, to be used for validation
-                        valid, vErrs := ValidateRequestSchema(request, schema, renderedInline, renderedJSON)
-                        if !valid {
-                            validationErrors = append(validationErrors, vErrs...)
-                        }
-                    }
-                }
-            } else {
-                // content type not found in the contract
-                validationErrors = append(validationErrors, errors.RequestContentTypeNotFound(operation, request))
-            }
-        }
-    }
-    if len(validationErrors) > 0 {
-        return false, validationErrors
-    }
-    return true, nil
+	return validationSucceeded, validationErrors
 }

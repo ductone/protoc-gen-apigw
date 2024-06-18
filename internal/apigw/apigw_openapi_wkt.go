@@ -3,6 +3,7 @@ package apigw
 import (
 	pgs "github.com/lyft/protoc-gen-star"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
+	"github.com/pb33f/libopenapi/orderedmap"
 )
 
 // based on the work here:
@@ -10,17 +11,18 @@ import (
 func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 	switch wkt {
 	case pgs.AnyWKT:
+		props := orderedmap.New[string, *dm_base.SchemaProxy]()
+		props.Set("@type", dm_base.CreateSchemaProxy(&dm_base.Schema{
+			Type:        []string{"string"},
+			Description: "The type of the serialized message.",
+		}))
+
 		return &dm_base.Schema{
 			Type:        []string{"object"},
 			Description: "Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.",
-			Properties: map[string]*dm_base.SchemaProxy{
-				"@type": dm_base.CreateSchemaProxy(&dm_base.Schema{
-					Type:        []string{"string"},
-					Description: "The type of the serialized message.",
-				}),
-			},
+			Properties:  props,
 			// TODO(pquerna): add a tag based annotation for possible Any values.
-			AdditionalProperties: true,
+			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{B: true},
 		}
 	case pgs.DurationWKT:
 		return &dm_base.Schema{
@@ -36,7 +38,7 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 		// todo: pquerna: is this the right mapping for an arbitrary Struct?
 		return &dm_base.Schema{
 			Type:                 []string{"object"},
-			AdditionalProperties: sc.schemaForWKT(pgs.ValueWKT),
+			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{B: true},
 		}
 	case pgs.TimestampWKT:
 		return &dm_base.Schema{
@@ -50,9 +52,8 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 		}
 	case pgs.ListValueWKT:
 		return &dm_base.Schema{
-			Type:                 []string{"array"},
-			AdditionalProperties: sc.schemaForWKT(pgs.ValueWKT),
-			Nullable:             oasTrue(),
+			Type:     []string{"array"},
+			Nullable: oasTrue(),
 		}
 	case pgs.DoubleValueWKT:
 		return &dm_base.Schema{

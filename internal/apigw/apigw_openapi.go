@@ -14,7 +14,9 @@ import (
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 	dm_v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/pb33f/libopenapi/orderedmap"
 	"github.com/stuart-warren/yamlfmt"
+	"gopkg.in/yaml.v3"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 )
@@ -44,9 +46,11 @@ func (module *Module) buildOpenAPI(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Do
 			},
 		},
 		Paths: &dm_v3.Paths{
-			PathItems: map[string]*dm_v3.PathItem{},
+			PathItems: orderedmap.New[string, *dm_v3.PathItem](),
 		},
-		Components: &dm_v3.Components{Schemas: map[string]*dm_base.SchemaProxy{}},
+		Components: &dm_v3.Components{
+			Schemas: orderedmap.New[string, *dm_base.SchemaProxy](),
+		},
 	}
 	mt := &msgTracker{}
 	for _, m := range in.Methods() {
@@ -154,19 +158,22 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	}
 
 	fqn := strings.Split(method.FullyQualifiedName(), ".")
-	extensions := map[string]interface{}{}
+	extensions := orderedmap.New[string, *yaml.Node]()
 	if len(fqn) > 2 {
 		prefix := fqn[len(fqn)-2]
 		methodName := fqn[len(fqn)-1]
 		// Remove `Service` from method name
 		prefix = strings.ReplaceAll(prefix, "Service", "")
-		extensions["tags"] = []string{module.getOpGroup(prefix, operation)}
-		extensions["x-speakeasy-group"] = prefix
-		extensions["x-speakeasy-name-override"] = methodName
+		extensions.Set("tags",
+			yamlStringSlice([]string{module.getOpGroup(prefix, operation)}),
+		)
+		extensions.Set("x-speakeasy-group", yamlString(prefix))
+		extensions.Set("x-speakeasy-name-override", yamlString(methodName))
 	}
 	terraformEntity := getTerraformEntityOperationExtension(operation)
 	if terraformEntity != "" {
-		extensions["x-speakeasy-entity-operation"] = terraformEntity
+		extensions.Set("x-speakeasy-entity-operation",
+			yamlString(terraformEntity))
 	}
 
 	outputRef := mt.Add(outObj)
@@ -176,16 +183,16 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		Description: methodDescription,
 		Deprecated:  oasBool(method.Descriptor().GetOptions().GetDeprecated()),
 		Responses: &dm_v3.Responses{
-			Codes: map[string]*dm_v3.Response{
+			Codes: orderedmap.ToOrderedMap(map[string]*dm_v3.Response{
 				"200": {
 					Description: outDescription,
-					Content: map[string]*dm_v3.MediaType{
+					Content: orderedmap.ToOrderedMap(map[string]*dm_v3.MediaType{
 						"application/json": {
 							Schema: outputRef,
 						},
-					},
+					}),
 				},
-			},
+			}),
 		},
 		Extensions: extensions,
 	}
@@ -203,7 +210,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		pp := &dm_v3.Parameter{
 			Name:     paramName,
 			In:       "path",
-			Required: true,
+			Required: oasTrue(),
 			Schema:   sc.Field(edgeField),
 		}
 
@@ -237,11 +244,11 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	if operation.Method != http.MethodGet && operation.Method != http.MethodHead {
 		inputRef := mt.AddInput(method.Input(), inputFilter)
 		op.RequestBody = &dm_v3.RequestBody{
-			Content: map[string]*dm_v3.MediaType{
+			Content: orderedmap.ToOrderedMap(map[string]*dm_v3.MediaType{
 				"application/json": {
 					Schema: inputRef,
 				},
-			},
+			}),
 		}
 	}
 	for _, sd := range mt.messages {
@@ -284,29 +291,29 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) string 
 }
 
 func addOperation(doc *dm_v3.Document, r *route, op *dm_v3.Operation, comp *dm_v3.Components) {
-	if doc.Paths.PathItems[r.Route] == nil {
-		doc.Paths.PathItems[r.Route] = &dm_v3.PathItem{}
+	if doc.Paths.PathItems.Value(r.Route) == nil {
+		doc.Paths.PathItems.Set(r.Route, &dm_v3.PathItem{})
 	}
 
 	switch r.Method {
 	case http.MethodGet:
-		doc.Paths.PathItems[r.Route].Get = op
+		doc.Paths.PathItems.Value(r.Route).Get = op
 	case http.MethodPost:
-		doc.Paths.PathItems[r.Route].Post = op
+		doc.Paths.PathItems.Value(r.Route).Post = op
 	case http.MethodPut:
-		doc.Paths.PathItems[r.Route].Put = op
+		doc.Paths.PathItems.Value(r.Route).Put = op
 	case http.MethodDelete:
-		doc.Paths.PathItems[r.Route].Delete = op
+		doc.Paths.PathItems.Value(r.Route).Delete = op
 	case http.MethodPatch:
-		doc.Paths.PathItems[r.Route].Patch = op
+		doc.Paths.PathItems.Value(r.Route).Patch = op
 	case http.MethodHead:
-		doc.Paths.PathItems[r.Route].Head = op
+		doc.Paths.PathItems.Value(r.Route).Head = op
 	default:
 		panic("apigw_openapi: addOperation: unsupported method: " + r.Method + " " + r.Route)
 	}
 	// TODO(pquerna): currently we only use Schemas from Components.
-	for k, v := range comp.Schemas {
-		doc.Components.Schemas[k] = v
+	for pair := comp.Schemas.Oldest(); pair != nil; pair = pair.Next() {
+		doc.Components.Schemas.Set(pair.Key, pair.Value)
 	}
 }
 

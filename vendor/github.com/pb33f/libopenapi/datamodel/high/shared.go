@@ -15,32 +15,32 @@ package high
 
 import (
 	"github.com/pb33f/libopenapi/datamodel/low"
+	"github.com/pb33f/libopenapi/orderedmap"
+	"gopkg.in/yaml.v3"
 )
 
 // GoesLow is used to represent any high-level model. All high level models meet this interface and can be used to
 // extract low-level models from any high-level model.
 type GoesLow[T any] interface {
-
 	// GoLow returns the low-level object that was used to create the high-level object. This allows consumers
 	// to dive-down into the plumbing API at any point in the model.
 	GoLow() T
 }
 
-// GoesLowUnTyped is used to represent any high-level model. All high level models meet this interface and can be used to
+// GoesLowUntyped is used to represent any high-level model. All high level models meet this interface and can be used to
 // extract low-level models from any high-level model.
 type GoesLowUntyped interface {
-
-	// GoLow returns the low-level object that was used to create the high-level object. This allows consumers
+	// GoLowUntyped returns the low-level object that was used to create the high-level object. This allows consumers
 	// to dive-down into the plumbing API at any point in the model.
 	GoLowUntyped() any
 }
 
-// ExtractExtensions is a convenience method for converting low-level extension definitions, to a high level map[string]any
+// ExtractExtensions is a convenience method for converting low-level extension definitions, to a high level *orderedmap.Map[string, *yaml.Node]
 // definition that is easier to consume in applications.
-func ExtractExtensions(extensions map[low.KeyReference[string]]low.ValueReference[any]) map[string]any {
-	extracted := make(map[string]any)
-	for k, v := range extensions {
-		extracted[k.Value] = v.Value
+func ExtractExtensions(extensions *orderedmap.Map[low.KeyReference[string], low.ValueReference[*yaml.Node]]) *orderedmap.Map[string, *yaml.Node] {
+	extracted := orderedmap.New[string, *yaml.Node]()
+	for pair := orderedmap.First(extensions); pair != nil; pair = pair.Next() {
+		extracted.Set(pair.Key().Value, pair.Value().Value)
 	}
 	return extracted
 }
@@ -59,20 +59,20 @@ func ExtractExtensions(extensions map[low.KeyReference[string]]low.ValueReferenc
 //
 // to use:
 //
-//	schema := schemaProxy.Schema() // any high-level object that has extensions
+//	schema := schemaProxy.Schema() // any high-level object that has
 //	extensions, err := UnpackExtensions[MyComplexType, low.Schema](schema)
-func UnpackExtensions[T any, R low.HasExtensions[T]](low GoesLow[R]) (map[string]*T, error) {
-	m := make(map[string]*T)
+func UnpackExtensions[T any, R low.HasExtensions[T]](low GoesLow[R]) (*orderedmap.Map[string, *T], error) {
+	m := orderedmap.New[string, *T]()
 	ext := low.GoLow().GetExtensions()
-	for i := range ext {
-		key := i.Value
+	for pair := orderedmap.First(ext); pair != nil; pair = pair.Next() {
+		key := pair.Key().Value
 		g := new(T)
-		valueNode := ext[i].ValueNode
+		valueNode := pair.Value().ValueNode
 		err := valueNode.Decode(g)
 		if err != nil {
 			return nil, err
 		}
-		m[key] = g
+		m.Set(key, g)
 	}
 	return m, nil
 }

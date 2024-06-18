@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -10,6 +11,24 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 )
+
+type contextKey string
+
+func (c contextKey) String() string {
+	return "apigw_v1 context key " + string(c)
+}
+
+const (
+	contextKeyMethodDesc = contextKey("methodDesc")
+)
+
+func MethodDescContext(ctx context.Context) *MethodDesc {
+	return ctx.Value(contextKeyMethodDesc).(*MethodDesc)
+}
+
+func NewMethodDescContext(ctx context.Context, methodDesc *MethodDesc) context.Context {
+	return context.WithValue(ctx, contextKeyMethodDesc, methodDesc)
+}
 
 func MetadataForRequest(req *http.Request, methodFulLName string) metadata.MD {
 	// https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-HTTP2.md

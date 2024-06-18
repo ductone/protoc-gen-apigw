@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"hash/maphash"
 	"math/big"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -22,25 +24,26 @@ type Schema struct {
 	dynamicAnchors []*Schema
 
 	// type agnostic validations
-	Format          string
-	format          func(interface{}) bool
-	Always          *bool // always pass/fail. used when booleans are used as schemas in draft-07.
-	Ref             *Schema
-	RecursiveAnchor bool
-	RecursiveRef    *Schema
-	DynamicAnchor   string
-	DynamicRef      *Schema
-	Types           []string      // allowed types.
-	Constant        []interface{} // first element in slice is constant value. note: slice is used to capture nil constant.
-	Enum            []interface{} // allowed values.
-	enumError       string        // error message for enum fail. captured here to avoid constructing error message every time.
-	Not             *Schema
-	AllOf           []*Schema
-	AnyOf           []*Schema
-	OneOf           []*Schema
-	If              *Schema
-	Then            *Schema // nil, when If is nil.
-	Else            *Schema // nil, when If is nil.
+	Format           string
+	format           func(interface{}) bool
+	Always           *bool // always pass/fail. used when booleans are used as schemas in draft-07.
+	Ref              *Schema
+	RecursiveAnchor  bool
+	RecursiveRef     *Schema
+	DynamicAnchor    string
+	DynamicRef       *Schema
+	dynamicRefAnchor string
+	Types            []string      // allowed types.
+	Constant         []interface{} // first element in slice is constant value. note: slice is used to capture nil constant.
+	Enum             []interface{} // allowed values.
+	enumError        string        // error message for enum fail. captured here to avoid constructing error message every time.
+	Not              *Schema
+	AllOf            []*Schema
+	AnyOf            []*Schema
+	OneOf            []*Schema
+	If               *Schema
+	Then             *Schema // nil, when If is nil.
+	Else             *Schema // nil, when If is nil.
 
 	// object validations
 	MinProperties         int      // -1 if not specified.
@@ -420,11 +423,38 @@ func (s *Schema) validate(scope []schemaRef, vscope int, spath string, v interfa
 			errors = append(errors, validationError("maxItems", "maximum %d items required, but found %d items", s.MaxItems, len(v)))
 		}
 		if s.UniqueItems {
-			for i := 1; i < len(v); i++ {
-				for j := 0; j < i; j++ {
-					if equals(v[i], v[j]) {
-						errors = append(errors, validationError("uniqueItems", "items at index %d and %d are equal", j, i))
+			if len(v) <= 20 {
+			outer1:
+				for i := 1; i < len(v); i++ {
+					for j := 0; j < i; j++ {
+						if equals(v[i], v[j]) {
+							errors = append(errors, validationError("uniqueItems", "items at index %d and %d are equal", j, i))
+							break outer1
+						}
 					}
+				}
+			} else {
+				m := make(map[uint64][]int)
+				var h maphash.Hash
+			outer2:
+				for i, item := range v {
+					h.Reset()
+					hash(item, &h)
+					k := h.Sum64()
+					if err != nil {
+						panic(err)
+					}
+					arr, ok := m[k]
+					if ok {
+						for _, j := range arr {
+							if equals(v[j], item) {
+								errors = append(errors, validationError("uniqueItems", "items at index %d and %d are equal", j, i))
+								break outer2
+							}
+						}
+					}
+					arr = append(arr, i)
+					m[k] = arr
 				}
 			}
 		}
@@ -616,7 +646,7 @@ func (s *Schema) validate(scope []schemaRef, vscope int, spath string, v interfa
 	}
 	if s.DynamicRef != nil {
 		sch := s.DynamicRef
-		if sch.DynamicAnchor != "" {
+		if s.dynamicRefAnchor != "" && sch.DynamicAnchor == s.dynamicRefAnchor {
 			// dynamicRef based on scope
 			for i := len(scope) - 1; i >= 0; i-- {
 				sr := scope[i]
@@ -710,13 +740,13 @@ func (s *Schema) validate(scope []schemaRef, vscope int, spath string, v interfa
 		}
 	}
 
-	// UnevaluatedProperties + UnevaluatedItems
+	// unevaluatedProperties + unevaluatedItems
 	switch v := v.(type) {
 	case map[string]interface{}:
 		if s.UnevaluatedProperties != nil {
 			for pname := range result.unevalProps {
 				if pvalue, ok := v[pname]; ok {
-					if err := validate(s.UnevaluatedProperties, "UnevaluatedProperties", pvalue, escape(pname)); err != nil {
+					if err := validate(s.UnevaluatedProperties, "unevaluatedProperties", pvalue, escape(pname)); err != nil {
 						errors = append(errors, err)
 					}
 				}
@@ -726,7 +756,7 @@ func (s *Schema) validate(scope []schemaRef, vscope int, spath string, v interfa
 	case []interface{}:
 		if s.UnevaluatedItems != nil {
 			for i := range result.unevalItems {
-				if err := validate(s.UnevaluatedItems, "UnevaluatedItems", v[i], strconv.Itoa(i)); err != nil {
+				if err := validate(s.UnevaluatedItems, "unevaluatedItems", v[i], strconv.Itoa(i)); err != nil {
 					errors = append(errors, err)
 				}
 			}
@@ -817,6 +847,48 @@ func equals(v1, v2 interface{}) bool {
 		return num1.Cmp(num2) == 0
 	default:
 		return v1 == v2
+	}
+}
+
+func hash(v interface{}, h *maphash.Hash) {
+	switch v := v.(type) {
+	case nil:
+		h.WriteByte(0)
+	case bool:
+		h.WriteByte(1)
+		if v {
+			h.WriteByte(1)
+		} else {
+			h.WriteByte(0)
+		}
+	case json.Number, float32, float64, int, int8, int32, int64, uint, uint8, uint32, uint64:
+		h.WriteByte(2)
+		num, _ := new(big.Rat).SetString(fmt.Sprint(v))
+		h.Write(num.Num().Bytes())
+		h.Write(num.Denom().Bytes())
+	case string:
+		h.WriteByte(3)
+		h.WriteString(v)
+	case []interface{}:
+		h.WriteByte(4)
+		for _, item := range v {
+			hash(item, h)
+		}
+	case map[string]interface{}:
+		h.WriteByte(5)
+		props := make([]string, 0, len(v))
+		for prop := range v {
+			props = append(props, prop)
+		}
+		sort.Slice(props, func(i, j int) bool {
+			return props[i] < props[j]
+		})
+		for _, prop := range props {
+			hash(prop, h)
+			hash(v[prop], h)
+		}
+	default:
+		panic(InvalidJSONTypeError(fmt.Sprintf("%T", v)))
 	}
 }
 
