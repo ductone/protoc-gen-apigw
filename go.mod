@@ -2,7 +2,7 @@ module github.com/ductone/protoc-gen-apigw
 
 go 1.21
 
-toolchain go1.22.1
+toolchain go1.22.4
 
 require (
 	github.com/davecgh/go-spew v1.1.1
