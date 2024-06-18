@@ -4,6 +4,9 @@
 package validator
 
 import (
+	"net/http"
+	"sync"
+
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi-validator/errors"
 	"github.com/pb33f/libopenapi-validator/parameters"
@@ -11,9 +14,7 @@ import (
 	"github.com/pb33f/libopenapi-validator/requests"
 	"github.com/pb33f/libopenapi-validator/responses"
 	"github.com/pb33f/libopenapi-validator/schema_validation"
-	"github.com/pb33f/libopenapi/datamodel/high/v3"
-	"net/http"
-	"sync"
+	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 )
 
 // Validator provides a coarse grained interface for validating an OpenAPI 3+ documents.
@@ -27,6 +28,13 @@ type Validator interface {
 	// ValidateHttpRequest will validate an *http.Request object against an OpenAPI 3+ document.
 	// The path, query, cookie and header parameters and request body are validated.
 	ValidateHttpRequest(request *http.Request) (bool, []*errors.ValidationError)
+	// ValidateHttpRequestSync will validate an *http.Request object against an OpenAPI 3+ document syncronously and without spawning any goroutines.
+	// The path, query, cookie and header parameters and request body are validated.
+	ValidateHttpRequestSync(request *http.Request) (bool, []*errors.ValidationError)
+
+	// ValidateHttpResponse will an *http.Response object against an OpenAPI 3+ document.
+	// The response body is validated. The request is only used to extract the correct reponse from the spec.
+	ValidateHttpResponse(request *http.Request, response *http.Response) (bool, []*errors.ValidationError)
 
 	// ValidateHttpRequestResponse will validate both the *http.Request and *http.Response objects against an OpenAPI 3+ document.
 	// The path, query, cookie and header parameters and request and response body are validated.
@@ -51,23 +59,28 @@ func NewValidator(document libopenapi.Document) (Validator, []error) {
 	if errs != nil {
 		return nil, errs
 	}
+	v := NewValidatorFromV3Model(&m.Model)
+	v.(*validator).document = document
+	return v, nil
+}
 
+// NewValidatorFromV3Model will create a new Validator from an OpenAPI Model
+func NewValidatorFromV3Model(m *v3.Document) Validator {
 	// create a new parameter validator
-	paramValidator := parameters.NewParameterValidator(&m.Model)
+	paramValidator := parameters.NewParameterValidator(m)
 
 	// create a new request body validator
-	reqBodyValidator := requests.NewRequestBodyValidator(&m.Model)
+	reqBodyValidator := requests.NewRequestBodyValidator(m)
 
 	// create a response body validator
-	respBodyValidator := responses.NewResponseBodyValidator(&m.Model)
+	respBodyValidator := responses.NewResponseBodyValidator(m)
 
 	return &validator{
-		v3Model:           &m.Model,
-		document:          document,
+		v3Model:           m,
 		requestValidator:  reqBodyValidator,
 		responseValidator: respBodyValidator,
 		paramValidator:    paramValidator,
-	}, nil
+	}
 }
 
 func (v *validator) GetParameterValidator() parameters.ParameterValidator {
@@ -82,6 +95,36 @@ func (v *validator) GetResponseBodyValidator() responses.ResponseBodyValidator {
 
 func (v *validator) ValidateDocument() (bool, []*errors.ValidationError) {
 	return schema_validation.ValidateOpenAPIDocument(v.document)
+}
+
+func (v *validator) ValidateHttpResponse(
+	request *http.Request,
+	response *http.Response) (bool, []*errors.ValidationError) {
+
+	var pathItem *v3.PathItem
+	var pathValue string
+	var errs []*errors.ValidationError
+
+	pathItem, errs, pathValue = paths.FindPath(request, v.v3Model)
+	if pathItem == nil || errs != nil {
+		v.errors = errs
+		return false, errs
+	}
+	v.foundPath = pathItem
+	v.foundPathValue = pathValue
+
+	responseBodyValidator := v.responseValidator
+	responseBodyValidator.SetPathItem(pathItem, pathValue)
+
+	// validate response
+	_, responseErrors := responseBodyValidator.ValidateResponseBody(request, response)
+
+	if len(responseErrors) > 0 {
+		return false, responseErrors
+	}
+	v.foundPath = nil
+	v.foundPathValue = ""
+	return true, nil
 }
 
 func (v *validator) ValidateHttpRequestResponse(
@@ -159,6 +202,7 @@ func (v *validator) ValidateHttpRequest(request *http.Request) (bool, []*errors.
 			paramValidator.ValidateCookieParams,
 			paramValidator.ValidateHeaderParams,
 			paramValidator.ValidateQueryParams,
+			paramValidator.ValidateSecurity,
 		}
 
 		// listen for validation errors on parameters. everything will run async.
@@ -234,6 +278,62 @@ func (v *validator) ValidateHttpRequest(request *http.Request) (bool, []*errors.
 	if len(validationErrors) > 0 {
 		return false, validationErrors
 	}
+	return true, nil
+}
+
+func (v *validator) ValidateHttpRequestSync(request *http.Request) (bool, []*errors.ValidationError) {
+	// find path
+	var pathItem *v3.PathItem
+	var pathValue string
+	var errs []*errors.ValidationError
+	if v.foundPath == nil {
+		pathItem, errs, pathValue = paths.FindPath(request, v.v3Model)
+		if pathItem == nil || errs != nil {
+			v.errors = errs
+			return false, errs
+		}
+		v.foundPath = pathItem
+		v.foundPathValue = pathValue
+	} else {
+		pathItem = v.foundPath
+		pathValue = v.foundPathValue
+	}
+
+	// create a new parameter validator
+	paramValidator := v.paramValidator
+	paramValidator.SetPathItem(pathItem, pathValue)
+
+	// create a new request body validator
+	reqBodyValidator := v.requestValidator
+	reqBodyValidator.SetPathItem(pathItem, pathValue)
+
+	validationErrors := make([]*errors.ValidationError, 0)
+
+	paramValidationErrors := make([]*errors.ValidationError, 0)
+	for _, validateFunc := range []validationFunction{
+		paramValidator.ValidatePathParams,
+		paramValidator.ValidateCookieParams,
+		paramValidator.ValidateHeaderParams,
+		paramValidator.ValidateQueryParams,
+		paramValidator.ValidateSecurity,
+	} {
+		valid, pErrs := validateFunc(request)
+		if !valid {
+			paramValidationErrors = append(paramValidationErrors, pErrs...)
+		}
+	}
+
+	valid, pErrs := reqBodyValidator.ValidateRequestBody(request)
+	if !valid {
+		paramValidationErrors = append(paramValidationErrors, pErrs...)
+	}
+
+	validationErrors = append(validationErrors, paramValidationErrors...)
+
+	if len(validationErrors) > 0 {
+		return false, validationErrors
+	}
+
 	return true, nil
 }
 

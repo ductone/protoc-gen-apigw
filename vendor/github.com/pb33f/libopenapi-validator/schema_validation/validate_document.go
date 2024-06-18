@@ -4,9 +4,10 @@
 package schema_validation
 
 import (
+	"errors"
 	"fmt"
 	"github.com/pb33f/libopenapi"
-	"github.com/pb33f/libopenapi-validator/errors"
+	liberrors "github.com/pb33f/libopenapi-validator/errors"
 	"github.com/pb33f/libopenapi-validator/helpers"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
@@ -16,11 +17,11 @@ import (
 
 // ValidateOpenAPIDocument will validate an OpenAPI document against the OpenAPI 2, 3.0 and 3.1 schemas (depending on version)
 // It will return true if the document is valid, false if it is not and a slice of ValidationError pointers.
-func ValidateOpenAPIDocument(doc libopenapi.Document) (bool, []*errors.ValidationError) {
+func ValidateOpenAPIDocument(doc libopenapi.Document) (bool, []*liberrors.ValidationError) {
 
 	info := doc.GetSpecInfo()
 	loadedSchema := info.APISchema
-	var validationErrors []*errors.ValidationError
+	var validationErrors []*liberrors.ValidationError
 	decodedDocument := *info.SpecJSON
 
 	compiler := jsonschema.NewCompiler()
@@ -29,29 +30,32 @@ func ValidateOpenAPIDocument(doc libopenapi.Document) (bool, []*errors.Validatio
 
 	scErrs := jsch.Validate(decodedDocument)
 
-	var schemaValidationErrors []*errors.SchemaValidationFailure
+	var schemaValidationErrors []*liberrors.SchemaValidationFailure
 
 	if scErrs != nil {
 
-		if jk, ok := scErrs.(*jsonschema.ValidationError); ok {
+		var jk *jsonschema.ValidationError
+		if errors.As(scErrs, &jk) {
 
 			// flatten the validationErrors
 			schFlatErrs := jk.BasicOutput().Errors
 
 			for q := range schFlatErrs {
 				er := schFlatErrs[q]
-				if er.KeywordLocation == "" || strings.HasPrefix(er.Error, "doesn't validate with") {
+				if er.KeywordLocation == "" ||
+					strings.HasPrefix(er.Error, "oneOf failed") ||
+					strings.HasPrefix(er.Error, "allOf failed") ||
+					strings.HasPrefix(er.Error, "anyOf failed") ||
+					strings.HasPrefix(er.Error, "if failed") ||
+					strings.HasPrefix(er.Error, "else failed") ||
+					strings.HasPrefix(er.Error, "doesn't validate with") {
 					continue // ignore this error, it's useless tbh, utter noise.
 				}
 				if er.Error != "" {
 
 					// locate the violated property in the schema
-					located := LocateSchemaPropertyNodeByJSONPath(info.RootNode.Content[0], er.KeywordLocation)
-					if located == nil {
-						// try again with the instance location
-						located = LocateSchemaPropertyNodeByJSONPath(info.RootNode.Content[0], er.InstanceLocation)
-					}
-					violation := &errors.SchemaValidationFailure{
+					located := LocateSchemaPropertyNodeByJSONPath(info.RootNode.Content[0], er.InstanceLocation)
+					violation := &liberrors.SchemaValidationFailure{
 						Reason:           er.Error,
 						Location:         er.InstanceLocation,
 						DeepLocation:     er.KeywordLocation,
@@ -80,13 +84,13 @@ func ValidateOpenAPIDocument(doc libopenapi.Document) (bool, []*errors.Validatio
 		}
 
 		// add the error to the list
-		validationErrors = append(validationErrors, &errors.ValidationError{
+		validationErrors = append(validationErrors, &liberrors.ValidationError{
 			ValidationType: helpers.Schema,
 			Message:        "Document does not pass validation",
 			Reason: fmt.Sprintf("OpenAPI document is not valid according "+
 				"to the %s specification", info.Version),
 			SchemaValidationErrors: schemaValidationErrors,
-			HowToFix:               errors.HowToFixInvalidSchema,
+			HowToFix:               liberrors.HowToFixInvalidSchema,
 		})
 	}
 	if len(validationErrors) > 0 {

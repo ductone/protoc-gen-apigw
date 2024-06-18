@@ -7,11 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
-	"time"
-
 	"github.com/pb33f/libopenapi/utils"
 	"gopkg.in/yaml.v3"
+	"strings"
+	"time"
 )
 
 const (
@@ -24,6 +23,7 @@ const (
 type SpecInfo struct {
 	SpecType            string                  `json:"type"`
 	Version             string                  `json:"version"`
+	VersionNumeric      float32                 `json:"versionNumeric"`
 	SpecFormat          string                  `json:"format"`
 	SpecFileType        string                  `json:"fileType"`
 	SpecBytes           *[]byte                 `json:"bytes"` // the original byte array
@@ -33,43 +33,44 @@ type SpecInfo struct {
 	Error               error                   `json:"-"`     // something go wrong?
 	APISchema           string                  `json:"-"`     // API Schema for supplied spec type (2 or 3)
 	Generated           time.Time               `json:"-"`
-	JsonParsingChannel  chan bool               `json:"-"`
 	OriginalIndentation int                     `json:"-"` // the original whitespace
 }
 
-// GetJSONParsingChannel returns a channel that will close once async JSON parsing is completed.
-// This is really useful if your application wants to analyze the JSON via SpecJSON. the library will
-// return *SpecInfo BEFORE the JSON is done parsing, so things are as fast as possible.
-//
-// If you want to know when parsing is done, listen on the channel for a bool.
-func (si SpecInfo) GetJSONParsingChannel() chan bool {
-	return si.JsonParsingChannel
+func ExtractSpecInfoWithConfig(spec []byte, config *DocumentConfiguration) (*SpecInfo, error) {
+	return ExtractSpecInfoWithDocumentCheck(spec, config.BypassDocumentCheck)
 }
 
-// ExtractSpecInfo accepts an OpenAPI/Swagger specification that has been read into a byte array
+// ExtractSpecInfoWithDocumentCheckSync accepts an OpenAPI/Swagger specification that has been read into a byte array
 // and will return a SpecInfo pointer, which contains details on the version and an un-marshaled
-// *yaml.Node root node tree. The root node tree is what's used by the library when building out models.
-//
-// If the spec cannot be parsed correctly then an error will be returned, otherwise the error is nil.
-func ExtractSpecInfo(spec []byte) (*SpecInfo, error) {
+// deprecated: use ExtractSpecInfoWithDocumentCheck instead, this function will be removed in a later version.
+func ExtractSpecInfoWithDocumentCheckSync(spec []byte, bypass bool) (*SpecInfo, error) {
+	i, err := ExtractSpecInfoWithDocumentCheck(spec, bypass)
+	if err != nil {
+		return nil, err
+	}
+	return i, nil
+}
 
+// ExtractSpecInfoWithDocumentCheck accepts an OpenAPI/Swagger specification that has been read into a byte array
+// and will return a SpecInfo pointer, which contains details on the version and an un-marshaled
+// ensures the document is an OpenAPI document.
+func ExtractSpecInfoWithDocumentCheck(spec []byte, bypass bool) (*SpecInfo, error) {
 	var parsedSpec yaml.Node
 
-	specVersion := &SpecInfo{}
-	specVersion.JsonParsingChannel = make(chan bool)
+	specInfo := &SpecInfo{}
 
 	// set original bytes
-	specVersion.SpecBytes = &spec
+	specInfo.SpecBytes = &spec
 
 	runes := []rune(strings.TrimSpace(string(spec)))
 	if len(runes) <= 0 {
-		return specVersion, errors.New("there is nothing in the spec, it's empty - so there is nothing to be done")
+		return specInfo, errors.New("there is nothing in the spec, it's empty - so there is nothing to be done")
 	}
 
 	if runes[0] == '{' && runes[len(runes)-1] == '}' {
-		specVersion.SpecFileType = JSONFileType
+		specInfo.SpecFileType = JSONFileType
 	} else {
-		specVersion.SpecFileType = YAMLFileType
+		specInfo.SpecFileType = YAMLFileType
 	}
 
 	err := yaml.Unmarshal(spec, &parsedSpec)
@@ -77,7 +78,7 @@ func ExtractSpecInfo(spec []byte) (*SpecInfo, error) {
 		return nil, fmt.Errorf("unable to parse specification: %s", err.Error())
 	}
 
-	specVersion.RootNode = &parsedSpec
+	specInfo.RootNode = &parsedSpec
 
 	_, openAPI3 := utils.FindKeyNode(utils.OpenApi3, parsedSpec.Content)
 	_, openAPI2 := utils.FindKeyNode(utils.OpenApi2, parsedSpec.Content)
@@ -85,19 +86,6 @@ func ExtractSpecInfo(spec []byte) (*SpecInfo, error) {
 
 	parseJSON := func(bytes []byte, spec *SpecInfo, parsedNode *yaml.Node) {
 		var jsonSpec map[string]interface{}
-
-		if spec.SpecType == utils.OpenApi3 {
-			switch spec.Version {
-			case "3.1.0", "3.1":
-				spec.APISchema = OpenAPI31SchemaData
-			default:
-				spec.APISchema = OpenAPI3SchemaData
-			}
-		}
-		if spec.SpecType == utils.OpenApi2 {
-			spec.APISchema = OpenAPI2SchemaData
-		}
-
 		if utils.IsYAML(string(bytes)) {
 			_ = parsedNode.Decode(&jsonSpec)
 			b, _ := json.Marshal(&jsonSpec)
@@ -108,80 +96,105 @@ func ExtractSpecInfo(spec []byte) (*SpecInfo, error) {
 			spec.SpecJSONBytes = &bytes
 			spec.SpecJSON = &jsonSpec
 		}
-		close(spec.JsonParsingChannel) // this needs removing at some point
 	}
 
-	// check for specific keys
-	if openAPI3 != nil {
-		version, majorVersion, versionError := parseVersionTypeData(openAPI3.Value)
-		if versionError != nil {
-			return nil, versionError
+	if !bypass {
+		// check for specific keys
+		if openAPI3 != nil {
+			version, majorVersion, versionError := parseVersionTypeData(openAPI3.Value)
+			if versionError != nil {
+				return nil, versionError
+			}
+
+			specInfo.SpecType = utils.OpenApi3
+			specInfo.Version = version
+			specInfo.SpecFormat = OAS3
+
+			switch specInfo.Version {
+			case "3.1.0", "3.1":
+				specInfo.VersionNumeric = 3.1
+				specInfo.APISchema = OpenAPI31SchemaData
+				specInfo.SpecFormat = OAS31
+			default:
+				specInfo.VersionNumeric = 3.0
+				specInfo.APISchema = OpenAPI3SchemaData
+			}
+
+			// parse JSON
+			parseJSON(spec, specInfo, &parsedSpec)
+
+			// double check for the right version, people mix this up.
+			if majorVersion < 3 {
+				specInfo.Error = errors.New("spec is defined as an openapi spec, but is using a swagger (2.0), or unknown version")
+				return specInfo, specInfo.Error
+			}
 		}
 
-		specVersion.SpecType = utils.OpenApi3
-		specVersion.Version = version
-		specVersion.SpecFormat = OAS3
+		if openAPI2 != nil {
+			version, majorVersion, versionError := parseVersionTypeData(openAPI2.Value)
+			if versionError != nil {
+				return nil, versionError
+			}
 
+			specInfo.SpecType = utils.OpenApi2
+			specInfo.Version = version
+			specInfo.SpecFormat = OAS2
+			specInfo.VersionNumeric = 2.0
+			specInfo.APISchema = OpenAPI2SchemaData
+
+			// parse JSON
+			parseJSON(spec, specInfo, &parsedSpec)
+
+			// I am not certain this edge-case is very frequent, but let's make sure we handle it anyway.
+			if majorVersion > 2 {
+				specInfo.Error = errors.New("spec is defined as a swagger (openapi 2.0) spec, but is an openapi 3 or unknown version")
+				return specInfo, specInfo.Error
+			}
+		}
+		if asyncAPI != nil {
+			version, majorVersion, versionErr := parseVersionTypeData(asyncAPI.Value)
+			if versionErr != nil {
+				return nil, versionErr
+			}
+
+			specInfo.SpecType = utils.AsyncApi
+			specInfo.Version = version
+			// TODO: format for AsyncAPI.
+
+			// parse JSON
+			parseJSON(spec, specInfo, &parsedSpec)
+
+			// so far there is only 2 as a major release of AsyncAPI
+			if majorVersion > 2 {
+				specInfo.Error = errors.New("spec is defined as asyncapi, but has a major version that is invalid")
+				return specInfo, specInfo.Error
+			}
+		}
+
+		if specInfo.SpecType == "" {
+			// parse JSON
+			parseJSON(spec, specInfo, &parsedSpec)
+			specInfo.Error = errors.New("spec type not supported by libopenapi, sorry")
+			return specInfo, specInfo.Error
+		}
+	} else {
 		// parse JSON
-		parseJSON(spec, specVersion, &parsedSpec)
-
-		// double check for the right version, people mix this up.
-		if majorVersion < 3 {
-			specVersion.Error = errors.New("spec is defined as an openapi spec, but is using a swagger (2.0), or unknown version")
-			return specVersion, specVersion.Error
-		}
-	}
-
-	if openAPI2 != nil {
-		version, majorVersion, versionError := parseVersionTypeData(openAPI2.Value)
-		if versionError != nil {
-			return nil, versionError
-		}
-
-		specVersion.SpecType = utils.OpenApi2
-		specVersion.Version = version
-		specVersion.SpecFormat = OAS2
-
-		// parse JSON
-		parseJSON(spec, specVersion, &parsedSpec)
-
-		// I am not certain this edge-case is very frequent, but let's make sure we handle it anyway.
-		if majorVersion > 2 {
-			specVersion.Error = errors.New("spec is defined as a swagger (openapi 2.0) spec, but is an openapi 3 or unknown version")
-			return specVersion, specVersion.Error
-		}
-	}
-	if asyncAPI != nil {
-		version, majorVersion, versionErr := parseVersionTypeData(asyncAPI.Value)
-		if versionErr != nil {
-			return nil, versionErr
-		}
-
-		specVersion.SpecType = utils.AsyncApi
-		specVersion.Version = version
-		// TODO: format for AsyncAPI.
-
-		// parse JSON
-		parseJSON(spec, specVersion, &parsedSpec)
-
-		// so far there is only 2 as a major release of AsyncAPI
-		if majorVersion > 2 {
-			specVersion.Error = errors.New("spec is defined as asyncapi, but has a major version that is invalid")
-			return specVersion, specVersion.Error
-		}
-	}
-
-	if specVersion.SpecType == "" {
-		// parse JSON
-		parseJSON(spec, specVersion, &parsedSpec)
-		specVersion.Error = errors.New("spec type not supported by libopenapi, sorry")
-		return specVersion, specVersion.Error
+		parseJSON(spec, specInfo, &parsedSpec)
 	}
 
 	// detect the original whitespace indentation
-	specVersion.OriginalIndentation = utils.DetermineWhitespaceLength(string(spec))
+	specInfo.OriginalIndentation = utils.DetermineWhitespaceLength(string(spec))
 
-	return specVersion, nil
+	return specInfo, nil
+}
+
+// ExtractSpecInfo accepts an OpenAPI/Swagger specification that has been read into a byte array
+// and will return a SpecInfo pointer, which contains details on the version and an un-marshaled
+// *yaml.Node root node tree. The root node tree is what's used by the library when building out models.
+//
+// If the spec cannot be parsed correctly then an error will be returned, otherwise the error is nil.
+func ExtractSpecInfo(spec []byte) (*SpecInfo, error) {
+	return ExtractSpecInfoWithDocumentCheck(spec, false)
 }
 
 // extract version number from specification

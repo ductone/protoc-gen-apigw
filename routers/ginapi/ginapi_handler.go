@@ -49,6 +49,7 @@ func Handler(srv interface{}, method *apigw_v1.MethodDesc, interceptor grpc.Unar
 		}
 
 		ctx = peer.NewContext(ctx, p)
+		ctx = apigw_v1.NewMethodDescContext(ctx, method)
 		ctx = metadata.NewIncomingContext(ctx, md)
 		stream := newGinTransportStream(c, method)
 		ctx = grpc.NewContextWithServerTransportStream(ctx, stream)
