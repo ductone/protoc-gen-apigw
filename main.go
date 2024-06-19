@@ -22,7 +22,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		err = os.WriteFile("/tmp/input.data", buf.Bytes(), 0644)
+		err = os.WriteFile("input.data", buf.Bytes(), 0600)
 		if err != nil {
 			panic(err)
 		}
