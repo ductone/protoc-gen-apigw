@@ -30,6 +30,11 @@ func NewMethodDescContext(ctx context.Context, methodDesc *MethodDesc) context.C
 	return context.WithValue(ctx, contextKeyMethodDesc, methodDesc)
 }
 
+const (
+	MetadataOriginalPath   = ":apigw-original-path"
+	MetadataOriginalMethod = ":apigw-original-method"
+)
+
 func MetadataForRequest(req *http.Request, methodFulLName string) metadata.MD {
 	// https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-HTTP2.md
 	rv := metadata.MD{}
@@ -44,6 +49,8 @@ func MetadataForRequest(req *http.Request, methodFulLName string) metadata.MD {
 	rv.Set(":path", methodFulLName)
 	rv.Set(":authority", req.Host)
 	rv.Set(":scheme", "https")
+	rv.Set(MetadataOriginalPath, req.URL.Path)
+	rv.Set(MetadataOriginalMethod, req.Method)
 
 	return rv
 }
