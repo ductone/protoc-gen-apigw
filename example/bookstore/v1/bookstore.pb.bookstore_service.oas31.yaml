@@ -13,8 +13,10 @@ components:
               '@type':
                 description: The type of the serialized message.
                 type: string
+            readOnly: false
             type: object
           nullable: true
+          readOnly: false
           type: array
         createdAt:
           format: date-time
@@ -22,6 +24,7 @@ components:
           type: string
         firstName:
           description: The firstName field.
+          readOnly: false
           type: string
         gender:
           description: The gender field.
@@ -29,13 +32,16 @@ components:
             - GENDER_UNSPECIFIED
             - GENDER_MALE
             - GENDER_FEMALE
+          readOnly: false
           type: string
         id:
           description: A unique author id.
           format: int64
+          readOnly: false
           type: string
         lname:
           description: The lname field.
+          readOnly: false
           type: string
         metadata:
           description: The metadata field.
@@ -49,21 +55,26 @@ components:
       properties:
         author:
           description: An author of the book.
+          readOnly: false
           type: string
         id:
           description: A unique book id.
+          readOnly: false
           type: string
         quotes:
           description: Quotes from the book.
           items:
             type: string
           nullable: true
+          readOnly: false
           type: array
         shelfId:
           description: The shelfId field.
+          readOnly: false
           type: string
         title:
           description: A book title.
+          readOnly: false
           type: string
       required:
         - id
@@ -142,6 +153,7 @@ components:
             This field is part of the `genre` oneof.
             See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
           nullable: true
+          readOnly: false
           type: boolean
         nonfiction:
           description: |-
@@ -149,6 +161,7 @@ components:
             This field is part of the `genre` oneof.
             See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
           nullable: true
+          readOnly: false
           type: boolean
       title: Get Author Response
       type: object
@@ -166,12 +179,14 @@ components:
       properties:
         mask:
           nullable: true
+          readOnly: false
           type: string
         shelves:
           description: Shelves in the bookstore.
           items:
             $ref: '#/components/schemas/bookstore.v1.Shelf'
           nullable: true
+          readOnly: false
           type: array
       title: List Shelves Response
       type: object
@@ -181,6 +196,7 @@ components:
       properties:
         anotherProp:
           description: This is a non recursive secondary prop
+          readOnly: false
           type: string
         page:
           $ref: '#/components/schemas/bookstore.v1.RecursivePage'
@@ -197,15 +213,18 @@ components:
           items:
             $ref: '#/components/schemas/bookstore.v1.RecursivePage'
           nullable: true
+          readOnly: false
           type: array
         pages:
           description: This is a list of recursive books
           items:
             $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
           nullable: true
+          readOnly: false
           type: array
         prop:
           description: This is a non recursive prop
+          readOnly: false
           type: string
       title: Recursive Page
       type: object
@@ -215,15 +234,19 @@ components:
       properties:
         id:
           description: A unique shelf id.
+          readOnly: false
           type: string
         search%5Bencoded%5D:
           description: To test json name is percentage encoded
+          readOnly: false
           type: string
         search[decoded]:
           description: To test json name is percentage decoded
+          readOnly: false
           type: string
         theme:
           description: A theme of the shelf (fiction, poetry, etc).
+          readOnly: false
           type: string
       title: Bookshelf
       type: object
@@ -235,6 +258,7 @@ components:
           $ref: '#/components/schemas/bookstore.v1.Book'
         shelf:
           description: The ID of the shelf from which to retrieve a book.
+          readOnly: false
           type: string
       title: Update Book Request
       type: object
@@ -265,6 +289,7 @@ paths:
           schema:
             description: The ID of the author resource to retrieve.
             format: int64
+            readOnly: false
             type: string
       responses:
         "200":
@@ -341,6 +366,7 @@ paths:
           required: true
           schema:
             description: The ID of the shelf to delete.
+            readOnly: false
             type: string
       requestBody:
         content:
@@ -369,6 +395,7 @@ paths:
           required: true
           schema:
             description: The ID of the shelf on which to create a book.
+            readOnly: false
             type: string
       requestBody:
         content:
@@ -398,12 +425,14 @@ paths:
           required: true
           schema:
             description: The shelfId field.
+            readOnly: false
             type: string
         - in: path
           name: book
           required: true
           schema:
             description: A unique book id.
+            readOnly: false
             type: string
       requestBody:
         content:
@@ -432,6 +461,7 @@ paths:
           required: true
           schema:
             description: The ID of the shelf from which to retrieve a book.
+            readOnly: false
             type: string
         - in: path
           name: book
@@ -439,22 +469,26 @@ paths:
           schema:
             description: The ID of the book to retrieve.
             format: int64
+            readOnly: false
             type: string
         - in: query
           name: author
           schema:
             description: The includeAuthor field.
+            readOnly: false
             type: boolean
         - in: query
           name: page_size
           schema:
             description: The pageSize field.
             format: int32
+            readOnly: false
             type: integer
         - in: query
           name: page_token
           schema:
             description: The pageToken field.
+            readOnly: false
             type: string
       responses:
         "200":
@@ -478,12 +512,14 @@ paths:
           required: true
           schema:
             description: The shelfId field.
+            readOnly: false
             type: string
         - in: path
           name: book
           required: true
           schema:
             description: A unique book id.
+            readOnly: false
             type: string
       requestBody:
         content:

@@ -22,7 +22,7 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 			Description: "Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.",
 			Properties:  props,
 			// TODO(pquerna): add a tag based annotation for possible Any values.
-			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{B: true},
+			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{N: 1, B: true},
 		}
 	case pgs.DurationWKT:
 		return &dm_base.Schema{
@@ -38,7 +38,7 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 		// todo: pquerna: is this the right mapping for an arbitrary Struct?
 		return &dm_base.Schema{
 			Type:                 []string{"object"},
-			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{B: true},
+			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{N: 1, B: true},
 		}
 	case pgs.TimestampWKT:
 		return &dm_base.Schema{

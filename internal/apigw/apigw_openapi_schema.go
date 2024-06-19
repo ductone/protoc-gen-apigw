@@ -134,7 +134,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	extensions.Set("x-speakeasy-name-override", yamlString(m.Name().UpperCamelCase().String()))
 	obj := &dm_base.Schema{
 		Type:       []string{"object"},
-		Properties: &orderedmap.Map[string, *dm_base.SchemaProxy]{},
+		Properties: orderedmap.New[string, *dm_base.SchemaProxy](),
 		Nullable:   nullable,
 		Deprecated: deprecated,
 		Title:      sc.messageDocName(title, m),
