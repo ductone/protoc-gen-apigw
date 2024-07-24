@@ -3,9 +3,9 @@ syntax = "proto3";
 package bookstore.v1;
 
 import "apigw/v1/apigw.proto";
+import "google/protobuf/any.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/any.proto";
 
 option go_package = "github.com/ductone/protoc-gen-apigw/example/bookstore/v1";
 
@@ -38,7 +38,6 @@ service BookstoreService {
       route: "/shelves/{shelf}"
       group: "Shelves"
     };
-
   }
 
   // Creates a new book.
@@ -61,18 +60,18 @@ service BookstoreService {
       route: "/shelves/{shelf}/books/{book}"
       query: [
         {
-          key: "author",
+          key: "author"
           value: "include_author"
         },
         {
-          key: "page_size",
+          key: "page_size"
           value: "page_size"
         },
         {
-          key: "page_token",
+          key: "page_token"
           value: "page_token"
         }
-      ];
+      ]
       terraform_entity: {
         type: TERRAFORM_ENTITY_METHOD_TYPE_READ
         name: "Book"
@@ -156,9 +155,7 @@ message GetAuthorResponse {
 
 // A shelf resource.
 message Shelf {
-  option (apigw.v1.message).message_options = {
-    title: "Bookshelf"
-  };
+  option (apigw.v1.message).message_options = {title: "Bookshelf"};
   // A unique shelf id.
   string id = 1;
   // A theme of the shelf (fiction, poetry, etc).

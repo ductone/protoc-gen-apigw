@@ -17,6 +17,7 @@ test:
 .PHONY: example
 example: build
 	buf --debug generate --template buf.example.gen.yaml --path example/bookstore
+	buf --debug generate --template buf.example.gen.yaml --path example/webhooks
 
 .PHONY: example_oas_lint
 example_oas_lint:
