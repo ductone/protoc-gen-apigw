@@ -47,19 +47,19 @@ type Body struct {
 	// This value will match the "Webhook-Event" header.
 	//
 	// The value will be one of:
-	// - "c1.webhooks.v1.PayloadTest"
-	// - "c1.webhooks.v1.PayloadPolicyApprovalStep"
-	// - "c1.webhooks.v1.PayloadPolicyPostAction"
-	// - "c1.webhooks.v1.PayloadProvisionStep"
+	// - "webhooks.v1.PayloadTest"
+	// - "webhooks.v1.PayloadPolicyApprovalStep"
+	// - "webhooks.v1.PayloadPolicyPostAction"
+	// - "webhooks.v1.PayloadProvisionStep"
 	Event string `protobuf:"bytes,4,opt,name=event,proto3" json:"event,omitempty"`
 	// The Payload of the webhook.
 	// The payload will be different depending on the event type.
 	//
 	// The @type will be one of:
-	// - "type.googleapis.com/c1.webhooks.v1.PayloadTest"
-	// - "type.googleapis.com/c1.webhooks.v1.PayloadPolicyApprovalStep"
-	// - "type.googleapis.com/c1.webhooks.v1.PayloadPolicyPostAction"
-	// - "type.googleapis.com/c1.webhooks.v1.PayloadProvisionStep"
+	// - "type.googleapis.com/webhooks.v1.PayloadTest"
+	// - "type.googleapis.com/webhooks.v1.PayloadPolicyApprovalStep"
+	// - "type.googleapis.com/webhooks.v1.PayloadPolicyPostAction"
+	// - "type.googleapis.com/webhooks.v1.PayloadProvisionStep"
 	//
 	// And map to the associated payload message type.
 	Payload *anypb.Any `protobuf:"bytes,5,opt,name=payload,proto3" json:"payload,omitempty"`

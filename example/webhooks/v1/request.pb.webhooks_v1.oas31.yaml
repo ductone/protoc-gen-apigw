@@ -21,10 +21,10 @@ components:
              This value will match the "Webhook-Event" header.
 
              The value will be one of:
-             - "c1.webhooks.v1.PayloadTest"
-             - "c1.webhooks.v1.PayloadPolicyApprovalStep"
-             - "c1.webhooks.v1.PayloadPolicyPostAction"
-             - "c1.webhooks.v1.PayloadProvisionStep"
+             - "webhooks.v1.PayloadTest"
+             - "webhooks.v1.PayloadPolicyApprovalStep"
+             - "webhooks.v1.PayloadPolicyPostAction"
+             - "webhooks.v1.PayloadProvisionStep"
           readOnly: false
           type: string
         payload:
