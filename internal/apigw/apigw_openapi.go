@@ -28,7 +28,7 @@ type route struct {
 
 const SchemaProxyRefPrefix = "#/components/schemas/"
 
-func (module *Module) buildOpenAPI(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Document, error) {
+func (module *Module) buildOpenAPIService(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Document, error) {
 	doc := &dm_v3.Document{
 		Version: "3.1.0",
 		// NOTE: Info is required to be a valid OAS,
@@ -63,6 +63,42 @@ func (module *Module) buildOpenAPI(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Do
 		}
 		addOperation(doc, route, op, components)
 	}
+	return doc, nil
+}
+
+func (module *Module) buildOpenAPIWithoutService(ctx pgsgo.Context, in pgs.File) (*dm_v3.Document, error) {
+	doc := &dm_v3.Document{
+		Version: "3.1.0",
+		// NOTE: Info is required to be a valid OAS,
+		// but we expect multiple services to Merge()
+		// their OAS together, so we leave it minimally filled out.
+		Info: &dm_base.Info{
+			Title:       "Definitions For " + nicerFQN(in),
+			Version:     "0.0.1",
+			Description: "This is an auto-generated Definitions for " + nicerFQN(in) + ".\n",
+		},
+		Components: &dm_v3.Components{
+			Schemas: orderedmap.New[string, *dm_base.SchemaProxy](),
+		},
+	}
+	found := false
+	sc := newSchemaContainer()
+	for _, m := range in.Messages() {
+		opts := getMessageOptions(m)
+		if opts == nil || !opts.ForceExpose {
+			continue
+		}
+		found = true
+
+		_ = sc.Message(m, nil, nil, false)
+	}
+	if !found {
+		return nil, nil
+	}
+	components := &dm_v3.Components{
+		Schemas: sc.schemas,
+	}
+	addOperation(doc, nil, nil, components)
 	return doc, nil
 }
 
@@ -291,26 +327,29 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) string 
 }
 
 func addOperation(doc *dm_v3.Document, r *route, op *dm_v3.Operation, comp *dm_v3.Components) {
-	if doc.Paths.PathItems.Value(r.Route) == nil {
-		doc.Paths.PathItems.Set(r.Route, &dm_v3.PathItem{})
+	if r != nil {
+		if doc.Paths.PathItems.Value(r.Route) == nil {
+			doc.Paths.PathItems.Set(r.Route, &dm_v3.PathItem{})
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			doc.Paths.PathItems.Value(r.Route).Get = op
+		case http.MethodPost:
+			doc.Paths.PathItems.Value(r.Route).Post = op
+		case http.MethodPut:
+			doc.Paths.PathItems.Value(r.Route).Put = op
+		case http.MethodDelete:
+			doc.Paths.PathItems.Value(r.Route).Delete = op
+		case http.MethodPatch:
+			doc.Paths.PathItems.Value(r.Route).Patch = op
+		case http.MethodHead:
+			doc.Paths.PathItems.Value(r.Route).Head = op
+		default:
+			panic("apigw_openapi: addOperation: unsupported method: " + r.Method + " " + r.Route)
+		}
 	}
 
-	switch r.Method {
-	case http.MethodGet:
-		doc.Paths.PathItems.Value(r.Route).Get = op
-	case http.MethodPost:
-		doc.Paths.PathItems.Value(r.Route).Post = op
-	case http.MethodPut:
-		doc.Paths.PathItems.Value(r.Route).Put = op
-	case http.MethodDelete:
-		doc.Paths.PathItems.Value(r.Route).Delete = op
-	case http.MethodPatch:
-		doc.Paths.PathItems.Value(r.Route).Patch = op
-	case http.MethodHead:
-		doc.Paths.PathItems.Value(r.Route).Head = op
-	default:
-		panic("apigw_openapi: addOperation: unsupported method: " + r.Method + " " + r.Route)
-	}
 	// TODO(pquerna): currently we only use Schemas from Components.
 	for pair := comp.Schemas.Oldest(); pair != nil; pair = pair.Next() {
 		doc.Components.Schemas.Set(pair.Key, pair.Value)
@@ -318,12 +357,12 @@ func addOperation(doc *dm_v3.Document, r *route, op *dm_v3.Operation, comp *dm_v
 }
 
 type openAPIContext struct {
-	ServerName string
-	Spec       string
+	Name string
+	Spec string
 }
 
 func (module *Module) renderOpenAPI(ctx pgsgo.Context, w io.Writer, in pgs.Service) error {
-	doc, err := module.buildOpenAPI(ctx, in)
+	doc, err := module.buildOpenAPIService(ctx, in)
 	if err != nil {
 		return err
 	}
@@ -332,7 +371,7 @@ func (module *Module) renderOpenAPI(ctx pgsgo.Context, w io.Writer, in pgs.Servi
 		return err
 	}
 	c := openAPIContext{
-		ServerName: ctx.ServerName(in).String(),
+		Name: ctx.ServerName(in).String(),
 	}
 	yamlData, err = yamlfmt.Format(bytes.NewReader(yamlData), true)
 	if err != nil {
@@ -341,6 +380,29 @@ func (module *Module) renderOpenAPI(ctx pgsgo.Context, w io.Writer, in pgs.Servi
 
 	c.Spec = string(yamlData)
 	return templates["openapi.tmpl"].Execute(w, c)
+}
+func (module *Module) renderOpenAPIWithoutService(ctx pgsgo.Context, w io.Writer, in pgs.File) (bool, error) {
+	doc, err := module.buildOpenAPIWithoutService(ctx, in)
+	if err != nil {
+		return false, err
+	}
+	if doc == nil {
+		return false, nil
+	}
+	yamlData, err := doc.Render()
+	if err != nil {
+		return false, err
+	}
+	c := openAPIContext{
+		Name: ctx.PackageName(in).String(),
+	}
+	yamlData, err = yamlfmt.Format(bytes.NewReader(yamlData), true)
+	if err != nil {
+		return false, err
+	}
+
+	c.Spec = string(yamlData)
+	return true, templates["openapi.tmpl"].Execute(w, c)
 }
 
 type schemaData struct {

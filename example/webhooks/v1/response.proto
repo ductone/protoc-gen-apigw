@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package webhooks.v1;
+
+import "apigw/v1/apigw.proto";
+
+option go_package = "gitlab.com/ductone/c1/pkg/pb/c1/webhooks/v1beta";
+
+message ResponseTest {
+  option (apigw.v1.message).message_options = {force_expose: true};
+
+  // version contains the constant value "v1". Future versions of the Webhook Response
+  // will use a different string.
+  string version = 1;
+}
+
+message PolicyStep {
+  string policy_step_id = 1;
+}
+
+message ResponsePolicyApprovalStep {
+  option (apigw.v1.message).message_options = {force_expose: true};
+
+  // version contains the constant value "v1". Future versions of the Webhook Response
+  // will use a different string.
+  string version = 1;
+
+  message ResponsePolicyApprovalStepApprove {
+    // optional comment
+    string comment = 1;
+  }
+  message ResponsePolicyApprovalStepDeny {
+    // optional comment
+    string comment = 1;
+  }
+  message ResponsePolicyApprovalStepReassign {
+    // optional comment
+    string comment = 1;
+
+    repeated string new_step_user_ids = 2;
+  }
+  message ResponsePolicyApprovalReplacePolicy {
+    string comment = 1;
+
+    repeated PolicyStep policy_steps = 2;
+  }
+  oneof action {
+    ResponsePolicyApprovalStepApprove approve = 100;
+    ResponsePolicyApprovalStepDeny deny = 101;
+    ResponsePolicyApprovalStepReassign reassign = 102;
+    ResponsePolicyApprovalReplacePolicy replace_policy = 103;
+  }
+}
+
+message ResponsePolicyPostAction {
+  option (apigw.v1.message).message_options = {force_expose: true};
+
+  // version contains the constant value "v1". Future versions of the Webhook Response
+  // will use a different string.
+  string version = 1;
+}
+
+message ResponseProvisionStep {
+  option (apigw.v1.message).message_options = {force_expose: true};
+
+  // version contains the constant value "v1". Future versions of the Webhook Response
+  // will use a different string.
+  string version = 1;
+
+  message ResponseProvisionStepComplete {
+    // optional comment
+    string comment = 1;
+  }
+  message ResponseProvisionStepErrored {
+    // optional comment
+    string comment = 1;
+  }
+  oneof outcome {
+    ResponseProvisionStepComplete complete = 100;
+    ResponseProvisionStepErrored errored = 101;
+  }
+}

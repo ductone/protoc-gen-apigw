@@ -48,11 +48,6 @@ func (m *Module) Name() string {
 
 func (m *Module) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Package) []pgs.Artifact {
 	for _, f := range targets {
-		services := f.Services()
-		if n := len(services); n == 0 {
-			m.Debugf("No Services in %v, skipping", f.Name())
-			continue
-		}
 		m.processFile(m.ctx, f)
 	}
 	return m.Artifacts()
@@ -60,10 +55,14 @@ func (m *Module) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Packag
 
 func (m *Module) processFile(ctx pgsgo.Context, f pgs.File) {
 	out := bytes.Buffer{}
-	err := m.applyTemplate(ctx, &out, f)
+	rendered, err := m.applyTemplate(ctx, &out, f)
 	if err != nil {
 		m.Logf("couldn't apply template: %s", err)
 		m.Fail("code generation failed")
+		return
+	}
+	// We didn't find anything to render so skip writing the file
+	if !rendered {
 		return
 	}
 	generatedFileName := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.go", moduleName)).String()
@@ -74,7 +73,7 @@ func (m *Module) processFile(ctx pgsgo.Context, f pgs.File) {
 	m.AddGeneratorFile(generatedFileName, out.String())
 }
 
-func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) error {
+func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) (bool, error) {
 	ix := &importTracker{
 		ctx:        ctx,
 		input:      f,
@@ -89,29 +88,37 @@ func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) e
 
 		err := m.renderService(ctx, bodyBuf, f, service, ix, oasName)
 		if err != nil {
-			return err
+			return false, err
 		}
 		oasBuf := &bytes.Buffer{}
 		err = m.renderOpenAPI(ctx, oasBuf, service)
 		if err != nil {
-			return err
+			return false, err
 		}
 		m.AddGeneratorFile(oasName, oasBuf.String())
 	}
 
-	err := m.renderHeader(ctx, headerBuf, f, ix)
+	err := m.renderForcedMessages(ctx, f)
 	if err != nil {
-		return err
+		return false, err
+	}
+	if len(services) == 0 {
+		return false, nil
+	}
+
+	err = m.renderHeader(ctx, headerBuf, f, ix)
+	if err != nil {
+		return false, err
 	}
 
 	_, err = io.Copy(w, headerBuf)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	_, err = io.Copy(w, bodyBuf)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if ok, _ := strconv.ParseBool(os.Getenv("APIGW_DUMP_FILE")); ok {
@@ -119,5 +126,19 @@ func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) e
 		_ = os.WriteFile(filepath.Join(tdr, "t.go"), w.Bytes(), 0600)
 		_, _ = os.Stderr.WriteString(filepath.Join(tdr, "t.go") + "\n")
 	}
+	return true, nil
+}
+
+func (m *Module) renderForcedMessages(ctx pgsgo.Context, f pgs.File) error {
+	forcedMessageOpenAPIFilename := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.oas31.yaml", f.Package().ProtoName().LowerSnakeCase())).String()
+	oasBuf := &bytes.Buffer{}
+	rendered, err := m.renderOpenAPIWithoutService(ctx, oasBuf, f)
+	if err != nil {
+		return err
+	}
+	if !rendered {
+		return nil
+	}
+	m.AddGeneratorFile(forcedMessageOpenAPIFilename, oasBuf.String())
 	return nil
 }

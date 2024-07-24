@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package webhooks.v1;
+
+import "apigw/v1/apigw.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "gitlab.com/ductone/c1/pkg/pb/c1/webhooks/v1beta";
+
+message Body {
+  option (apigw.v1.message).message_options = {force_expose: true};
+
+  // version contains the constant value "v1". Future versions of the Webhook body will use a different string.
+  //
+  // This value will match the "Webhook-Version" header.
+  string version = 1;
+
+  // Unique ID for this Webhook. Your receiver should only process this ID once.
+  //
+  // This value will match the "Webhook-Id" header.
+  string webhook_id = 2;
+
+  // If your receiver returns HTTP Status Code 202 Accepted, it MUST send its resposne to this URL as a POST
+  // message body.
+  //
+  // If your receiver returns any other status code, it is expected to not use the callback url.
+  //
+  // This value will match the "Webhook-Callback-Url" header.
+  string callback_url = 3;
+
+  // The type of event that triggered this Webhook.
+  //
+  // This value will match the "Webhook-Event" header.
+  //
+  // The value will be one of:
+  // - "c1.webhooks.v1.PayloadTest"
+  // - "c1.webhooks.v1.PayloadPolicyApprovalStep"
+  // - "c1.webhooks.v1.PayloadPolicyPostAction"
+  // - "c1.webhooks.v1.PayloadProvisionStep"
+  //
+  string event = 4;
+
+  // The Payload of the webhook.
+  // The payload will be different depending on the event type.
+  //
+  // The @type will be one of:
+  // - "type.googleapis.com/c1.webhooks.v1.PayloadTest"
+  // - "type.googleapis.com/c1.webhooks.v1.PayloadPolicyApprovalStep"
+  // - "type.googleapis.com/c1.webhooks.v1.PayloadPolicyPostAction"
+  // - "type.googleapis.com/c1.webhooks.v1.PayloadProvisionStep"
+  //
+  // And map to the associated payload message type.
+  google.protobuf.Any payload = 5;
+}
+
+message PayloadTest {}
+
+message TaskView {
+  string task_id = 1;
+  string other_field = 2;
+}
+
+message PayloadPolicyApprovalStep {
+  option (apigw.v1.message).message_options = {force_expose: true};
+
+  // A view of the task, contains the serialized task and paths to objects referenced by the task
+  TaskView task_view = 1;
+
+  // List of serialized related objects.
+  repeated google.protobuf.Any expanded = 2;
+}
+
+message PayloadPolicyPostAction {
+  option (apigw.v1.message).message_options = {force_expose: true};
+
+  // A view of the task, contains the serialized task and paths to objects referenced by the task
+  TaskView task_view = 1;
+
+  // List of serialized related objects.
+  repeated google.protobuf.Any expanded = 2;
+}
+
+message PayloadProvisionStep {
+  option (apigw.v1.message).message_options = {force_expose: true};
+
+  // A view of the task, contains the serialized task and paths to objects referenced by the task
+  TaskView task_view = 1;
+
+  // List of serialized related objects.
+  repeated google.protobuf.Any expanded = 2;
+}

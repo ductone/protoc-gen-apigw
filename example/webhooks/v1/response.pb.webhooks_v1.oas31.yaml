@@ -1,0 +1,171 @@
+---
+components:
+  schemas:
+    webhooks.v1.PolicyStep:
+      description: The PolicyStep message.
+      properties:
+        policyStepId:
+          description: The policyStepId field.
+          readOnly: false
+          type: string
+      title: Policy Step
+      type: object
+      x-speakeasy-name-override: PolicyStep
+    webhooks.v1.ResponsePolicyApprovalStep:
+      description: |
+        The ResponsePolicyApprovalStep message.
+
+        This message contains a oneof named action. Only a single field of the following list may be set at a time:
+          - approve
+          - deny
+          - reassign
+          - replacePolicy
+      properties:
+        approve:
+          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepApprove'
+        deny:
+          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepDeny'
+        reassign:
+          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepReassign'
+        replacePolicy:
+          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalReplacePolicy'
+        version:
+          description: |-
+            version contains the constant value "v1". Future versions of the Webhook Response
+             will use a different string.
+          readOnly: false
+          type: string
+      title: Response Policy Approval Step
+      type: object
+      x-speakeasy-name-override: ResponsePolicyApprovalStep
+    webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalReplacePolicy:
+      description: The ResponsePolicyApprovalReplacePolicy message.
+      nullable: true
+      properties:
+        comment:
+          description: The comment field.
+          readOnly: false
+          type: string
+        policySteps:
+          description: The policySteps field.
+          items:
+            $ref: '#/components/schemas/webhooks.v1.PolicyStep'
+          nullable: true
+          readOnly: false
+          type: array
+      title: Response Policy Approval Replace Policy
+      type: object
+      x-speakeasy-name-override: ResponsePolicyApprovalReplacePolicy
+    webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepApprove:
+      description: The ResponsePolicyApprovalStepApprove message.
+      nullable: true
+      properties:
+        comment:
+          description: optional comment
+          readOnly: false
+          type: string
+      title: Response Policy Approval Step Approve
+      type: object
+      x-speakeasy-name-override: ResponsePolicyApprovalStepApprove
+    webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepDeny:
+      description: The ResponsePolicyApprovalStepDeny message.
+      nullable: true
+      properties:
+        comment:
+          description: optional comment
+          readOnly: false
+          type: string
+      title: Response Policy Approval Step Deny
+      type: object
+      x-speakeasy-name-override: ResponsePolicyApprovalStepDeny
+    webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepReassign:
+      description: The ResponsePolicyApprovalStepReassign message.
+      nullable: true
+      properties:
+        comment:
+          description: optional comment
+          readOnly: false
+          type: string
+        newStepUserIds:
+          description: The newStepUserIds field.
+          items:
+            type: string
+          nullable: true
+          readOnly: false
+          type: array
+      title: Response Policy Approval Step Reassign
+      type: object
+      x-speakeasy-name-override: ResponsePolicyApprovalStepReassign
+    webhooks.v1.ResponsePolicyPostAction:
+      description: The ResponsePolicyPostAction message.
+      properties:
+        version:
+          description: |-
+            version contains the constant value "v1". Future versions of the Webhook Response
+             will use a different string.
+          readOnly: false
+          type: string
+      title: Response Policy Post Action
+      type: object
+      x-speakeasy-name-override: ResponsePolicyPostAction
+    webhooks.v1.ResponseProvisionStep:
+      description: |
+        The ResponseProvisionStep message.
+
+        This message contains a oneof named outcome. Only a single field of the following list may be set at a time:
+          - complete
+          - errored
+      properties:
+        complete:
+          $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepComplete'
+        errored:
+          $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepErrored'
+        version:
+          description: |-
+            version contains the constant value "v1". Future versions of the Webhook Response
+             will use a different string.
+          readOnly: false
+          type: string
+      title: Response Provision Step
+      type: object
+      x-speakeasy-name-override: ResponseProvisionStep
+    webhooks.v1.ResponseProvisionStep.ResponseProvisionStepComplete:
+      description: The ResponseProvisionStepComplete message.
+      nullable: true
+      properties:
+        comment:
+          description: optional comment
+          readOnly: false
+          type: string
+      title: Response Provision Step Complete
+      type: object
+      x-speakeasy-name-override: ResponseProvisionStepComplete
+    webhooks.v1.ResponseProvisionStep.ResponseProvisionStepErrored:
+      description: The ResponseProvisionStepErrored message.
+      nullable: true
+      properties:
+        comment:
+          description: optional comment
+          readOnly: false
+          type: string
+      title: Response Provision Step Errored
+      type: object
+      x-speakeasy-name-override: ResponseProvisionStepErrored
+    webhooks.v1.ResponseTest:
+      description: The ResponseTest message.
+      properties:
+        version:
+          description: |-
+            version contains the constant value "v1". Future versions of the Webhook Response
+             will use a different string.
+          readOnly: false
+          type: string
+      title: Response Test
+      type: object
+      x-speakeasy-name-override: ResponseTest
+info:
+  description: |
+    This is an auto-generated Definitions for webhooks.v1.
+  title: Definitions For webhooks.v1
+  version: 0.0.1
+openapi: 3.1.0

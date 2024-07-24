@@ -1,0 +1,141 @@
+---
+components:
+  schemas:
+    webhooks.v1.Body:
+      description: The Body message.
+      properties:
+        callbackUrl:
+          description: |-
+            If your receiver returns HTTP Status Code 202 Accepted, it MUST send its resposne to this URL as a POST
+             message body.
+
+             If your receiver returns any other status code, it is expected to not use the callback url.
+
+             This value will match the "Webhook-Callback-Url" header.
+          readOnly: false
+          type: string
+        event:
+          description: |-
+            The type of event that triggered this Webhook.
+
+             This value will match the "Webhook-Event" header.
+
+             The value will be one of:
+             - "c1.webhooks.v1.PayloadTest"
+             - "c1.webhooks.v1.PayloadPolicyApprovalStep"
+             - "c1.webhooks.v1.PayloadPolicyPostAction"
+             - "c1.webhooks.v1.PayloadProvisionStep"
+          readOnly: false
+          type: string
+        payload:
+          additionalProperties: true
+          description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+          properties:
+            '@type':
+              description: The type of the serialized message.
+              type: string
+          readOnly: false
+          type: object
+        version:
+          description: |-
+            version contains the constant value "v1". Future versions of the Webhook body will use a different string.
+
+             This value will match the "Webhook-Version" header.
+          readOnly: false
+          type: string
+        webhookId:
+          description: |-
+            Unique ID for this Webhook. Your receiver should only process this ID once.
+
+             This value will match the "Webhook-Id" header.
+          readOnly: false
+          type: string
+      title: Body
+      type: object
+      x-speakeasy-name-override: Body
+    webhooks.v1.PayloadPolicyApprovalStep:
+      description: The PayloadPolicyApprovalStep message.
+      properties:
+        expanded:
+          description: List of serialized related objects.
+          items:
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+            properties:
+              '@type':
+                description: The type of the serialized message.
+                type: string
+            readOnly: false
+            type: object
+          nullable: true
+          readOnly: false
+          type: array
+        taskView:
+          $ref: '#/components/schemas/webhooks.v1.TaskView'
+      title: Payload Policy Approval Step
+      type: object
+      x-speakeasy-name-override: PayloadPolicyApprovalStep
+    webhooks.v1.PayloadPolicyPostAction:
+      description: The PayloadPolicyPostAction message.
+      properties:
+        expanded:
+          description: List of serialized related objects.
+          items:
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+            properties:
+              '@type':
+                description: The type of the serialized message.
+                type: string
+            readOnly: false
+            type: object
+          nullable: true
+          readOnly: false
+          type: array
+        taskView:
+          $ref: '#/components/schemas/webhooks.v1.TaskView'
+      title: Payload Policy Post Action
+      type: object
+      x-speakeasy-name-override: PayloadPolicyPostAction
+    webhooks.v1.PayloadProvisionStep:
+      description: The PayloadProvisionStep message.
+      properties:
+        expanded:
+          description: List of serialized related objects.
+          items:
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+            properties:
+              '@type':
+                description: The type of the serialized message.
+                type: string
+            readOnly: false
+            type: object
+          nullable: true
+          readOnly: false
+          type: array
+        taskView:
+          $ref: '#/components/schemas/webhooks.v1.TaskView'
+      title: Payload Provision Step
+      type: object
+      x-speakeasy-name-override: PayloadProvisionStep
+    webhooks.v1.TaskView:
+      description: The TaskView message.
+      properties:
+        otherField:
+          description: The otherField field.
+          readOnly: false
+          type: string
+        taskId:
+          description: The taskId field.
+          readOnly: false
+          type: string
+      title: Task View
+      type: object
+      x-speakeasy-name-override: TaskView
+info:
+  description: |
+    This is an auto-generated Definitions for webhooks.v1.
+  title: Definitions For webhooks.v1
+  version: 0.0.1
+openapi: 3.1.0

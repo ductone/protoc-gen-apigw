@@ -31,6 +31,9 @@ message MessageOptions {
 message MessageOption {
   TerraformEntity terraform_entity = 1;
   string title = 2;
+  // Messages are only exposed if they are in (or descend from) an RPC service.
+  // This option overrides that by forcing generation of this (and referenced) message.
+  bool force_expose = 3;
 }
 
 message FieldOption {
