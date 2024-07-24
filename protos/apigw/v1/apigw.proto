@@ -34,6 +34,9 @@ message MessageOption {
   // Messages are only exposed if they are in (or descend from) an RPC service.
   // This option overrides that by forcing generation of this (and referenced) message.
   bool force_expose = 3;
+
+  // Set this to process this message as the body of a webhook
+  string webhook_request_name = 4;
 }
 
 message FieldOption {

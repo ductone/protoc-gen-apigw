@@ -80,17 +80,42 @@ func (module *Module) buildOpenAPIWithoutService(ctx pgsgo.Context, in pgs.File)
 		Components: &dm_v3.Components{
 			Schemas: orderedmap.New[string, *dm_base.SchemaProxy](),
 		},
+		Webhooks: orderedmap.New[string, *dm_v3.PathItem](),
 	}
 	found := false
 	sc := newSchemaContainer()
 	for _, m := range in.Messages() {
 		opts := getMessageOptions(m)
-		if opts == nil || !opts.ForceExpose {
+		if opts == nil {
+			continue
+		}
+		hasForceProp := opts.ForceExpose || opts.WebhookRequestName != ""
+		if !hasForceProp {
 			continue
 		}
 		found = true
 
-		_ = sc.Message(m, nil, nil, false)
+		schemaProxy := sc.Message(m, nil, nil, false)
+		if opts.WebhookRequestName != "" {
+			_, exists := doc.Webhooks.Get(opts.WebhookRequestName)
+			if !exists {
+				truePtr := true
+				content := orderedmap.New[string, *dm_v3.MediaType]()
+				content.Set("application/json", &dm_v3.MediaType{
+					Schema: schemaProxy,
+				})
+				doc.Webhooks.Set(opts.WebhookRequestName, &dm_v3.PathItem{
+					Description: fmt.Sprintf("Schema for %s webhook", opts.WebhookRequestName),
+					Post: &dm_v3.Operation{
+						RequestBody: &dm_v3.RequestBody{
+							Description: fmt.Sprintf("Schema for %s webhook request body", opts.WebhookRequestName),
+							Content:     content,
+							Required:    &truePtr,
+						},
+					},
+				})
+			}
+		}
 	}
 	if !found {
 		return nil, nil
@@ -98,6 +123,7 @@ func (module *Module) buildOpenAPIWithoutService(ctx pgsgo.Context, in pgs.File)
 	components := &dm_v3.Components{
 		Schemas: sc.schemas,
 	}
+
 	addOperation(doc, nil, nil, components)
 	return doc, nil
 }

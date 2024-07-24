@@ -6,7 +6,7 @@ components:
       properties:
         callbackUrl:
           description: |-
-            If your receiver returns HTTP Status Code 202 Accepted, it MUST send its resposne to this URL as a POST
+            If your receiver returns HTTP Status Code 202 Accepted, it MUST send its response to this URL as a POST
              message body.
 
              If your receiver returns any other status code, it is expected to not use the callback url.
@@ -119,6 +119,11 @@ components:
       title: Payload Provision Step
       type: object
       x-speakeasy-name-override: PayloadProvisionStep
+    webhooks.v1.PayloadTest:
+      description: The PayloadTest message.
+      title: Payload Test
+      type: object
+      x-speakeasy-name-override: PayloadTest
     webhooks.v1.TaskView:
       description: The TaskView message.
       properties:
@@ -139,3 +144,14 @@ info:
   title: Definitions For webhooks.v1
   version: 0.0.1
 openapi: 3.1.0
+webhooks:
+  webhookNameExample:
+    description: Schema for webhookNameExample webhook
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/webhooks.v1.Body'
+        description: Schema for webhookNameExample webhook request body
+        required: true
