@@ -3,6 +3,7 @@ package apigw
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/camelcase"
@@ -77,6 +78,14 @@ func yamlString(in string) *yaml.Node {
 	return rv
 }
 
+func yamlBool(in bool) *yaml.Node {
+	return &yaml.Node{
+		Kind:  yaml.ScalarNode,
+		Tag:   "!!bool",
+		Value: strconv.FormatBool(in),
+	}
+}
+
 func yamlStringSlice(in []string) *yaml.Node {
 	inner := make([]*yaml.Node, 0, len(in))
 	for _, s := range in {
@@ -145,7 +154,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		extensions.Set("x-speakeasy-entity", yamlString(terraformEntityName))
 	}
 	if forced {
-		extensions.Set("x-speakeasy-include", yamlString("true"))
+		extensions.Set("x-speakeasy-include", yamlBool(true))
 	}
 
 	required := make([]string, 0)

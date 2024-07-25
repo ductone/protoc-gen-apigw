@@ -37,7 +37,7 @@ components:
           type: string
       title: Response Policy Approval Step
       type: object
-      x-speakeasy-include: "true"
+      x-speakeasy-include: true
       x-speakeasy-name-override: ResponsePolicyApprovalStep
     webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalReplacePolicy:
       description: The ResponsePolicyApprovalReplacePolicy message.
@@ -108,7 +108,7 @@ components:
           type: string
       title: Response Policy Post Action
       type: object
-      x-speakeasy-include: "true"
+      x-speakeasy-include: true
       x-speakeasy-name-override: ResponsePolicyPostAction
     webhooks.v1.ResponseProvisionStep:
       description: |
@@ -130,7 +130,7 @@ components:
           type: string
       title: Response Provision Step
       type: object
-      x-speakeasy-include: "true"
+      x-speakeasy-include: true
       x-speakeasy-name-override: ResponseProvisionStep
     webhooks.v1.ResponseProvisionStep.ResponseProvisionStepComplete:
       description: The ResponseProvisionStepComplete message.
@@ -165,7 +165,7 @@ components:
           type: string
       title: Response Test
       type: object
-      x-speakeasy-include: "true"
+      x-speakeasy-include: true
       x-speakeasy-name-override: ResponseTest
 info:
   description: |
