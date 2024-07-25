@@ -155,3 +155,8 @@ webhooks:
               $ref: '#/components/schemas/webhooks.v1.Body'
         description: Schema for webhookNameExample webhook request body
         required: true
+      responses:
+        "200":
+          description: A response returned by the webhook request handler immediately.
+        "202":
+          description: Returned by the request handler when the request will be followed up using the callback_url provided in the request body.

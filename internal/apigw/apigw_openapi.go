@@ -104,6 +104,13 @@ func (module *Module) buildOpenAPIWithoutService(ctx pgsgo.Context, in pgs.File)
 				content.Set("application/json", &dm_v3.MediaType{
 					Schema: schemaProxy,
 				})
+				responses := orderedmap.New[string, *dm_v3.Response]()
+				responses.Set("200", &dm_v3.Response{
+					Description: "A response returned by the webhook request handler immediately.",
+				})
+				responses.Set("202", &dm_v3.Response{
+					Description: "Returned by the request handler when the request will be followed up using the callback_url provided in the request body.",
+				})
 				doc.Webhooks.Set(opts.WebhookRequestName, &dm_v3.PathItem{
 					Description: fmt.Sprintf("Schema for %s webhook", opts.WebhookRequestName),
 					Post: &dm_v3.Operation{
@@ -111,6 +118,9 @@ func (module *Module) buildOpenAPIWithoutService(ctx pgsgo.Context, in pgs.File)
 							Description: fmt.Sprintf("Schema for %s webhook request body", opts.WebhookRequestName),
 							Content:     content,
 							Required:    &truePtr,
+						},
+						Responses: &dm_v3.Responses{
+							Codes: responses,
 						},
 					},
 				})
