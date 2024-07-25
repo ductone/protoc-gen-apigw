@@ -52,6 +52,7 @@ components:
           type: string
       title: Body
       type: object
+      x-speakeasy-include: true
       x-speakeasy-name-override: Body
     webhooks.v1.PayloadPolicyApprovalStep:
       description: The PayloadPolicyApprovalStep message.
@@ -74,6 +75,7 @@ components:
           $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Policy Approval Step
       type: object
+      x-speakeasy-include: true
       x-speakeasy-name-override: PayloadPolicyApprovalStep
     webhooks.v1.PayloadPolicyPostAction:
       description: The PayloadPolicyPostAction message.
@@ -96,6 +98,7 @@ components:
           $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Policy Post Action
       type: object
+      x-speakeasy-include: true
       x-speakeasy-name-override: PayloadPolicyPostAction
     webhooks.v1.PayloadProvisionStep:
       description: The PayloadProvisionStep message.
@@ -118,11 +121,13 @@ components:
           $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Provision Step
       type: object
+      x-speakeasy-include: true
       x-speakeasy-name-override: PayloadProvisionStep
     webhooks.v1.PayloadTest:
       description: The PayloadTest message.
       title: Payload Test
       type: object
+      x-speakeasy-include: true
       x-speakeasy-name-override: PayloadTest
     webhooks.v1.TaskView:
       description: The TaskView message.

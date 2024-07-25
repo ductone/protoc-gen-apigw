@@ -3,6 +3,7 @@ package apigw
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/camelcase"
@@ -77,6 +78,14 @@ func yamlString(in string) *yaml.Node {
 	return rv
 }
 
+func yamlBool(in bool) *yaml.Node {
+	return &yaml.Node{
+		Kind:  yaml.ScalarNode,
+		Tag:   "!!bool",
+		Value: strconv.FormatBool(in),
+	}
+}
+
 func yamlStringSlice(in []string) *yaml.Node {
 	inner := make([]*yaml.Node, 0, len(in))
 	for _, s := range in {
@@ -89,7 +98,7 @@ func yamlStringSlice(in []string) *yaml.Node {
 	return rv
 }
 
-func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool, readOnly bool) *dm_base.SchemaProxy {
+func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool, readOnly bool, forced bool) *dm_base.SchemaProxy {
 	if IsWellKnown(m) {
 		// TODO(pquera): we may want to customize this some day,
 		// but right now WKTs are just rendered inline, and not a Ref.
@@ -143,6 +152,9 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	}
 	if terraformEntityName != "" {
 		extensions.Set("x-speakeasy-entity", yamlString(terraformEntityName))
+	}
+	if forced {
+		extensions.Set("x-speakeasy-include", yamlBool(true))
 	}
 
 	required := make([]string, 0)
@@ -212,7 +224,7 @@ func (sc *schemaContainer) Enum(e pgs.Enum) *dm_base.Schema {
 func (sc *schemaContainer) FieldTypeElem(fte pgs.FieldTypeElem, readOnly bool) *dm_base.SchemaProxy {
 	switch {
 	case fte.IsEmbed():
-		return sc.Message(fte.Embed(), nil, nil, readOnly)
+		return sc.Message(fte.Embed(), nil, nil, readOnly, false)
 	case fte.IsEnum():
 		return dm_base.CreateSchemaProxy(sc.Enum(fte.Enum()))
 	default:
@@ -266,7 +278,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
 		// todo: nested filters
-		return sc.Message(f.Type().Embed(), nil, nullable, readOnly)
+		return sc.Message(f.Type().Embed(), nil, nullable, readOnly, false)
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())
 		sv.ReadOnly = &readOnly

@@ -95,7 +95,7 @@ func (module *Module) buildOpenAPIWithoutService(ctx pgsgo.Context, in pgs.File)
 		}
 		found = true
 
-		schemaProxy := sc.Message(m, nil, nil, false)
+		schemaProxy := sc.Message(m, nil, nil, false, true)
 		if opts.WebhookRequestName != "" {
 			_, exists := doc.Webhooks.Get(opts.WebhookRequestName)
 			if !exists {
@@ -314,7 +314,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		}
 	}
 	for _, sd := range mt.messages {
-		_ = sc.Message(sd.msg, sd.filter, nil, false)
+		_ = sc.Message(sd.msg, sd.filter, nil, false, false)
 	}
 	components := &dm_v3.Components{
 		Schemas: sc.schemas,
