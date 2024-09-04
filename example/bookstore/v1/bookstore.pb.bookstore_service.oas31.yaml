@@ -98,6 +98,24 @@ components:
       title: Create Book Response
       type: object
       x-speakeasy-name-override: CreateBookResponse
+    bookstore.v1.CreateGenreRequest:
+      description: The CreateGenreRequest message.
+      properties:
+        name:
+          description: The name field.
+          readOnly: false
+          type: string
+      title: Create Genre Request
+      type: object
+      x-speakeasy-name-override: CreateGenreRequest
+    bookstore.v1.CreateGenreResponse:
+      description: The CreateGenreResponse message.
+      properties:
+        genre:
+          $ref: '#/components/schemas/bookstore.v1.Genre'
+      title: Create Genre Response
+      type: object
+      x-speakeasy-name-override: CreateGenreResponse
     bookstore.v1.CreateShelfRequest:
       description: Request message for CreateShelf method.
       properties:
@@ -127,6 +145,16 @@ components:
       title: Delete Book Response
       type: object
       x-speakeasy-name-override: DeleteBookResponse
+    bookstore.v1.DeleteGenreRequestInput:
+      description: The DeleteGenreRequest message.
+      title: Delete Genre Request
+      type: object
+      x-speakeasy-name-override: DeleteGenreRequest
+    bookstore.v1.DeleteGenreResponse:
+      description: The DeleteGenreResponse message.
+      title: Delete Genre Response
+      type: object
+      x-speakeasy-name-override: DeleteGenreResponse
     bookstore.v1.DeleteShelfRequestInput:
       description: Request message for DeleteShelf method.
       title: Delete Shelf Request
@@ -137,6 +165,23 @@ components:
       title: Delete Shelf Response
       type: object
       x-speakeasy-name-override: DeleteShelfResponse
+    bookstore.v1.Genre:
+      description: A book genre
+      properties:
+        id:
+          description: A unique genre id.
+          format: int64
+          readOnly: false
+          type: string
+        name:
+          description: A genre name.
+          readOnly: false
+          type: string
+      title: Genre
+      type: object
+      x-speakeasy-entity: Genre
+      x-speakeasy-name-override: Genre
+      x-speakeasy-type-override: any
     bookstore.v1.GetAuthorResponse:
       description: |
         The GetAuthorResponse message.
@@ -174,6 +219,27 @@ components:
       title: Get Book Response
       type: object
       x-speakeasy-name-override: GetBookResponse
+    bookstore.v1.GetGenreResponse:
+      description: The GetGenreResponse message.
+      properties:
+        genre:
+          $ref: '#/components/schemas/bookstore.v1.Genre'
+      title: Get Genre Response
+      type: object
+      x-speakeasy-name-override: GetGenreResponse
+    bookstore.v1.ListGenresResponse:
+      description: The ListGenresResponse message.
+      properties:
+        genres:
+          description: The genres field.
+          items:
+            $ref: '#/components/schemas/bookstore.v1.Genre'
+          nullable: true
+          readOnly: false
+          type: array
+      title: List Genres Response
+      type: object
+      x-speakeasy-name-override: ListGenresResponse
     bookstore.v1.ListShelvesResponse:
       description: Response to ListShelves call.
       properties:
@@ -303,6 +369,95 @@ paths:
         - Authors
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: GetAuthor
+  /genre:
+    post:
+      description: Creates a new genre in the bookstore.
+      operationId: bookstore.v1.BookstoreService.CreateGenre
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/bookstore.v1.CreateGenreRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v1.CreateGenreResponse'
+          description: Successful response
+      summary: Create a New Genre
+      tags:
+        - Genres
+      x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: CreateGenre
+  /genre/{genre_id}:
+    delete:
+      description: Deletes a genre.
+      operationId: bookstore.v1.BookstoreService.DeleteGenre
+      parameters:
+        - in: path
+          name: genre_id
+          required: true
+          schema:
+            description: The genreId field.
+            readOnly: false
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/bookstore.v1.DeleteGenreRequestInput'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v1.DeleteGenreResponse'
+          description: Successful response
+      summary: Delete Genre
+      tags:
+        - Genres
+      x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: DeleteGenre
+    get:
+      description: Get a genre
+      operationId: bookstore.v1.BookstoreService.GetGenre
+      parameters:
+        - in: path
+          name: genre_id
+          required: true
+          schema:
+            description: The genreId field.
+            readOnly: false
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v1.GetGenreResponse'
+          description: Successful response
+      summary: Get a Genre
+      tags:
+        - Genres
+      x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: GetGenre
+  /genres:
+    get:
+      description: Lists genres
+      operationId: bookstore.v1.BookstoreService.ListGenres
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v1.ListGenresResponse'
+          description: Successful response
+      summary: List Genres
+      tags:
+        - Genres
+      x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: ListGenres
   /recursive:
     get:
       description: Invokes the bookstore.v1.BookstoreService.RecursiveBook method.
