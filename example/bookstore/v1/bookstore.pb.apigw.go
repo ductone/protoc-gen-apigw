@@ -54,6 +54,34 @@ var apigw_desc_BookstoreServiceServer = apigw_v1.ServiceDesc{
 			Decoder: _BookstoreService_DeleteShelf_APIGW_Decoder,
 		},
 		{
+			Name:    BookstoreService_ListGenres_FullMethodName,
+			Method:  http.MethodGet,
+			Route:   "/genres",
+			Handler: _BookstoreService_ListGenres_APIGW_Handler,
+			Decoder: _BookstoreService_ListGenres_APIGW_Decoder,
+		},
+		{
+			Name:    BookstoreService_CreateGenre_FullMethodName,
+			Method:  http.MethodPost,
+			Route:   "/genre",
+			Handler: _BookstoreService_CreateGenre_APIGW_Handler,
+			Decoder: _BookstoreService_CreateGenre_APIGW_Decoder,
+		},
+		{
+			Name:    BookstoreService_GetGenre_FullMethodName,
+			Method:  http.MethodGet,
+			Route:   "/genre/{genre_id}",
+			Handler: _BookstoreService_GetGenre_APIGW_Handler,
+			Decoder: _BookstoreService_GetGenre_APIGW_Decoder,
+		},
+		{
+			Name:    BookstoreService_DeleteGenre_FullMethodName,
+			Method:  http.MethodDelete,
+			Route:   "/genre/{genre_id}",
+			Handler: _BookstoreService_DeleteGenre_APIGW_Handler,
+			Decoder: _BookstoreService_DeleteGenre_APIGW_Decoder,
+		},
+		{
 			Name:    BookstoreService_CreateBook_FullMethodName,
 			Method:  http.MethodPost,
 			Route:   "/shelves/{shelf}/books",
@@ -199,6 +227,184 @@ func _BookstoreService_DeleteShelf_APIGW_Handler(srv interface{}, ctx context.Co
 }
 
 func _BookstoreService_DeleteShelf_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
+
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
+	bodyData, err := io.ReadAll(input.Body())
+	if err != nil {
+		return err
+	}
+	if len(bodyData) > 0 {
+		err = protojson.UnmarshalOptions{AllowPartial: true}.Unmarshal(bodyData, out)
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+		}
+	}
+
+	vn0 := input.PathParam("0")
+
+	vn1 := protopack.Message{
+		protopack.Tag{Number: 1, Type: protopack.BytesType},
+		protopack.String(vn0),
+	}
+
+	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func _BookstoreService_ListGenres_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
+	in := new(ListGenresRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).ListGenres(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_ListGenres_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).ListGenres(ctx, req.(*ListGenresRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
+}
+
+func _BookstoreService_ListGenres_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
+
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
+	return nil
+}
+
+func _BookstoreService_CreateGenre_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
+	in := new(CreateGenreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).CreateGenre(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_CreateGenre_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).CreateGenre(ctx, req.(*CreateGenreRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
+}
+
+func _BookstoreService_CreateGenre_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
+
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
+	bodyData, err := io.ReadAll(input.Body())
+	if err != nil {
+		return err
+	}
+	if len(bodyData) > 0 {
+		err = protojson.UnmarshalOptions{AllowPartial: true}.Unmarshal(bodyData, out)
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "failed to unmarshal body: %s", err)
+		}
+	}
+
+	return nil
+}
+
+func _BookstoreService_GetGenre_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
+	in := new(GetGenreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).GetGenre(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_GetGenre_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).GetGenre(ctx, req.(*GetGenreRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
+}
+
+func _BookstoreService_GetGenre_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
+
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
+	vn0 := input.PathParam("0")
+
+	vn1 := protopack.Message{
+		protopack.Tag{Number: 1, Type: protopack.BytesType},
+		protopack.String(vn0),
+	}
+
+	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func _BookstoreService_DeleteGenre_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
+	in := new(DeleteGenreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).DeleteGenre(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_DeleteGenre_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).DeleteGenre(ctx, req.(*DeleteGenreRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
+}
+
+func _BookstoreService_DeleteGenre_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
 	var err error
 	_ = err
 

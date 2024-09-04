@@ -108,12 +108,14 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	}
 
 	terraformEntityName := ""
+	terraformEntityJSON := false
 	mopt := getMessageOptions(m)
 	title := ""
 	if mopt != nil {
 		terraformEntity := mopt.GetTerraformEntity()
 		if terraformEntity != nil {
 			terraformEntityName = terraformEntity.Name
+			terraformEntityJSON = terraformEntity.Json
 		}
 		title = mopt.GetTitle()
 	}
@@ -156,7 +158,9 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	if forced {
 		extensions.Set("x-speakeasy-include", yamlBool(true))
 	}
-
+	if terraformEntityJSON {
+		extensions.Set("x-speakeasy-type-override", yamlString("any"))
+	}
 	required := make([]string, 0)
 	for _, f := range m.NonOneOfFields() {
 		jn := jsonName(f)

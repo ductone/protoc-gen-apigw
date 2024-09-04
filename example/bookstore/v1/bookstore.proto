@@ -40,6 +40,44 @@ service BookstoreService {
     };
   }
 
+  // Lists genres
+  rpc ListGenres(ListGenresRequest) returns (ListGenresResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/genres"
+      group: "Genres"
+    };
+  }
+
+  // Creates a new genre in the bookstore.
+  rpc CreateGenre(CreateGenreRequest) returns (CreateGenreResponse) {
+    option (apigw.v1.method).operations = {
+      method: "POST"
+      route: "/genre"
+      summary: "Create a New Genre"
+      group: "Genres"
+    };
+  }
+
+  // Get a genre
+  rpc GetGenre(GetGenreRequest) returns (GetGenreResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/genre/{genre_id}"
+      summary: "Get a Genre"
+      group: "Genres"
+    };
+  }
+
+  // Deletes a genre.
+  rpc DeleteGenre(DeleteGenreRequest) returns (DeleteGenreResponse) {
+    option (apigw.v1.method).operations = {
+      method: "DELETE"
+      route: "/genre/{genre_id}"
+      group: "Genres"
+    };
+  }
+
   // Creates a new book.
   rpc CreateBook(CreateBookRequest) returns (CreateBookResponse) {
     option (apigw.v1.method).operations = {
@@ -122,6 +160,34 @@ service BookstoreService {
   }
 }
 
+message CreateGenreRequest {
+  string name = 1;
+}
+
+message CreateGenreResponse {
+  Genre genre = 1;
+}
+
+message GetGenreRequest {
+  string genre_id = 1;
+}
+
+message GetGenreResponse {
+  Genre genre = 1;
+}
+
+message DeleteGenreRequest {
+  string genre_id = 1;
+}
+
+message DeleteGenreResponse {}
+
+message ListGenresRequest {}
+
+message ListGenresResponse {
+  repeated Genre genres = 1;
+}
+
 message DeleteShelfResponse {}
 
 message ListShelvesRequest {}
@@ -166,6 +232,20 @@ message Shelf {
 
   // To test json name is percentage encoded
   string search_encoded = 4 [json_name = "search%5Bencoded%5D"];
+}
+
+// A book genre
+message Genre {
+  option (apigw.v1.message).message_options = {
+    terraform_entity: {
+      name: "Genre",
+      json: true
+    }
+  };
+  // A unique genre id.
+  int64 id = 1;
+  // A genre name.
+  string name = 2;
 }
 
 // A book resource.
