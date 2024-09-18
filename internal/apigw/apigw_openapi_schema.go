@@ -250,6 +250,16 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		description += "\nThis field is part of the `" + f.OneOf().Name().String() + "` oneof.\n" +
 			"See the documentation for `" + nicerFQN(f.Message()) + "` for more details."
 	}
+	forceReadOnly := getForceReadOnly(f)
+	forceOptional := getForceOptional(f)
+	extensions := orderedmap.New[string, *yaml.Node]()
+	if forceReadOnly {
+		extensions.Set("x-speakeasy-param-readonly", yamlBool(true))
+	}
+	if forceOptional {
+		extensions.Set("x-speakeasy-param-optional", yamlBool(true))
+	}
+
 	switch {
 	case f.Type().IsRepeated():
 		fteSchema := sc.FieldTypeElem(f.Type().Element(), readOnly)
@@ -259,6 +269,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			Nullable:    oasTrue(),
 			ReadOnly:    &readOnly,
 			Deprecated:  deprecated,
+			Extensions:  extensions,
 			Items:       &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
 		return dm_base.CreateSchemaProxy(arraySchema)
@@ -270,6 +281,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			Description:          description,
 			Nullable:             nullable,
 			ReadOnly:             &readOnly,
+			Extensions:           extensions,
 			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
 		return dm_base.CreateSchemaProxy(mv)
@@ -278,10 +290,12 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		ev.Deprecated = deprecated
 		ev.Description = description
 		ev.ReadOnly = &readOnly
+		ev.Extensions = extensions
 		mergeNullable(ev, nullable)
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
 		// todo: nested filters
+		// todo: nested extensions
 		return sc.Message(f.Type().Embed(), nil, nullable, readOnly, false)
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())
@@ -289,6 +303,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		mergeNullable(sv, nullable)
 		sv.Deprecated = deprecated
 		sv.Description = description
+		sv.Extensions = extensions
 		return dm_base.CreateSchemaProxy(sv)
 	}
 }
@@ -339,4 +354,28 @@ func mergeNullable(s *dm_base.Schema, nullable *bool) {
 	if *nullable {
 		s.Nullable = oasTrue()
 	}
+}
+
+func getForceReadOnly(f pgs.Field) bool {
+	for _, fo := range getFieldOptions(f) {
+		tfattrs := fo.GetTerraformAttribute()
+		if tfattrs != nil {
+			if tfattrs.GetForceReadOnly() {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func getForceOptional(f pgs.Field) bool {
+	for _, fo := range getFieldOptions(f) {
+		tfattrs := fo.GetTerraformAttribute()
+		if tfattrs != nil {
+			if tfattrs.GetForceOptional() {
+				return true
+			}
+		}
+	}
+	return false
 }
