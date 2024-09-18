@@ -47,6 +47,7 @@ components:
           description: The metadata field.
           readOnly: true
           type: string
+          x-speakeasy-param-readonly: true
       title: Author
       type: object
       x-speakeasy-name-override: Author
@@ -68,6 +69,7 @@ components:
           nullable: true
           readOnly: false
           type: array
+          x-speakeasy-param-optional: true
         shelfId:
           description: The shelfId field.
           readOnly: false

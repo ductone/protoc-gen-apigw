@@ -261,7 +261,9 @@ message Book {
   // A book title.
   string title = 3;
   // Quotes from the book.
-  repeated string quotes = 4;
+  repeated string quotes = 4 [(apigw.v1.field).field_options = {
+    terraform_attribute: {force_optional: true}
+  }];
   string shelf_id = 5;
 }
 
@@ -277,7 +279,10 @@ message Author {
   Gender gender = 2;
   string first_name = 3;
   string last_name = 4 [json_name = "lname"];
-  string metadata = 5 [(apigw.v1.field).field_options = {read_only_spec: true}];
+  string metadata = 5 [(apigw.v1.field).field_options = {
+    read_only_spec: true,
+    terraform_attribute: {force_read_only: true}
+  }];
   google.protobuf.Timestamp created_at = 6 [(apigw.v1.field).field_options = {read_only_spec: true}];
   repeated google.protobuf.Any books = 7;
 }
