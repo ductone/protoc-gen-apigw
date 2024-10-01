@@ -37,6 +37,8 @@ message MessageOption {
 
   // Set this to process this message as the body of a webhook
   string webhook_request_name = 4;
+
+
 }
 
 message FieldOption {
@@ -44,6 +46,10 @@ message FieldOption {
   bool required_spec = 1;
   // Sets the field as read only in the generated openAPI spec.
   bool read_only_spec = 2;
+
+  // Only valid for use on `Any` fields. Messages with this matching group name will be included
+  // as part of a oneof in the OpenAPI spec instead of the any using the `additionalProperties` field.
+  string any_group = 3;
 }
 
 message FieldOptions {

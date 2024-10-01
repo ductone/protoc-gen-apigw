@@ -53,7 +53,7 @@ message Body {
   // - "type.googleapis.com/webhooks.v1.PayloadProvisionStep"
   //
   // And map to the associated payload message type.
-  google.protobuf.Any payload = 5;
+  google.protobuf.Any payload = 5 [(apigw.v1.field).field_options = {}];
 }
 
 message PayloadTest {

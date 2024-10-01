@@ -34,6 +34,7 @@ components:
             - GENDER_FEMALE
           readOnly: false
           type: string
+          x-speakeasy-unknown-values: allow
         id:
           description: A unique author id.
           format: int64
