@@ -278,6 +278,9 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		ev.Deprecated = deprecated
 		ev.Description = description
 		ev.ReadOnly = &readOnly
+		ev.Extensions = orderedmap.New[string, *yaml.Node]()
+		// TODO: Make this optional instead of always true
+		ev.Extensions.Set("x-speakeasy-unknown-values", yamlString("allow"))
 		mergeNullable(ev, nullable)
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
