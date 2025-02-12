@@ -228,6 +228,19 @@ components:
       title: Get Genre Response
       type: object
       x-speakeasy-name-override: GetGenreResponse
+    bookstore.v1.ListBooksResponse:
+      description: The ListBooksResponse message.
+      properties:
+        books:
+          description: The books field.
+          items:
+            $ref: '#/components/schemas/bookstore.v1.Book'
+          nullable: true
+          readOnly: false
+          type: array
+      title: List Books Response
+      type: object
+      x-speakeasy-name-override: ListBooksResponse
     bookstore.v1.ListGenresResponse:
       description: The ListGenresResponse message.
       properties:
@@ -542,6 +555,32 @@ paths:
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: DeleteShelf
   /shelves/{shelf}/books:
+    get:
+      description: Invokes the bookstore.v1.BookstoreService.ListBooks method.
+      operationId: bookstore.v1.BookstoreService.ListBooks
+      parameters:
+        - in: path
+          name: shelf
+          required: true
+          schema:
+            description: ID of the shelf which books to list.
+            readOnly: false
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v1.ListBooksResponse'
+          description: Successful response
+      summary: List Books
+      tags:
+        - Books
+      x-speakeasy-entity-operation:
+        terraform-datasource: Book#read#2
+        terraform-resource:
+      x-speakeasy-group: Bookstore
+      x-speakeasy-name-override: ListBooks
     post:
       description: Creates a new book.
       operationId: bookstore.v1.BookstoreService.CreateBook
@@ -568,7 +607,8 @@ paths:
       summary: Create Book
       tags:
         - Books
-      x-speakeasy-entity-operation: Book#create
+      x-speakeasy-entity-operation:
+        terraform-resource: Book#create
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: CreateBook
   /shelves/{shelf}/books/{book}:
@@ -605,7 +645,8 @@ paths:
       summary: Delete Book
       tags:
         - Books
-      x-speakeasy-entity-operation: Book#delete
+      x-speakeasy-entity-operation:
+        terraform-resource: Book#delete
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: DeleteBook
     get:
@@ -656,7 +697,9 @@ paths:
       summary: Get Book
       tags:
         - Books
-      x-speakeasy-entity-operation: Book#read
+      x-speakeasy-entity-operation:
+        terraform-datasource: Book#read
+        terraform-resource: Book#read
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: GetBook
     patch:
@@ -692,7 +735,8 @@ paths:
       summary: Update Book
       tags:
         - Books
-      x-speakeasy-entity-operation: Book#update
+      x-speakeasy-entity-operation:
+        terraform-resource: Book#update
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: UpdateBook
 servers:

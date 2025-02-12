@@ -82,6 +82,12 @@ message TerraformEntity {
   TerraformEntityMethodType type = 1;
   string name = 2;
   bool json = 3;
+  int32 operation_number =  4;
+  
+  oneof optionalExclusion {
+    bool datasource_only = 100;
+    bool resource_only = 101;
+  }
 }
 
 message Operation {
