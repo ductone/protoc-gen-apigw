@@ -125,7 +125,7 @@ service BookstoreService {
       terraform_entity: {
         type: TERRAFORM_ENTITY_METHOD_TYPE_READ
         name: "Book"
-        datasource_only: true
+        optional_exclusion: OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY
         operation_number: 2
       }
     };

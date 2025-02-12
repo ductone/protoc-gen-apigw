@@ -365,11 +365,11 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.N
 	datasourceEntity, resourceEntity := terraformEntity, terraformEntity
 
 	// Handle optional exclusions
-	if te := operation.TerraformEntity; te != nil && te.OptionalExclusion != nil {
-		switch te.OptionalExclusion.(type) {
-		case *apigw_v1.TerraformEntity_DatasourceOnly:
+	if te := operation.TerraformEntity; te != nil {
+		switch te.OptionalExclusion {
+		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY:
 			resourceTag, resourceEntity = nullTag, ""
-		case *apigw_v1.TerraformEntity_ResourceOnly:
+		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_RESOURCE_ONLY:
 			datasourceTag, datasourceEntity = nullTag, ""
 		}
 	}
