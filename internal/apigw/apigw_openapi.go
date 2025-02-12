@@ -371,6 +371,8 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.N
 			resourceTag, resourceEntity = nullTag, ""
 		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_RESOURCE_ONLY:
 			datasourceTag, datasourceEntity = nullTag, ""
+		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_UNSPECIFIED:
+			// No special logic needed
 		}
 	}
 
