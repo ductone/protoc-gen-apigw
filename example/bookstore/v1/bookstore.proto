@@ -117,6 +117,19 @@ service BookstoreService {
       group: "Books"
     };
   }
+  rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/shelves/{shelf}/books"
+      group: "Books"
+      terraform_entity: {
+        type: TERRAFORM_ENTITY_METHOD_TYPE_READ
+        name: "Book"
+        optional_exclusion: OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY
+        operation_number: 2
+      }
+    };
+  }
   // Deletes a book from a shelf.
   rpc DeleteBook(DeleteBookRequest) returns (DeleteBookResponse) {
     option (apigw.v1.method).operations = {
@@ -376,4 +389,8 @@ message RecursivePage {
   repeated RecursivePage extra_pages = 3;
   // This is a non recursive prop
   string prop = 4;
+}
+
+message ListBooksResponse {
+  repeated Book books = 1;
 }

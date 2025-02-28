@@ -96,6 +96,13 @@ var apigw_desc_BookstoreServiceServer = apigw_v1.ServiceDesc{
 			Decoder: _BookstoreService_GetBook_APIGW_Decoder,
 		},
 		{
+			Name:    BookstoreService_ListBooks_FullMethodName,
+			Method:  http.MethodGet,
+			Route:   "/shelves/{shelf}/books",
+			Handler: _BookstoreService_ListBooks_APIGW_Handler,
+			Decoder: _BookstoreService_ListBooks_APIGW_Decoder,
+		},
+		{
 			Name:    BookstoreService_DeleteBook_FullMethodName,
 			Method:  http.MethodDelete,
 			Route:   "/shelves/{book.shelf_id}/books/{book.id}",
@@ -602,6 +609,51 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 	}
 
 	err = unmarshalOpts.Unmarshal(vn3.Marshal(), out)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func _BookstoreService_ListBooks_APIGW_Handler(srv interface{}, ctx context.Context, dec func(proto.Message) error, interceptor grpc.UnaryServerInterceptor) (proto.Message, error) {
+	in := new(ListBooksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreServiceServer).ListBooks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookstoreService_ListBooks_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreServiceServer).ListBooks(ctx, req.(*ListBooksRequest))
+	}
+
+	rv, err := interceptor(ctx, in, info, handler)
+	if err != nil {
+		return nil, err
+	}
+	return rv.(proto.Message), nil
+}
+
+func _BookstoreService_ListBooks_APIGW_Decoder(ctx context.Context, input apigw_v1.DecoderInput, out proto.Message) error {
+	var err error
+	_ = err
+
+	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
+	_ = unmarshalOpts
+
+	vn0 := input.PathParam("0")
+
+	vn1 := protopack.Message{
+		protopack.Tag{Number: 1, Type: protopack.BytesType},
+		protopack.String(vn0),
+	}
+
+	err = unmarshalOpts.Unmarshal(vn1.Marshal(), out)
 	if err != nil {
 		return err
 	}

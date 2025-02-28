@@ -21,6 +21,11 @@ import (
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 )
 
+const (
+	stringTag = "!!str"
+	nullTag   = "!!null"
+)
+
 type route struct {
 	Route  string
 	Method string
@@ -233,9 +238,10 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		extensions.Set("x-speakeasy-name-override", yamlString(methodName))
 	}
 	terraformEntity := getTerraformEntityOperationExtension(operation)
-	if terraformEntity != "" {
-		extensions.Set("x-speakeasy-entity-operation",
-			yamlString(terraformEntity))
+
+	if terraformEntity != nil {
+		// Set the extension
+		extensions.Set("x-speakeasy-entity-operation", terraformEntity)
 	}
 
 	outputRef := mt.Add(outObj)
@@ -330,10 +336,11 @@ func toSnakeCase(s string) string {
 	return strings.ReplaceAll(s, ".", "_")
 }
 
-func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) string {
+func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.Node {
 	terraformEntity := ""
+	requiresDatasource := false
 	if operation.TerraformEntity == nil {
-		return ""
+		return nil
 	}
 	switch operation.TerraformEntity.Type {
 	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_UNSPECIFIED:
@@ -341,15 +348,53 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) string 
 	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_CREATE:
 		terraformEntity = fmt.Sprintf("%s#create", operation.TerraformEntity.Name)
 	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_READ:
+		requiresDatasource = true
 		terraformEntity = fmt.Sprintf("%s#read", operation.TerraformEntity.Name)
 	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_UPDATE:
 		terraformEntity = fmt.Sprintf("%s#update", operation.TerraformEntity.Name)
 	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_DELETE:
 		terraformEntity = fmt.Sprintf("%s#delete", operation.TerraformEntity.Name)
 	default:
-		return terraformEntity
+		return nil
 	}
-	return terraformEntity
+	if operation.TerraformEntity.OperationNumber != 0 {
+		terraformEntity = fmt.Sprintf("%s#%d", terraformEntity, operation.TerraformEntity.OperationNumber)
+	}
+
+	datasourceTag, resourceTag := stringTag, stringTag
+	datasourceEntity, resourceEntity := terraformEntity, terraformEntity
+
+	// Handle optional exclusions
+	if te := operation.TerraformEntity; te != nil {
+		switch te.OptionalExclusion {
+		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY:
+			resourceTag, resourceEntity = nullTag, ""
+		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_RESOURCE_ONLY:
+			datasourceTag, datasourceEntity = nullTag, ""
+		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_UNSPECIFIED:
+			// No special logic needed
+		}
+	}
+
+	// Construct YAML node
+	terraformEntityOperation := &yaml.Node{
+		Kind: yaml.MappingNode,
+		Content: []*yaml.Node{
+			{Kind: yaml.ScalarNode, Tag: stringTag, Value: "terraform-resource"},
+			{Kind: yaml.ScalarNode, Tag: resourceTag, Value: resourceEntity},
+		},
+	}
+
+	dataSourceNodes := []*yaml.Node{
+		{Kind: yaml.ScalarNode, Tag: stringTag, Value: "terraform-datasource"},
+		{Kind: yaml.ScalarNode, Tag: datasourceTag, Value: datasourceEntity},
+	}
+
+	if requiresDatasource {
+		terraformEntityOperation.Content = append(terraformEntityOperation.Content, dataSourceNodes...)
+	}
+
+	return terraformEntityOperation
 }
 
 func addOperation(doc *dm_v3.Document, r *route, op *dm_v3.Operation, comp *dm_v3.Components) {
