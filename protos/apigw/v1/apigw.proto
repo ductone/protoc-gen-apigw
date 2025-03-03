@@ -83,9 +83,9 @@ message TerraformEntity {
   string name = 2;
   bool json = 3;
   int32 operation_number =  4;
-  optionalExclusion optional_exclusion = 5;
+  OptionalExclusion optional_exclusion = 5;
   
-  enum optionalExclusion {
+  enum OptionalExclusion {
     OPTIONAL_EXCLUSION_UNSPECIFIED = 0;
     // Exclude the field from the terraform resource
     OPTIONAL_EXCLUSION_RESOURCE_ONLY = 1;
