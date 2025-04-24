@@ -77,15 +77,16 @@ message TerraformEntity {
     TERRAFORM_ENTITY_METHOD_TYPE_READ = 2;
     TERRAFORM_ENTITY_METHOD_TYPE_UPDATE = 3;
     TERRAFORM_ENTITY_METHOD_TYPE_DELETE = 4;
+    TERRAFORM_ENTITY_METHOD_TYPE_LIST = 5;
   }
 
   TerraformEntityMethodType type = 1;
   string name = 2;
   bool json = 3;
-  int32 operation_number =  4;
-  optionalExclusion optional_exclusion = 5;
-  
-  enum optionalExclusion {
+  int32 operation_number = 4;
+  OptionalExclusion optional_exclusion = 5;
+
+  enum OptionalExclusion {
     OPTIONAL_EXCLUSION_UNSPECIFIED = 0;
     // Exclude the field from the terraform resource
     OPTIONAL_EXCLUSION_RESOURCE_ONLY = 1;
@@ -102,7 +103,7 @@ message Operation {
   string docs_path = 5;
   repeated RequestExample request_examples = 6;
   repeated ResponseExample response_examples = 7;
-  TerraformEntity terraform_entity = 8;
+  repeated TerraformEntity terraform_entity = 8;
   string summary = 9;
   string group = 10;
 }
