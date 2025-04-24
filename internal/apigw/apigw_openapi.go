@@ -337,66 +337,73 @@ func toSnakeCase(s string) string {
 }
 
 func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.Node {
-	terraformEntity := ""
-	requiresDatasource := false
-	if operation.TerraformEntity == nil {
+	if len(operation.TerraformEntity) == 0 {
 		return nil
 	}
-	switch operation.TerraformEntity.Type {
-	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_UNSPECIFIED:
-		terraformEntity = ""
-	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_CREATE:
-		terraformEntity = fmt.Sprintf("%s#create", operation.TerraformEntity.Name)
-	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_READ:
-		requiresDatasource = true
-		terraformEntity = fmt.Sprintf("%s#read", operation.TerraformEntity.Name)
-	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_UPDATE:
-		terraformEntity = fmt.Sprintf("%s#update", operation.TerraformEntity.Name)
-	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_DELETE:
-		terraformEntity = fmt.Sprintf("%s#delete", operation.TerraformEntity.Name)
-	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_LIST:
-		terraformEntity = fmt.Sprintf("%s#list", operation.TerraformEntity.Name)
-	default:
-		return nil
-	}
-	if operation.TerraformEntity.OperationNumber != 0 {
-		terraformEntity = fmt.Sprintf("%s#%d", terraformEntity, operation.TerraformEntity.OperationNumber)
+
+	// Create mapping node to hold all terraform entities
+	extensionNode := &yaml.Node{
+		Kind:    yaml.MappingNode,
+		Content: []*yaml.Node{},
 	}
 
-	datasourceTag, resourceTag := stringTag, stringTag
-	datasourceEntity, resourceEntity := terraformEntity, terraformEntity
+	// Process each terraform entity
+	for _, te := range operation.TerraformEntity {
+		terraformEntity := ""
+		requiresDatasource := false
 
-	// Handle optional exclusions
-	if te := operation.TerraformEntity; te != nil {
+		switch te.Type {
+		case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_UNSPECIFIED:
+			continue // Skip unspecified types
+		case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_CREATE:
+			terraformEntity = fmt.Sprintf("%s#create", te.Name)
+		case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_READ:
+			requiresDatasource = true
+			terraformEntity = fmt.Sprintf("%s#read", te.Name)
+		case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_UPDATE:
+			terraformEntity = fmt.Sprintf("%s#update", te.Name)
+		case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_DELETE:
+			terraformEntity = fmt.Sprintf("%s#delete", te.Name)
+		case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_LIST:
+			requiresDatasource = true
+			terraformEntity = fmt.Sprintf("%s#list", te.Name)
+		default:
+			continue
+		}
+
+		if te.OperationNumber != 0 {
+			terraformEntity = fmt.Sprintf("%s#%d", terraformEntity, te.OperationNumber)
+		}
+
+		datasourceTag, resourceTag := stringTag, stringTag
+		datasourceEntity, resourceEntity := terraformEntity, terraformEntity
+
 		switch te.OptionalExclusion {
 		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY:
 			resourceTag, resourceEntity = nullTag, ""
 		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_RESOURCE_ONLY:
 			datasourceTag, datasourceEntity = nullTag, ""
 		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_UNSPECIFIED:
-			// No special logic needed
+		}
+
+		extensionNode.Content = append(extensionNode.Content,
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "terraform-resource-" + te.Name},
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: resourceTag, Value: resourceEntity},
+		)
+
+		if requiresDatasource {
+			extensionNode.Content = append(extensionNode.Content,
+				&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "terraform-datasource-" + te.Name},
+				&yaml.Node{Kind: yaml.ScalarNode, Tag: datasourceTag, Value: datasourceEntity},
+			)
 		}
 	}
 
-	// Construct YAML node
-	terraformEntityOperation := &yaml.Node{
-		Kind: yaml.MappingNode,
-		Content: []*yaml.Node{
-			{Kind: yaml.ScalarNode, Tag: stringTag, Value: "terraform-resource"},
-			{Kind: yaml.ScalarNode, Tag: resourceTag, Value: resourceEntity},
-		},
+	if len(extensionNode.Content) == 0 {
+		return nil
 	}
 
-	dataSourceNodes := []*yaml.Node{
-		{Kind: yaml.ScalarNode, Tag: stringTag, Value: "terraform-datasource"},
-		{Kind: yaml.ScalarNode, Tag: datasourceTag, Value: datasourceEntity},
-	}
-
-	if requiresDatasource {
-		terraformEntityOperation.Content = append(terraformEntityOperation.Content, dataSourceNodes...)
-	}
-
-	return terraformEntityOperation
+	return extensionNode
 }
 
 func addOperation(doc *dm_v3.Document, r *route, op *dm_v3.Operation, comp *dm_v3.Components) {

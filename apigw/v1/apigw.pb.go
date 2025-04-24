@@ -132,54 +132,54 @@ func (TerraformEntity_TerraformEntityMethodType) EnumDescriptor() ([]byte, []int
 	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{7, 0}
 }
 
-type TerraformEntityOptionalExclusion int32
+type TerraformEntity_OptionalExclusion int32
 
 const (
-	TerraformEntity_OPTIONAL_EXCLUSION_UNSPECIFIED TerraformEntityOptionalExclusion = 0
+	TerraformEntity_OPTIONAL_EXCLUSION_UNSPECIFIED TerraformEntity_OptionalExclusion = 0
 	// Exclude the field from the terraform resource
-	TerraformEntity_OPTIONAL_EXCLUSION_RESOURCE_ONLY TerraformEntityOptionalExclusion = 1
+	TerraformEntity_OPTIONAL_EXCLUSION_RESOURCE_ONLY TerraformEntity_OptionalExclusion = 1
 	// Exclude the field from the terraform data source
-	TerraformEntity_OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY TerraformEntityOptionalExclusion = 2
+	TerraformEntity_OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY TerraformEntity_OptionalExclusion = 2
 )
 
-// Enum value maps for TerraformEntityOptionalExclusion.
+// Enum value maps for TerraformEntity_OptionalExclusion.
 var (
-	TerraformEntityOptionalExclusion_name = map[int32]string{
+	TerraformEntity_OptionalExclusion_name = map[int32]string{
 		0: "OPTIONAL_EXCLUSION_UNSPECIFIED",
 		1: "OPTIONAL_EXCLUSION_RESOURCE_ONLY",
 		2: "OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY",
 	}
-	TerraformEntityOptionalExclusion_value = map[string]int32{
+	TerraformEntity_OptionalExclusion_value = map[string]int32{
 		"OPTIONAL_EXCLUSION_UNSPECIFIED":      0,
 		"OPTIONAL_EXCLUSION_RESOURCE_ONLY":    1,
 		"OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY": 2,
 	}
 )
 
-func (x TerraformEntityOptionalExclusion) Enum() *TerraformEntityOptionalExclusion {
-	p := new(TerraformEntityOptionalExclusion)
+func (x TerraformEntity_OptionalExclusion) Enum() *TerraformEntity_OptionalExclusion {
+	p := new(TerraformEntity_OptionalExclusion)
 	*p = x
 	return p
 }
 
-func (x TerraformEntityOptionalExclusion) String() string {
+func (x TerraformEntity_OptionalExclusion) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (TerraformEntityOptionalExclusion) Descriptor() protoreflect.EnumDescriptor {
+func (TerraformEntity_OptionalExclusion) Descriptor() protoreflect.EnumDescriptor {
 	return file_apigw_v1_apigw_proto_enumTypes[2].Descriptor()
 }
 
-func (TerraformEntityOptionalExclusion) Type() protoreflect.EnumType {
+func (TerraformEntity_OptionalExclusion) Type() protoreflect.EnumType {
 	return &file_apigw_v1_apigw_proto_enumTypes[2]
 }
 
-func (x TerraformEntityOptionalExclusion) Number() protoreflect.EnumNumber {
+func (x TerraformEntity_OptionalExclusion) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use TerraformEntityOptionalExclusion.Descriptor instead.
-func (TerraformEntityOptionalExclusion) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use TerraformEntity_OptionalExclusion.Descriptor instead.
+func (TerraformEntity_OptionalExclusion) EnumDescriptor() ([]byte, []int) {
 	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{7, 1}
 }
 
@@ -542,7 +542,7 @@ type TerraformEntity struct {
 	Name              string                                    `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Json              bool                                      `protobuf:"varint,3,opt,name=json,proto3" json:"json,omitempty"`
 	OperationNumber   int32                                     `protobuf:"varint,4,opt,name=operation_number,json=operationNumber,proto3" json:"operation_number,omitempty"`
-	OptionalExclusion TerraformEntityOptionalExclusion          `protobuf:"varint,5,opt,name=optional_exclusion,json=optionalExclusion,proto3,enum=apigw.v1.TerraformEntityOptionalExclusion" json:"optional_exclusion,omitempty"`
+	OptionalExclusion TerraformEntity_OptionalExclusion         `protobuf:"varint,5,opt,name=optional_exclusion,json=optionalExclusion,proto3,enum=apigw.v1.TerraformEntity_OptionalExclusion" json:"optional_exclusion,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -605,7 +605,7 @@ func (x *TerraformEntity) GetOperationNumber() int32 {
 	return 0
 }
 
-func (x *TerraformEntity) GetOptionalExclusion() TerraformEntityOptionalExclusion {
+func (x *TerraformEntity) GetOptionalExclusion() TerraformEntity_OptionalExclusion {
 	if x != nil {
 		return x.OptionalExclusion
 	}
@@ -621,7 +621,7 @@ type Operation struct {
 	DocsPath         string                 `protobuf:"bytes,5,opt,name=docs_path,json=docsPath,proto3" json:"docs_path,omitempty"`
 	RequestExamples  []*RequestExample      `protobuf:"bytes,6,rep,name=request_examples,json=requestExamples,proto3" json:"request_examples,omitempty"`
 	ResponseExamples []*ResponseExample     `protobuf:"bytes,7,rep,name=response_examples,json=responseExamples,proto3" json:"response_examples,omitempty"`
-	TerraformEntity  *TerraformEntity       `protobuf:"bytes,8,opt,name=terraform_entity,json=terraformEntity,proto3" json:"terraform_entity,omitempty"`
+	TerraformEntity  []*TerraformEntity     `protobuf:"bytes,8,rep,name=terraform_entity,json=terraformEntity,proto3" json:"terraform_entity,omitempty"`
 	Summary          string                 `protobuf:"bytes,9,opt,name=summary,proto3" json:"summary,omitempty"`
 	Group            string                 `protobuf:"bytes,10,opt,name=group,proto3" json:"group,omitempty"`
 	unknownFields    protoimpl.UnknownFields
@@ -707,7 +707,7 @@ func (x *Operation) GetResponseExamples() []*ResponseExample {
 	return nil
 }
 
-func (x *Operation) GetTerraformEntity() *TerraformEntity {
+func (x *Operation) GetTerraformEntity() []*TerraformEntity {
 	if x != nil {
 		return x.TerraformEntity
 	}
@@ -922,7 +922,7 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04json\x18\x03 \x01(\bR\x04json\x12)\n" +
 	"\x10operation_number\x18\x04 \x01(\x05R\x0foperationNumber\x12Z\n" +
-	"\x12optional_exclusion\x18\x05 \x01(\x0e2+.apigw.v1.TerraformEntity.optionalExclusionR\x11optionalExclusion\"\x92\x02\n" +
+	"\x12optional_exclusion\x18\x05 \x01(\x0e2+.apigw.v1.TerraformEntity.OptionalExclusionR\x11optionalExclusion\"\x92\x02\n" +
 	"\x19TerraformEntityMethodType\x12,\n" +
 	"(TERRAFORM_ENTITY_METHOD_TYPE_UNSPECIFIED\x10\x00\x12'\n" +
 	"#TERRAFORM_ENTITY_METHOD_TYPE_CREATE\x10\x01\x12%\n" +
@@ -930,7 +930,7 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"#TERRAFORM_ENTITY_METHOD_TYPE_UPDATE\x10\x03\x12'\n" +
 	"#TERRAFORM_ENTITY_METHOD_TYPE_DELETE\x10\x04\x12%\n" +
 	"!TERRAFORM_ENTITY_METHOD_TYPE_LIST\x10\x05\"\x86\x01\n" +
-	"\x11optionalExclusion\x12\"\n" +
+	"\x11OptionalExclusion\x12\"\n" +
 	"\x1eOPTIONAL_EXCLUSION_UNSPECIFIED\x10\x00\x12$\n" +
 	" OPTIONAL_EXCLUSION_RESOURCE_ONLY\x10\x01\x12'\n" +
 	"#OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY\x10\x02\"\xfc\x03\n" +
@@ -942,7 +942,7 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\tdocs_path\x18\x05 \x01(\tR\bdocsPath\x12C\n" +
 	"\x10request_examples\x18\x06 \x03(\v2\x18.apigw.v1.RequestExampleR\x0frequestExamples\x12F\n" +
 	"\x11response_examples\x18\a \x03(\v2\x19.apigw.v1.ResponseExampleR\x10responseExamples\x12D\n" +
-	"\x10terraform_entity\x18\b \x01(\v2\x19.apigw.v1.TerraformEntityR\x0fterraformEntity\x12\x18\n" +
+	"\x10terraform_entity\x18\b \x03(\v2\x19.apigw.v1.TerraformEntityR\x0fterraformEntity\x12\x18\n" +
 	"\asummary\x18\t \x01(\tR\asummary\x12\x14\n" +
 	"\x05group\x18\n" +
 	" \x01(\tR\x05group\x1a8\n" +
@@ -985,7 +985,7 @@ var file_apigw_v1_apigw_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_apigw_v1_apigw_proto_goTypes = []any{
 	(Stability)(0), // 0: apigw.v1.Stability
 	(TerraformEntity_TerraformEntityMethodType)(0), // 1: apigw.v1.TerraformEntity.TerraformEntityMethodType
-	(TerraformEntityOptionalExclusion)(0),          // 2: apigw.v1.TerraformEntity.optionalExclusion
+	(TerraformEntity_OptionalExclusion)(0),         // 2: apigw.v1.TerraformEntity.OptionalExclusion
 	(*MessageOptions)(nil),                         // 3: apigw.v1.MessageOptions
 	(*MessageOption)(nil),                          // 4: apigw.v1.MessageOption
 	(*FieldOption)(nil),                            // 5: apigw.v1.FieldOption
@@ -1011,7 +1011,7 @@ var file_apigw_v1_apigw_proto_depIdxs = []int32{
 	9,  // 4: apigw.v1.ServiceOptions.service:type_name -> apigw.v1.Service
 	0,  // 5: apigw.v1.Service.stability:type_name -> apigw.v1.Stability
 	1,  // 6: apigw.v1.TerraformEntity.type:type_name -> apigw.v1.TerraformEntity.TerraformEntityMethodType
-	2,  // 7: apigw.v1.TerraformEntity.optional_exclusion:type_name -> apigw.v1.TerraformEntity.optionalExclusion
+	2,  // 7: apigw.v1.TerraformEntity.optional_exclusion:type_name -> apigw.v1.TerraformEntity.OptionalExclusion
 	14, // 8: apigw.v1.Operation.query:type_name -> apigw.v1.Operation.QueryEntry
 	0,  // 9: apigw.v1.Operation.stability:type_name -> apigw.v1.Stability
 	12, // 10: apigw.v1.Operation.request_examples:type_name -> apigw.v1.RequestExample

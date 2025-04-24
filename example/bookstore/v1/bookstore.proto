@@ -128,6 +128,11 @@ service BookstoreService {
         optional_exclusion: OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY
         operation_number: 2
       }
+      terraform_entity: {
+        type: TERRAFORM_ENTITY_METHOD_TYPE_LIST
+        name: "Books"
+        optional_exclusion: OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY
+      }
     };
   }
   // Deletes a book from a shelf.
@@ -251,7 +256,7 @@ message Shelf {
 message Genre {
   option (apigw.v1.message).message_options = {
     terraform_entity: {
-      name: "Genre",
+      name: "Genre"
       json: true
     }
   };
