@@ -354,6 +354,8 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.N
 		terraformEntity = fmt.Sprintf("%s#update", operation.TerraformEntity.Name)
 	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_DELETE:
 		terraformEntity = fmt.Sprintf("%s#delete", operation.TerraformEntity.Name)
+	case apigw_v1.TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_LIST:
+		terraformEntity = fmt.Sprintf("%s#list", operation.TerraformEntity.Name)
 	default:
 		return nil
 	}
