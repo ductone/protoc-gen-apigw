@@ -341,11 +341,15 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.N
 		return nil
 	}
 
-	// Create mapping node to hold all terraform entities
+	// Create mapping node to hold terraform entities
 	extensionNode := &yaml.Node{
 		Kind:    yaml.MappingNode,
 		Content: []*yaml.Node{},
 	}
+
+	// We need to track which entity types we've added to construct proper keys
+	resourceKeys := make(map[string]bool)
+	datasourceKeys := make(map[string]bool)
 
 	// Process each terraform entity
 	for _, te := range operation.TerraformEntity {
@@ -386,14 +390,28 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.N
 		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_UNSPECIFIED:
 		}
 
+		// Add resource key with unique suffix if already exists
+		resourceKey := "terraform-resource"
+		if resourceKeys[te.Name] {
+			resourceKey = fmt.Sprintf("terraform-resource-%s", te.Name)
+		}
+		resourceKeys[te.Name] = true
+
 		extensionNode.Content = append(extensionNode.Content,
-			&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "terraform-resource-" + te.Name},
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: resourceKey},
 			&yaml.Node{Kind: yaml.ScalarNode, Tag: resourceTag, Value: resourceEntity},
 		)
 
 		if requiresDatasource {
+			// Add datasource key with unique suffix if already exists
+			datasourceKey := "terraform-datasource"
+			if datasourceKeys[te.Name] {
+				datasourceKey = fmt.Sprintf("terraform-datasource-%s", te.Name)
+			}
+			datasourceKeys[te.Name] = true
+
 			extensionNode.Content = append(extensionNode.Content,
-				&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "terraform-datasource-" + te.Name},
+				&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: datasourceKey},
 				&yaml.Node{Kind: yaml.ScalarNode, Tag: datasourceTag, Value: datasourceEntity},
 			)
 		}
