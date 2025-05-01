@@ -344,14 +344,14 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.N
 		return nil
 	}
 
-	// Create arrays of tuples of (tag, value)
+	// Arrays of tuples of (tag, value)
 	datasourceValues := [][]string{}
 	resourceValues := [][]string{}
-	// Ensure we only add null values once
+	// Ensure we add null values only once
 	hasNullDatasource := false
 	hasNullResource := false
 
-	// Process each terraform entity
+	// Each operation.TerraformEntity can have 0, 1, or more terraform entities
 	for _, te := range operation.TerraformEntity {
 		terraformEntity := ""
 		requiresDatasource := false
@@ -379,7 +379,7 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.N
 		datasourceTag, resourceTag := stringTag, stringTag
 		datasourceEntity, resourceEntity := terraformEntity, terraformEntity
 
-		// Add to appropriate arrays based on exclusions
+		// Handle exclusions
 		switch te.OptionalExclusion {
 		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY:
 			// Set resource to explicit null
