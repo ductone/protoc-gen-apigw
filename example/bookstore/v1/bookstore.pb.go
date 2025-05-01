@@ -1976,7 +1976,7 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"page_tokenB\b\b\x02\x12\x04BookR\x05Books\x12\x93\x01\n" +
 	"\tListBooks\x12\x1e.bookstore.v1.ListBooksRequest\x1a\x1f.bookstore.v1.ListBooksResponse\"E\x9a\xde\x03A\n" +
 	"?\n" +
-	"\x03GET\x12\x16/shelves/{shelf}/booksB\f\b\x02\x12\x04Book \x02(\x02B\v\b\x05\x12\x05Books(\x02R\x05Books\x12\x9a\x01\n" +
+	"\x03GET\x12\x16/shelves/{shelf}/booksB\f\b\x02\x12\x04Book \x02(\x02B\v\b\x02\x12\x05Books(\x02R\x05Books\x12\x9a\x01\n" +
 	"\n" +
 	"DeleteBook\x12\x1f.bookstore.v1.DeleteBookRequest\x1a .bookstore.v1.DeleteBookResponse\"I\x9a\xde\x03E\n" +
 	"C\n" +

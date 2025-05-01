@@ -82,7 +82,6 @@ const (
 	TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_READ        TerraformEntity_TerraformEntityMethodType = 2
 	TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_UPDATE      TerraformEntity_TerraformEntityMethodType = 3
 	TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_DELETE      TerraformEntity_TerraformEntityMethodType = 4
-	TerraformEntity_TERRAFORM_ENTITY_METHOD_TYPE_LIST        TerraformEntity_TerraformEntityMethodType = 5
 )
 
 // Enum value maps for TerraformEntity_TerraformEntityMethodType.
@@ -93,7 +92,6 @@ var (
 		2: "TERRAFORM_ENTITY_METHOD_TYPE_READ",
 		3: "TERRAFORM_ENTITY_METHOD_TYPE_UPDATE",
 		4: "TERRAFORM_ENTITY_METHOD_TYPE_DELETE",
-		5: "TERRAFORM_ENTITY_METHOD_TYPE_LIST",
 	}
 	TerraformEntity_TerraformEntityMethodType_value = map[string]int32{
 		"TERRAFORM_ENTITY_METHOD_TYPE_UNSPECIFIED": 0,
@@ -101,7 +99,6 @@ var (
 		"TERRAFORM_ENTITY_METHOD_TYPE_READ":        2,
 		"TERRAFORM_ENTITY_METHOD_TYPE_UPDATE":      3,
 		"TERRAFORM_ENTITY_METHOD_TYPE_DELETE":      4,
-		"TERRAFORM_ENTITY_METHOD_TYPE_LIST":        5,
 	}
 )
 
@@ -916,20 +913,19 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\aservice\x18\x01 \x01(\v2\x11.apigw.v1.ServiceR\aservice\"Y\n" +
 	"\aService\x121\n" +
 	"\tstability\x18\x01 \x01(\x0e2\x13.apigw.v1.StabilityR\tstability\x12\x1b\n" +
-	"\tdocs_path\x18\x02 \x01(\tR\bdocsPath\"\xa7\x05\n" +
+	"\tdocs_path\x18\x02 \x01(\tR\bdocsPath\"\x80\x05\n" +
 	"\x0fTerraformEntity\x12G\n" +
 	"\x04type\x18\x01 \x01(\x0e23.apigw.v1.TerraformEntity.TerraformEntityMethodTypeR\x04type\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04json\x18\x03 \x01(\bR\x04json\x12)\n" +
 	"\x10operation_number\x18\x04 \x01(\x05R\x0foperationNumber\x12Z\n" +
-	"\x12optional_exclusion\x18\x05 \x01(\x0e2+.apigw.v1.TerraformEntity.OptionalExclusionR\x11optionalExclusion\"\x92\x02\n" +
+	"\x12optional_exclusion\x18\x05 \x01(\x0e2+.apigw.v1.TerraformEntity.OptionalExclusionR\x11optionalExclusion\"\xeb\x01\n" +
 	"\x19TerraformEntityMethodType\x12,\n" +
 	"(TERRAFORM_ENTITY_METHOD_TYPE_UNSPECIFIED\x10\x00\x12'\n" +
 	"#TERRAFORM_ENTITY_METHOD_TYPE_CREATE\x10\x01\x12%\n" +
 	"!TERRAFORM_ENTITY_METHOD_TYPE_READ\x10\x02\x12'\n" +
 	"#TERRAFORM_ENTITY_METHOD_TYPE_UPDATE\x10\x03\x12'\n" +
-	"#TERRAFORM_ENTITY_METHOD_TYPE_DELETE\x10\x04\x12%\n" +
-	"!TERRAFORM_ENTITY_METHOD_TYPE_LIST\x10\x05\"\x86\x01\n" +
+	"#TERRAFORM_ENTITY_METHOD_TYPE_DELETE\x10\x04\"\x86\x01\n" +
 	"\x11OptionalExclusion\x12\"\n" +
 	"\x1eOPTIONAL_EXCLUSION_UNSPECIFIED\x10\x00\x12$\n" +
 	" OPTIONAL_EXCLUSION_RESOURCE_ONLY\x10\x01\x12'\n" +

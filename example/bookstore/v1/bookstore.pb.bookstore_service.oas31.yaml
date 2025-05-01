@@ -577,10 +577,10 @@ paths:
       tags:
         - Books
       x-speakeasy-entity-operation:
-        terraform-datasource: Book#read#2
-        terraform-datasource: Books#list
-        terraform-resource:
-        terraform-resource:
+        terraform-datasource:
+          - Book#read#2
+          - Books#read
+        terraform-resource: null
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: ListBooks
     post:
@@ -610,6 +610,7 @@ paths:
       tags:
         - Books
       x-speakeasy-entity-operation:
+        terraform-datasource: null
         terraform-resource: Book#create
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: CreateBook
@@ -648,6 +649,7 @@ paths:
       tags:
         - Books
       x-speakeasy-entity-operation:
+        terraform-datasource: null
         terraform-resource: Book#delete
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: DeleteBook
@@ -738,6 +740,7 @@ paths:
       tags:
         - Books
       x-speakeasy-entity-operation:
+        terraform-datasource: null
         terraform-resource: Book#update
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: UpdateBook
