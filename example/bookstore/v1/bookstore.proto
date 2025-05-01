@@ -113,6 +113,7 @@ service BookstoreService {
       terraform_entity: {
         type: TERRAFORM_ENTITY_METHOD_TYPE_READ
         name: "Book"
+        optional_exclusion: OPTIONAL_EXCLUSION_RESOURCE_ONLY
       }
       group: "Books"
     };

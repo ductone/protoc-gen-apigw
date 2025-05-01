@@ -22,8 +22,11 @@ import (
 )
 
 const (
-	stringTag = "!!str"
-	nullTag   = "!!null"
+	stringTag       = "!!str"
+	nullTag         = "!!null"
+	seqTag          = "!!seq"
+	tfDatasourceVal = "terraform-datasource"
+	tfResourceVal   = "terraform-resource"
 )
 
 type route struct {
@@ -341,15 +344,12 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.N
 		return nil
 	}
 
-	// Create mapping node to hold all terraform entities
-	extensionNode := &yaml.Node{
-		Kind:    yaml.MappingNode,
-		Content: []*yaml.Node{},
-	}
-
-	// Create arrays to collect values before creating nodes
-	datasourceValues := []string{}
-	resourceValues := []string{}
+	// Create arrays of tuples of (tag, value)
+	datasourceValues := [][]string{}
+	resourceValues := [][]string{}
+	// Ensure we only add null values once
+	hasNullDatasource := false
+	hasNullResource := false
 
 	// Process each terraform entity
 	for _, te := range operation.TerraformEntity {
@@ -376,77 +376,99 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.N
 			terraformEntity = fmt.Sprintf("%s#%d", terraformEntity, te.OperationNumber)
 		}
 
+		datasourceTag, resourceTag := stringTag, stringTag
+		datasourceEntity, resourceEntity := terraformEntity, terraformEntity
+
 		// Add to appropriate arrays based on exclusions
 		switch te.OptionalExclusion {
 		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY:
-			// Only add to datasource
-			if requiresDatasource {
-				datasourceValues = append(datasourceValues, terraformEntity)
-			}
+			// Set resource to explicit null
+			resourceTag, resourceEntity = nullTag, ""
 		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_RESOURCE_ONLY:
-			// Only add to resource
-			resourceValues = append(resourceValues, terraformEntity)
+			// Set datasource to explicit null
+			datasourceTag, datasourceEntity = nullTag, ""
 		case apigw_v1.TerraformEntity_OPTIONAL_EXCLUSION_UNSPECIFIED:
-			// Add to both if applicable
-			resourceValues = append(resourceValues, terraformEntity)
-			if requiresDatasource {
-				datasourceValues = append(datasourceValues, terraformEntity)
+			// No special logic needed
+		}
+
+		if requiresDatasource {
+			if datasourceTag == nullTag && !hasNullDatasource {
+				datasourceValues = append(datasourceValues, []string{datasourceTag, datasourceEntity})
+				hasNullDatasource = true
+			} else if datasourceTag != nullTag {
+				datasourceValues = append(datasourceValues, []string{datasourceTag, datasourceEntity})
 			}
+		}
+
+		if resourceTag == nullTag && !hasNullResource {
+			resourceValues = append(resourceValues, []string{resourceTag, resourceEntity})
+			hasNullResource = true
+		} else if resourceTag != nullTag {
+			resourceValues = append(resourceValues, []string{resourceTag, resourceEntity})
 		}
 	}
 
-	// Add datasource values to extension node
-	extensionNode.Content = append(extensionNode.Content,
-		&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "terraform-datasource"},
-	)
+	extensionNode := &yaml.Node{
+		Kind:    yaml.MappingNode,
+		Content: []*yaml.Node{},
+	}
 
-	switch len(datasourceValues) {
-	case 0:
-		// Use explicit null for empty collections
+	// If any, initialize the datasource node
+	if len(datasourceValues) > 0 {
 		extensionNode.Content = append(extensionNode.Content,
-			&yaml.Node{Kind: yaml.ScalarNode, Tag: nullTag, Value: "null"},
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: tfDatasourceVal},
 		)
-	case 1:
+	}
+
+	switch {
+	case len(datasourceValues) == 0:
+		// No datasource values, so no need to add anything
+		break
+	case len(datasourceValues) == 1:
 		// Use scalar for single value
 		extensionNode.Content = append(extensionNode.Content,
-			&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: datasourceValues[0]},
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: datasourceValues[0][0], Value: datasourceValues[0][1]},
 		)
-	default:
+	case len(datasourceValues) > 1:
 		// Use sequence for multiple values
-		datasourceNode := &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
+		datasourceNode := &yaml.Node{Kind: yaml.SequenceNode, Tag: seqTag}
 		for _, val := range datasourceValues {
 			datasourceNode.Content = append(datasourceNode.Content,
-				&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: val},
+				&yaml.Node{Kind: yaml.ScalarNode, Tag: val[0], Value: val[1]},
 			)
 		}
 		extensionNode.Content = append(extensionNode.Content, datasourceNode)
 	}
 
-	// Add resource values to extension node
-	extensionNode.Content = append(extensionNode.Content,
-		&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "terraform-resource"},
-	)
-
-	switch len(resourceValues) {
-	case 0:
-		// Use explicit null for empty collections
+	// If any, initialize the resource node
+	if len(resourceValues) > 0 {
 		extensionNode.Content = append(extensionNode.Content,
-			&yaml.Node{Kind: yaml.ScalarNode, Tag: nullTag, Value: "null"},
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: tfResourceVal},
 		)
-	case 1:
+	}
+
+	switch {
+	case len(resourceValues) == 0:
+		// No resource values, so no need to add anything
+		break
+	case len(resourceValues) == 1:
 		// Use scalar for single value
 		extensionNode.Content = append(extensionNode.Content,
-			&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: resourceValues[0]},
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: resourceValues[0][0], Value: resourceValues[0][1]},
 		)
-	default:
+	case len(resourceValues) > 1:
 		// Use sequence for multiple values
-		resourceNode := &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
+		resourceNode := &yaml.Node{Kind: yaml.SequenceNode, Tag: seqTag}
 		for _, val := range resourceValues {
 			resourceNode.Content = append(resourceNode.Content,
-				&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: val},
+				&yaml.Node{Kind: yaml.ScalarNode, Tag: val[0], Value: val[1]},
 			)
 		}
 		extensionNode.Content = append(extensionNode.Content, resourceNode)
+	}
+
+	if len(extensionNode.Content) == 0 {
+		return nil
 	}
 
 	return extensionNode
