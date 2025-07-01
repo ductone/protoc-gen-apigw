@@ -511,8 +511,8 @@ func getTerraformEntityOperationPagination(operation *apigw_v1.Operation) *yaml.
 	for _, input := range operation.Pagination.Inputs {
 		inputIn := ""
 		switch input.In {
-			case apigw_v1.PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_IN_UNSPECIFIED:
-			return nil // Skip if input location is unspecified
+		case apigw_v1.PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_IN_UNSPECIFIED:
+			continue // Skip if input location is unspecified
 		case apigw_v1.PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_IN_REQUEST_BODY:
 			inputIn = "requestBody"
 		}
@@ -524,7 +524,7 @@ func getTerraformEntityOperationPagination(operation *apigw_v1.Operation) *yaml.
 			inputType = "cursor"
 		}
 		inputNode := &yaml.Node{
-			Kind:    yaml.MappingNode,
+			Kind: yaml.MappingNode,
 			Content: []*yaml.Node{
 				{Kind: yaml.ScalarNode, Tag: stringTag, Value: "name"},
 				{Kind: yaml.ScalarNode, Tag: stringTag, Value: input.GetName()},
@@ -536,6 +536,11 @@ func getTerraformEntityOperationPagination(operation *apigw_v1.Operation) *yaml.
 		}
 		inputsNode.Content = append(inputsNode.Content, inputNode)
 	}
+
+	if len(inputsNode.Content) == 0 {
+		return nil // Skip if no inputs are defined
+	}
+
 	paginationNode.Content = append(paginationNode.Content,
 		&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "inputs"},
 		inputsNode,
@@ -547,13 +552,13 @@ func getTerraformEntityOperationPagination(operation *apigw_v1.Operation) *yaml.
 		Content: []*yaml.Node{},
 	}
 	outputsNode.Content = append(outputsNode.Content,
-				&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "nextCursor"},
-				&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: operation.Pagination.Outputs.NextCursor},
-			)
+		&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "nextCursor"},
+		&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: operation.Pagination.Outputs.NextCursor},
+	)
 	paginationNode.Content = append(paginationNode.Content,
-			&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "outputs"},
-			outputsNode,
-		)
+		&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "outputs"},
+		outputsNode,
+	)
 
 	if len(paginationNode.Content) == 0 {
 		return nil
