@@ -583,6 +583,14 @@ paths:
         terraform-resource:
       x-speakeasy-group: Bookstore
       x-speakeasy-name-override: ListBooks
+      x-speakeasy-pagination:
+        inputs:
+          - in: requestBody
+            name: pageToken
+            type: cursor
+        outputs:
+          nextCursor: $.nextPageToken
+        type: cursor
     post:
       description: Creates a new book.
       operationId: bookstore.v1.BookstoreService.CreateBook

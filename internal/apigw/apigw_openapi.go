@@ -247,6 +247,12 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		extensions.Set("x-speakeasy-entity-operation", terraformEntity)
 	}
 
+	// Get pagination values
+	terraformPagination := getTerraformEntityOperationPagination(operation)
+	if terraformPagination != nil {
+		extensions.Set("x-speakeasy-pagination", terraformPagination)
+	}
+
 	outputRef := mt.Add(outObj)
 	op := &dm_v3.Operation{
 		OperationId: nicerFQN(method),
@@ -472,6 +478,88 @@ func getTerraformEntityOperationExtension(operation *apigw_v1.Operation) *yaml.N
 	}
 
 	return extensionNode
+}
+
+func getTerraformEntityOperationPagination(operation *apigw_v1.Operation) *yaml.Node {
+	if operation.Pagination == nil {
+		return nil // Skip if no pagination is defined
+	}
+
+	paginationNode := &yaml.Node{
+		Kind:    yaml.MappingNode,
+		Content: []*yaml.Node{},
+	}
+
+	// type
+	paginationType := ""
+	switch operation.Pagination.Type {
+	case apigw_v1.Pagination_TERRAFORM_ENTITY_PAGINATION_TYPE_UNSPECIFIED:
+		return nil // Skip if pagination type is unspecified
+	case apigw_v1.Pagination_TERRAFORM_ENTITY_PAGINATION_TYPE_CURSOR:
+		paginationType = "cursor"
+	}
+	paginationNode.Content = append(paginationNode.Content,
+		&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "type"},
+		&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: paginationType},
+	)
+
+	// inputs
+	inputsNode := &yaml.Node{
+		Kind:    yaml.SequenceNode,
+		Content: []*yaml.Node{},
+	}
+	for _, input := range operation.Pagination.Inputs {
+		inputIn := ""
+		switch input.In {
+			case apigw_v1.PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_IN_UNSPECIFIED:
+			return nil // Skip if input location is unspecified
+		case apigw_v1.PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_IN_REQUEST_BODY:
+			inputIn = "requestBody"
+		}
+		inputType := ""
+		switch input.Type {
+		case apigw_v1.PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_UNSPECIFIED:
+			return nil // Skip if input type is unspecified
+		case apigw_v1.PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_CURSOR:
+			inputType = "cursor"
+		}
+		inputNode := &yaml.Node{
+			Kind:    yaml.MappingNode,
+			Content: []*yaml.Node{
+				{Kind: yaml.ScalarNode, Tag: stringTag, Value: "name"},
+				{Kind: yaml.ScalarNode, Tag: stringTag, Value: input.GetName()},
+				{Kind: yaml.ScalarNode, Tag: stringTag, Value: "in"},
+				{Kind: yaml.ScalarNode, Tag: stringTag, Value: inputIn},
+				{Kind: yaml.ScalarNode, Tag: stringTag, Value: "type"},
+				{Kind: yaml.ScalarNode, Tag: stringTag, Value: inputType},
+			},
+		}
+		inputsNode.Content = append(inputsNode.Content, inputNode)
+	}
+	paginationNode.Content = append(paginationNode.Content,
+		&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "inputs"},
+		inputsNode,
+	)
+
+	// outputs
+	outputsNode := &yaml.Node{
+		Kind:    yaml.MappingNode,
+		Content: []*yaml.Node{},
+	}
+	outputsNode.Content = append(outputsNode.Content,
+				&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "nextCursor"},
+				&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: operation.Pagination.Outputs.NextCursor},
+			)
+	paginationNode.Content = append(paginationNode.Content,
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: stringTag, Value: "outputs"},
+			outputsNode,
+		)
+
+	if len(paginationNode.Content) == 0 {
+		return nil
+	}
+
+	return paginationNode
 }
 
 func addOperation(doc *dm_v3.Document, r *route, op *dm_v3.Operation, comp *dm_v3.Components) {

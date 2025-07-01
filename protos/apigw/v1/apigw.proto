@@ -94,6 +94,37 @@ message TerraformEntity {
   }
 }
 
+message Pagination {
+  enum TerraformEntityPaginationType {
+    TERRAFORM_ENTITY_PAGINATION_TYPE_UNSPECIFIED = 0;
+    TERRAFORM_ENTITY_PAGINATION_TYPE_CURSOR = 1;
+  }
+
+  TerraformEntityPaginationType type = 1;
+  repeated PaginationInput inputs = 2;
+  PaginationOutput outputs = 3;
+}
+
+message PaginationInput {
+  string name = 1;
+
+  enum TerraformEntityPaginationInputIn {
+    TERRAFORM_ENTITY_PAGINATION_INPUT_IN_UNSPECIFIED = 0;
+    TERRAFORM_ENTITY_PAGINATION_INPUT_IN_REQUEST_BODY = 1;
+  }
+  TerraformEntityPaginationInputIn in = 2;
+
+  enum TerraformEntityPaginationInputType {
+    TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_UNSPECIFIED = 0;
+    TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_CURSOR = 1;
+  }
+  TerraformEntityPaginationInputType type = 3;
+}
+
+message PaginationOutput {
+  string next_cursor = 1;
+}
+
 message Operation {
   string method = 1;
   string route = 2;
@@ -105,6 +136,7 @@ message Operation {
   repeated TerraformEntity terraform_entity = 8;
   string summary = 9;
   string group = 10;
+  Pagination pagination = 11;
 }
 
 message RequestExample {

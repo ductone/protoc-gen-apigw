@@ -1938,7 +1938,7 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"extraPages\x12\x12\n" +
 	"\x04prop\x18\x04 \x01(\tR\x04prop\"=\n" +
 	"\x11ListBooksResponse\x12(\n" +
-	"\x05books\x18\x01 \x03(\v2\x12.bookstore.v1.BookR\x05books2\xa6\x0f\n" +
+	"\x05books\x18\x01 \x03(\v2\x12.bookstore.v1.BookR\x05books2\xce\x0f\n" +
 	"\x10BookstoreService\x12r\n" +
 	"\vListShelves\x12 .bookstore.v1.ListShelvesRequest\x1a!.bookstore.v1.ListShelvesResponse\"\x1e\x9a\xde\x03\x1a\n" +
 	"\x18\n" +
@@ -1974,10 +1974,12 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"\n" +
 	"page_token\x12\n" +
 	"page_tokenB\n" +
-	"\b\x02\x12\x04Book(\x01R\x05Books\x12\x93\x01\n" +
-	"\tListBooks\x12\x1e.bookstore.v1.ListBooksRequest\x1a\x1f.bookstore.v1.ListBooksResponse\"E\x9a\xde\x03A\n" +
-	"?\n" +
-	"\x03GET\x12\x16/shelves/{shelf}/booksB\f\b\x02\x12\x04Book \x02(\x02B\v\b\x02\x12\x05Books(\x02R\x05Books\x12\x9a\x01\n" +
+	"\b\x02\x12\x04Book(\x01R\x05Books\x12\xbb\x01\n" +
+	"\tListBooks\x12\x1e.bookstore.v1.ListBooksRequest\x1a\x1f.bookstore.v1.ListBooksResponse\"m\x9a\xde\x03i\n" +
+	"g\n" +
+	"\x03GET\x12\x16/shelves/{shelf}/booksB\f\b\x02\x12\x04Book \x02(\x02B\v\b\x02\x12\x05Books(\x02R\x05BooksZ&\b\x01\x12\x0f\n" +
+	"\tpageToken\x10\x01\x18\x01\x1a\x11\n" +
+	"\x0f$.nextPageToken\x12\x9a\x01\n" +
 	"\n" +
 	"DeleteBook\x12\x1f.bookstore.v1.DeleteBookRequest\x1a .bookstore.v1.DeleteBookResponse\"I\x9a\xde\x03E\n" +
 	"C\n" +
