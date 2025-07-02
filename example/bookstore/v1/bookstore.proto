@@ -134,6 +134,19 @@ service BookstoreService {
         name: "Books"
         optional_exclusion: OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY
       }
+      pagination : {
+          type: TERRAFORM_ENTITY_PAGINATION_TYPE_CURSOR
+          inputs: [
+            {
+              name: "pageToken"
+              type: TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_CURSOR
+              in: TERRAFORM_ENTITY_PAGINATION_INPUT_IN_REQUEST_BODY
+            }
+          ]
+          outputs: {
+            next_cursor: "$.nextPageToken"
+          }
+        }
     };
   }
   // Deletes a book from a shelf.

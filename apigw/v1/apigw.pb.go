@@ -180,6 +180,144 @@ func (TerraformEntity_OptionalExclusion) EnumDescriptor() ([]byte, []int) {
 	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{7, 1}
 }
 
+type Pagination_TerraformEntityPaginationType int32
+
+const (
+	Pagination_TERRAFORM_ENTITY_PAGINATION_TYPE_UNSPECIFIED Pagination_TerraformEntityPaginationType = 0
+	Pagination_TERRAFORM_ENTITY_PAGINATION_TYPE_CURSOR      Pagination_TerraformEntityPaginationType = 1
+)
+
+// Enum value maps for Pagination_TerraformEntityPaginationType.
+var (
+	Pagination_TerraformEntityPaginationType_name = map[int32]string{
+		0: "TERRAFORM_ENTITY_PAGINATION_TYPE_UNSPECIFIED",
+		1: "TERRAFORM_ENTITY_PAGINATION_TYPE_CURSOR",
+	}
+	Pagination_TerraformEntityPaginationType_value = map[string]int32{
+		"TERRAFORM_ENTITY_PAGINATION_TYPE_UNSPECIFIED": 0,
+		"TERRAFORM_ENTITY_PAGINATION_TYPE_CURSOR":      1,
+	}
+)
+
+func (x Pagination_TerraformEntityPaginationType) Enum() *Pagination_TerraformEntityPaginationType {
+	p := new(Pagination_TerraformEntityPaginationType)
+	*p = x
+	return p
+}
+
+func (x Pagination_TerraformEntityPaginationType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Pagination_TerraformEntityPaginationType) Descriptor() protoreflect.EnumDescriptor {
+	return file_apigw_v1_apigw_proto_enumTypes[3].Descriptor()
+}
+
+func (Pagination_TerraformEntityPaginationType) Type() protoreflect.EnumType {
+	return &file_apigw_v1_apigw_proto_enumTypes[3]
+}
+
+func (x Pagination_TerraformEntityPaginationType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Pagination_TerraformEntityPaginationType.Descriptor instead.
+func (Pagination_TerraformEntityPaginationType) EnumDescriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{8, 0}
+}
+
+type PaginationInput_TerraformEntityPaginationInputIn int32
+
+const (
+	PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_IN_UNSPECIFIED  PaginationInput_TerraformEntityPaginationInputIn = 0
+	PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_IN_REQUEST_BODY PaginationInput_TerraformEntityPaginationInputIn = 1
+)
+
+// Enum value maps for PaginationInput_TerraformEntityPaginationInputIn.
+var (
+	PaginationInput_TerraformEntityPaginationInputIn_name = map[int32]string{
+		0: "TERRAFORM_ENTITY_PAGINATION_INPUT_IN_UNSPECIFIED",
+		1: "TERRAFORM_ENTITY_PAGINATION_INPUT_IN_REQUEST_BODY",
+	}
+	PaginationInput_TerraformEntityPaginationInputIn_value = map[string]int32{
+		"TERRAFORM_ENTITY_PAGINATION_INPUT_IN_UNSPECIFIED":  0,
+		"TERRAFORM_ENTITY_PAGINATION_INPUT_IN_REQUEST_BODY": 1,
+	}
+)
+
+func (x PaginationInput_TerraformEntityPaginationInputIn) Enum() *PaginationInput_TerraformEntityPaginationInputIn {
+	p := new(PaginationInput_TerraformEntityPaginationInputIn)
+	*p = x
+	return p
+}
+
+func (x PaginationInput_TerraformEntityPaginationInputIn) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PaginationInput_TerraformEntityPaginationInputIn) Descriptor() protoreflect.EnumDescriptor {
+	return file_apigw_v1_apigw_proto_enumTypes[4].Descriptor()
+}
+
+func (PaginationInput_TerraformEntityPaginationInputIn) Type() protoreflect.EnumType {
+	return &file_apigw_v1_apigw_proto_enumTypes[4]
+}
+
+func (x PaginationInput_TerraformEntityPaginationInputIn) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PaginationInput_TerraformEntityPaginationInputIn.Descriptor instead.
+func (PaginationInput_TerraformEntityPaginationInputIn) EnumDescriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{9, 0}
+}
+
+type PaginationInput_TerraformEntityPaginationInputType int32
+
+const (
+	PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_UNSPECIFIED PaginationInput_TerraformEntityPaginationInputType = 0
+	PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_CURSOR      PaginationInput_TerraformEntityPaginationInputType = 1
+)
+
+// Enum value maps for PaginationInput_TerraformEntityPaginationInputType.
+var (
+	PaginationInput_TerraformEntityPaginationInputType_name = map[int32]string{
+		0: "TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_UNSPECIFIED",
+		1: "TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_CURSOR",
+	}
+	PaginationInput_TerraformEntityPaginationInputType_value = map[string]int32{
+		"TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_UNSPECIFIED": 0,
+		"TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_CURSOR":      1,
+	}
+)
+
+func (x PaginationInput_TerraformEntityPaginationInputType) Enum() *PaginationInput_TerraformEntityPaginationInputType {
+	p := new(PaginationInput_TerraformEntityPaginationInputType)
+	*p = x
+	return p
+}
+
+func (x PaginationInput_TerraformEntityPaginationInputType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PaginationInput_TerraformEntityPaginationInputType) Descriptor() protoreflect.EnumDescriptor {
+	return file_apigw_v1_apigw_proto_enumTypes[5].Descriptor()
+}
+
+func (PaginationInput_TerraformEntityPaginationInputType) Type() protoreflect.EnumType {
+	return &file_apigw_v1_apigw_proto_enumTypes[5]
+}
+
+func (x PaginationInput_TerraformEntityPaginationInputType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PaginationInput_TerraformEntityPaginationInputType.Descriptor instead.
+func (PaginationInput_TerraformEntityPaginationInputType) EnumDescriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{9, 1}
+}
+
 type MessageOptions struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	MessageOptions []*MessageOption       `protobuf:"bytes,1,rep,name=message_options,json=messageOptions,proto3" json:"message_options,omitempty"`
@@ -609,6 +747,170 @@ func (x *TerraformEntity) GetOptionalExclusion() TerraformEntity_OptionalExclusi
 	return TerraformEntity_OPTIONAL_EXCLUSION_UNSPECIFIED
 }
 
+type Pagination struct {
+	state         protoimpl.MessageState                   `protogen:"open.v1"`
+	Type          Pagination_TerraformEntityPaginationType `protobuf:"varint,1,opt,name=type,proto3,enum=apigw.v1.Pagination_TerraformEntityPaginationType" json:"type,omitempty"`
+	Inputs        []*PaginationInput                       `protobuf:"bytes,2,rep,name=inputs,proto3" json:"inputs,omitempty"`
+	Outputs       *PaginationOutput                        `protobuf:"bytes,3,opt,name=outputs,proto3" json:"outputs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Pagination) Reset() {
+	*x = Pagination{}
+	mi := &file_apigw_v1_apigw_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Pagination) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Pagination) ProtoMessage() {}
+
+func (x *Pagination) ProtoReflect() protoreflect.Message {
+	mi := &file_apigw_v1_apigw_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Pagination.ProtoReflect.Descriptor instead.
+func (*Pagination) Descriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *Pagination) GetType() Pagination_TerraformEntityPaginationType {
+	if x != nil {
+		return x.Type
+	}
+	return Pagination_TERRAFORM_ENTITY_PAGINATION_TYPE_UNSPECIFIED
+}
+
+func (x *Pagination) GetInputs() []*PaginationInput {
+	if x != nil {
+		return x.Inputs
+	}
+	return nil
+}
+
+func (x *Pagination) GetOutputs() *PaginationOutput {
+	if x != nil {
+		return x.Outputs
+	}
+	return nil
+}
+
+type PaginationInput struct {
+	state         protoimpl.MessageState                             `protogen:"open.v1"`
+	Name          string                                             `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	In            PaginationInput_TerraformEntityPaginationInputIn   `protobuf:"varint,2,opt,name=in,proto3,enum=apigw.v1.PaginationInput_TerraformEntityPaginationInputIn" json:"in,omitempty"`
+	Type          PaginationInput_TerraformEntityPaginationInputType `protobuf:"varint,3,opt,name=type,proto3,enum=apigw.v1.PaginationInput_TerraformEntityPaginationInputType" json:"type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PaginationInput) Reset() {
+	*x = PaginationInput{}
+	mi := &file_apigw_v1_apigw_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PaginationInput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PaginationInput) ProtoMessage() {}
+
+func (x *PaginationInput) ProtoReflect() protoreflect.Message {
+	mi := &file_apigw_v1_apigw_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PaginationInput.ProtoReflect.Descriptor instead.
+func (*PaginationInput) Descriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *PaginationInput) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *PaginationInput) GetIn() PaginationInput_TerraformEntityPaginationInputIn {
+	if x != nil {
+		return x.In
+	}
+	return PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_IN_UNSPECIFIED
+}
+
+func (x *PaginationInput) GetType() PaginationInput_TerraformEntityPaginationInputType {
+	if x != nil {
+		return x.Type
+	}
+	return PaginationInput_TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_UNSPECIFIED
+}
+
+type PaginationOutput struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NextCursor    string                 `protobuf:"bytes,1,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PaginationOutput) Reset() {
+	*x = PaginationOutput{}
+	mi := &file_apigw_v1_apigw_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PaginationOutput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PaginationOutput) ProtoMessage() {}
+
+func (x *PaginationOutput) ProtoReflect() protoreflect.Message {
+	mi := &file_apigw_v1_apigw_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PaginationOutput.ProtoReflect.Descriptor instead.
+func (*PaginationOutput) Descriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *PaginationOutput) GetNextCursor() string {
+	if x != nil {
+		return x.NextCursor
+	}
+	return ""
+}
+
 type Operation struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Method           string                 `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitempty"`
@@ -621,13 +923,14 @@ type Operation struct {
 	TerraformEntity  []*TerraformEntity     `protobuf:"bytes,8,rep,name=terraform_entity,json=terraformEntity,proto3" json:"terraform_entity,omitempty"`
 	Summary          string                 `protobuf:"bytes,9,opt,name=summary,proto3" json:"summary,omitempty"`
 	Group            string                 `protobuf:"bytes,10,opt,name=group,proto3" json:"group,omitempty"`
+	Pagination       *Pagination            `protobuf:"bytes,11,opt,name=pagination,proto3" json:"pagination,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
 
 func (x *Operation) Reset() {
 	*x = Operation{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[8]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -639,7 +942,7 @@ func (x *Operation) String() string {
 func (*Operation) ProtoMessage() {}
 
 func (x *Operation) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[8]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -652,7 +955,7 @@ func (x *Operation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Operation.ProtoReflect.Descriptor instead.
 func (*Operation) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{8}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Operation) GetMethod() string {
@@ -725,6 +1028,13 @@ func (x *Operation) GetGroup() string {
 	return ""
 }
 
+func (x *Operation) GetPagination() *Pagination {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
 type RequestExample struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -735,7 +1045,7 @@ type RequestExample struct {
 
 func (x *RequestExample) Reset() {
 	*x = RequestExample{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[9]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -747,7 +1057,7 @@ func (x *RequestExample) String() string {
 func (*RequestExample) ProtoMessage() {}
 
 func (x *RequestExample) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[9]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -760,7 +1070,7 @@ func (x *RequestExample) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequestExample.ProtoReflect.Descriptor instead.
 func (*RequestExample) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{9}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *RequestExample) GetName() string {
@@ -787,7 +1097,7 @@ type ResponseExample struct {
 
 func (x *ResponseExample) Reset() {
 	*x = ResponseExample{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[10]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -799,7 +1109,7 @@ func (x *ResponseExample) String() string {
 func (*ResponseExample) ProtoMessage() {}
 
 func (x *ResponseExample) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[10]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -812,7 +1122,7 @@ func (x *ResponseExample) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResponseExample.ProtoReflect.Descriptor instead.
 func (*ResponseExample) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{10}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ResponseExample) GetName() string {
@@ -929,7 +1239,28 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\x11OptionalExclusion\x12\"\n" +
 	"\x1eOPTIONAL_EXCLUSION_UNSPECIFIED\x10\x00\x12$\n" +
 	" OPTIONAL_EXCLUSION_RESOURCE_ONLY\x10\x01\x12'\n" +
-	"#OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY\x10\x02\"\xfc\x03\n" +
+	"#OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY\x10\x02\"\xbd\x02\n" +
+	"\n" +
+	"Pagination\x12F\n" +
+	"\x04type\x18\x01 \x01(\x0e22.apigw.v1.Pagination.TerraformEntityPaginationTypeR\x04type\x121\n" +
+	"\x06inputs\x18\x02 \x03(\v2\x19.apigw.v1.PaginationInputR\x06inputs\x124\n" +
+	"\aoutputs\x18\x03 \x01(\v2\x1a.apigw.v1.PaginationOutputR\aoutputs\"~\n" +
+	"\x1dTerraformEntityPaginationType\x120\n" +
+	",TERRAFORM_ENTITY_PAGINATION_TYPE_UNSPECIFIED\x10\x00\x12+\n" +
+	"'TERRAFORM_ENTITY_PAGINATION_TYPE_CURSOR\x10\x01\"\xe7\x03\n" +
+	"\x0fPaginationInput\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12J\n" +
+	"\x02in\x18\x02 \x01(\x0e2:.apigw.v1.PaginationInput.TerraformEntityPaginationInputInR\x02in\x12P\n" +
+	"\x04type\x18\x03 \x01(\x0e2<.apigw.v1.PaginationInput.TerraformEntityPaginationInputTypeR\x04type\"\x8f\x01\n" +
+	" TerraformEntityPaginationInputIn\x124\n" +
+	"0TERRAFORM_ENTITY_PAGINATION_INPUT_IN_UNSPECIFIED\x10\x00\x125\n" +
+	"1TERRAFORM_ENTITY_PAGINATION_INPUT_IN_REQUEST_BODY\x10\x01\"\x8f\x01\n" +
+	"\"TerraformEntityPaginationInputType\x126\n" +
+	"2TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_UNSPECIFIED\x10\x00\x121\n" +
+	"-TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_CURSOR\x10\x01\"3\n" +
+	"\x10PaginationOutput\x12\x1f\n" +
+	"\vnext_cursor\x18\x01 \x01(\tR\n" +
+	"nextCursor\"\xb2\x04\n" +
 	"\tOperation\x12\x16\n" +
 	"\x06method\x18\x01 \x01(\tR\x06method\x12\x14\n" +
 	"\x05route\x18\x02 \x01(\tR\x05route\x124\n" +
@@ -941,7 +1272,10 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\x10terraform_entity\x18\b \x03(\v2\x19.apigw.v1.TerraformEntityR\x0fterraformEntity\x12\x18\n" +
 	"\asummary\x18\t \x01(\tR\asummary\x12\x14\n" +
 	"\x05group\x18\n" +
-	" \x01(\tR\x05group\x1a8\n" +
+	" \x01(\tR\x05group\x124\n" +
+	"\n" +
+	"pagination\x18\v \x01(\v2\x14.apigw.v1.PaginationR\n" +
+	"pagination\x1a8\n" +
 	"\n" +
 	"QueryEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
@@ -976,56 +1310,68 @@ func file_apigw_v1_apigw_proto_rawDescGZIP() []byte {
 	return file_apigw_v1_apigw_proto_rawDescData
 }
 
-var file_apigw_v1_apigw_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_apigw_v1_apigw_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_apigw_v1_apigw_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
+var file_apigw_v1_apigw_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_apigw_v1_apigw_proto_goTypes = []any{
 	(Stability)(0), // 0: apigw.v1.Stability
-	(TerraformEntity_TerraformEntityMethodType)(0), // 1: apigw.v1.TerraformEntity.TerraformEntityMethodType
-	(TerraformEntity_OptionalExclusion)(0),         // 2: apigw.v1.TerraformEntity.OptionalExclusion
-	(*MessageOptions)(nil),                         // 3: apigw.v1.MessageOptions
-	(*MessageOption)(nil),                          // 4: apigw.v1.MessageOption
-	(*FieldOption)(nil),                            // 5: apigw.v1.FieldOption
-	(*FieldOptions)(nil),                           // 6: apigw.v1.FieldOptions
-	(*MethodOptions)(nil),                          // 7: apigw.v1.MethodOptions
-	(*ServiceOptions)(nil),                         // 8: apigw.v1.ServiceOptions
-	(*Service)(nil),                                // 9: apigw.v1.Service
-	(*TerraformEntity)(nil),                        // 10: apigw.v1.TerraformEntity
-	(*Operation)(nil),                              // 11: apigw.v1.Operation
-	(*RequestExample)(nil),                         // 12: apigw.v1.RequestExample
-	(*ResponseExample)(nil),                        // 13: apigw.v1.ResponseExample
-	nil,                                            // 14: apigw.v1.Operation.QueryEntry
-	(*descriptorpb.ServiceOptions)(nil),            // 15: google.protobuf.ServiceOptions
-	(*descriptorpb.MethodOptions)(nil),             // 16: google.protobuf.MethodOptions
-	(*descriptorpb.FieldOptions)(nil),              // 17: google.protobuf.FieldOptions
-	(*descriptorpb.MessageOptions)(nil),            // 18: google.protobuf.MessageOptions
+	(TerraformEntity_TerraformEntityMethodType)(0),          // 1: apigw.v1.TerraformEntity.TerraformEntityMethodType
+	(TerraformEntity_OptionalExclusion)(0),                  // 2: apigw.v1.TerraformEntity.OptionalExclusion
+	(Pagination_TerraformEntityPaginationType)(0),           // 3: apigw.v1.Pagination.TerraformEntityPaginationType
+	(PaginationInput_TerraformEntityPaginationInputIn)(0),   // 4: apigw.v1.PaginationInput.TerraformEntityPaginationInputIn
+	(PaginationInput_TerraformEntityPaginationInputType)(0), // 5: apigw.v1.PaginationInput.TerraformEntityPaginationInputType
+	(*MessageOptions)(nil),                                  // 6: apigw.v1.MessageOptions
+	(*MessageOption)(nil),                                   // 7: apigw.v1.MessageOption
+	(*FieldOption)(nil),                                     // 8: apigw.v1.FieldOption
+	(*FieldOptions)(nil),                                    // 9: apigw.v1.FieldOptions
+	(*MethodOptions)(nil),                                   // 10: apigw.v1.MethodOptions
+	(*ServiceOptions)(nil),                                  // 11: apigw.v1.ServiceOptions
+	(*Service)(nil),                                         // 12: apigw.v1.Service
+	(*TerraformEntity)(nil),                                 // 13: apigw.v1.TerraformEntity
+	(*Pagination)(nil),                                      // 14: apigw.v1.Pagination
+	(*PaginationInput)(nil),                                 // 15: apigw.v1.PaginationInput
+	(*PaginationOutput)(nil),                                // 16: apigw.v1.PaginationOutput
+	(*Operation)(nil),                                       // 17: apigw.v1.Operation
+	(*RequestExample)(nil),                                  // 18: apigw.v1.RequestExample
+	(*ResponseExample)(nil),                                 // 19: apigw.v1.ResponseExample
+	nil,                                                     // 20: apigw.v1.Operation.QueryEntry
+	(*descriptorpb.ServiceOptions)(nil),                     // 21: google.protobuf.ServiceOptions
+	(*descriptorpb.MethodOptions)(nil),                      // 22: google.protobuf.MethodOptions
+	(*descriptorpb.FieldOptions)(nil),                       // 23: google.protobuf.FieldOptions
+	(*descriptorpb.MessageOptions)(nil),                     // 24: google.protobuf.MessageOptions
 }
 var file_apigw_v1_apigw_proto_depIdxs = []int32{
-	4,  // 0: apigw.v1.MessageOptions.message_options:type_name -> apigw.v1.MessageOption
-	10, // 1: apigw.v1.MessageOption.terraform_entity:type_name -> apigw.v1.TerraformEntity
-	5,  // 2: apigw.v1.FieldOptions.field_options:type_name -> apigw.v1.FieldOption
-	11, // 3: apigw.v1.MethodOptions.operations:type_name -> apigw.v1.Operation
-	9,  // 4: apigw.v1.ServiceOptions.service:type_name -> apigw.v1.Service
+	7,  // 0: apigw.v1.MessageOptions.message_options:type_name -> apigw.v1.MessageOption
+	13, // 1: apigw.v1.MessageOption.terraform_entity:type_name -> apigw.v1.TerraformEntity
+	8,  // 2: apigw.v1.FieldOptions.field_options:type_name -> apigw.v1.FieldOption
+	17, // 3: apigw.v1.MethodOptions.operations:type_name -> apigw.v1.Operation
+	12, // 4: apigw.v1.ServiceOptions.service:type_name -> apigw.v1.Service
 	0,  // 5: apigw.v1.Service.stability:type_name -> apigw.v1.Stability
 	1,  // 6: apigw.v1.TerraformEntity.type:type_name -> apigw.v1.TerraformEntity.TerraformEntityMethodType
 	2,  // 7: apigw.v1.TerraformEntity.optional_exclusion:type_name -> apigw.v1.TerraformEntity.OptionalExclusion
-	14, // 8: apigw.v1.Operation.query:type_name -> apigw.v1.Operation.QueryEntry
-	0,  // 9: apigw.v1.Operation.stability:type_name -> apigw.v1.Stability
-	12, // 10: apigw.v1.Operation.request_examples:type_name -> apigw.v1.RequestExample
-	13, // 11: apigw.v1.Operation.response_examples:type_name -> apigw.v1.ResponseExample
-	10, // 12: apigw.v1.Operation.terraform_entity:type_name -> apigw.v1.TerraformEntity
-	15, // 13: apigw.v1.service:extendee -> google.protobuf.ServiceOptions
-	16, // 14: apigw.v1.method:extendee -> google.protobuf.MethodOptions
-	17, // 15: apigw.v1.field:extendee -> google.protobuf.FieldOptions
-	18, // 16: apigw.v1.message:extendee -> google.protobuf.MessageOptions
-	8,  // 17: apigw.v1.service:type_name -> apigw.v1.ServiceOptions
-	7,  // 18: apigw.v1.method:type_name -> apigw.v1.MethodOptions
-	6,  // 19: apigw.v1.field:type_name -> apigw.v1.FieldOptions
-	3,  // 20: apigw.v1.message:type_name -> apigw.v1.MessageOptions
-	21, // [21:21] is the sub-list for method output_type
-	21, // [21:21] is the sub-list for method input_type
-	17, // [17:21] is the sub-list for extension type_name
-	13, // [13:17] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	3,  // 8: apigw.v1.Pagination.type:type_name -> apigw.v1.Pagination.TerraformEntityPaginationType
+	15, // 9: apigw.v1.Pagination.inputs:type_name -> apigw.v1.PaginationInput
+	16, // 10: apigw.v1.Pagination.outputs:type_name -> apigw.v1.PaginationOutput
+	4,  // 11: apigw.v1.PaginationInput.in:type_name -> apigw.v1.PaginationInput.TerraformEntityPaginationInputIn
+	5,  // 12: apigw.v1.PaginationInput.type:type_name -> apigw.v1.PaginationInput.TerraformEntityPaginationInputType
+	20, // 13: apigw.v1.Operation.query:type_name -> apigw.v1.Operation.QueryEntry
+	0,  // 14: apigw.v1.Operation.stability:type_name -> apigw.v1.Stability
+	18, // 15: apigw.v1.Operation.request_examples:type_name -> apigw.v1.RequestExample
+	19, // 16: apigw.v1.Operation.response_examples:type_name -> apigw.v1.ResponseExample
+	13, // 17: apigw.v1.Operation.terraform_entity:type_name -> apigw.v1.TerraformEntity
+	14, // 18: apigw.v1.Operation.pagination:type_name -> apigw.v1.Pagination
+	21, // 19: apigw.v1.service:extendee -> google.protobuf.ServiceOptions
+	22, // 20: apigw.v1.method:extendee -> google.protobuf.MethodOptions
+	23, // 21: apigw.v1.field:extendee -> google.protobuf.FieldOptions
+	24, // 22: apigw.v1.message:extendee -> google.protobuf.MessageOptions
+	11, // 23: apigw.v1.service:type_name -> apigw.v1.ServiceOptions
+	10, // 24: apigw.v1.method:type_name -> apigw.v1.MethodOptions
+	9,  // 25: apigw.v1.field:type_name -> apigw.v1.FieldOptions
+	6,  // 26: apigw.v1.message:type_name -> apigw.v1.MessageOptions
+	27, // [27:27] is the sub-list for method output_type
+	27, // [27:27] is the sub-list for method input_type
+	23, // [23:27] is the sub-list for extension type_name
+	19, // [19:23] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_apigw_v1_apigw_proto_init() }
@@ -1038,8 +1384,8 @@ func file_apigw_v1_apigw_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_apigw_v1_apigw_proto_rawDesc), len(file_apigw_v1_apigw_proto_rawDesc)),
-			NumEnums:      3,
-			NumMessages:   12,
+			NumEnums:      6,
+			NumMessages:   15,
 			NumExtensions: 4,
 			NumServices:   0,
 		},
