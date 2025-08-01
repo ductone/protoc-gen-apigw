@@ -230,7 +230,10 @@ func (sc *schemaContainer) FieldTypeElem(fte pgs.FieldTypeElem, readOnly bool) *
 	case fte.IsEmbed():
 		return sc.Message(fte.Embed(), nil, nil, readOnly, false)
 	case fte.IsEnum():
-		return dm_base.CreateSchemaProxy(sc.Enum(fte.Enum()))
+		ev := sc.Enum(fte.Enum())
+		ev.Extensions = orderedmap.New[string, *yaml.Node]()
+		ev.Extensions.Set("x-speakeasy-unknown-values", yamlString("allow"))
+		return dm_base.CreateSchemaProxy(ev)
 	default:
 		return dm_base.CreateSchemaProxy(sc.schemaForScalar(fte.ProtoType()))
 	}

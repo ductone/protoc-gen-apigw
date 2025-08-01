@@ -35,6 +35,18 @@ components:
           readOnly: false
           type: string
           x-speakeasy-unknown-values: allow
+        genders:
+          description: The genders field.
+          items:
+            enum:
+              - GENDER_UNSPECIFIED
+              - GENDER_MALE
+              - GENDER_FEMALE
+            type: string
+            x-speakeasy-unknown-values: allow
+          nullable: true
+          readOnly: false
+          type: array
         id:
           description: A unique author id.
           format: int64

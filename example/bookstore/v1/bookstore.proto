@@ -134,19 +134,17 @@ service BookstoreService {
         name: "Books"
         optional_exclusion: OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY
       }
-      pagination : {
-          type: TERRAFORM_ENTITY_PAGINATION_TYPE_CURSOR
-          inputs: [
-            {
-              name: "pageToken"
-              type: TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_CURSOR
-              in: TERRAFORM_ENTITY_PAGINATION_INPUT_IN_REQUEST_BODY
-            }
-          ]
-          outputs: {
-            next_cursor: "$.nextPageToken"
+      pagination: {
+        type: TERRAFORM_ENTITY_PAGINATION_TYPE_CURSOR
+        inputs: [
+          {
+            name: "pageToken"
+            type: TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_CURSOR
+            in: TERRAFORM_ENTITY_PAGINATION_INPUT_IN_REQUEST_BODY
           }
-        }
+        ]
+        outputs: {next_cursor: "$.nextPageToken"}
+      }
     };
   }
   // Deletes a book from a shelf.
@@ -307,6 +305,7 @@ message Author {
     GENDER_FEMALE = 2;
   }
   Gender gender = 2;
+  repeated Gender genders = 8;
   string first_name = 3;
   string last_name = 4 [json_name = "lname"];
   string metadata = 5 [(apigw.v1.field).field_options = {read_only_spec: true}];
