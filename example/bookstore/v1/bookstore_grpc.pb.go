@@ -48,6 +48,7 @@ type BookstoreServiceClient interface {
 	// Creates a new shelf in the bookstore.
 	CreateShelf(ctx context.Context, in *CreateShelfRequest, opts ...grpc.CallOption) (*CreateShelfResponse, error)
 	// Deletes a shelf, including all books that are stored on the shelf.
+	// This operation is deprecated and will be removed in the future.
 	DeleteShelf(ctx context.Context, in *DeleteShelfRequest, opts ...grpc.CallOption) (*DeleteShelfResponse, error)
 	// Lists genres
 	ListGenres(ctx context.Context, in *ListGenresRequest, opts ...grpc.CallOption) (*ListGenresResponse, error)
@@ -231,6 +232,7 @@ type BookstoreServiceServer interface {
 	// Creates a new shelf in the bookstore.
 	CreateShelf(context.Context, *CreateShelfRequest) (*CreateShelfResponse, error)
 	// Deletes a shelf, including all books that are stored on the shelf.
+	// This operation is deprecated and will be removed in the future.
 	DeleteShelf(context.Context, *DeleteShelfRequest) (*DeleteShelfResponse, error)
 	// Lists genres
 	ListGenres(context.Context, *ListGenresRequest) (*ListGenresResponse, error)

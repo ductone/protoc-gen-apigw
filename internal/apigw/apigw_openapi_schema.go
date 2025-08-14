@@ -253,6 +253,33 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		description += "\nThis field is part of the `" + f.OneOf().Name().String() + "` oneof.\n" +
 			"See the documentation for `" + nicerFQN(f.Message()) + "` for more details."
 	}
+
+	// Get field-level stability and deprecation info
+	fieldStability := getFieldStability(f)
+	fieldDeprecation := getFieldDeprecation(f)
+
+	// Validate field-level deprecation if present
+	if fieldDeprecation != nil {
+		if err := ValidateDeprecationInfo(fieldDeprecation); err != nil {
+			// For now, we'll log the error but continue processing
+			// In a production system, you might want to handle this differently
+			fmt.Printf("Warning: field deprecation validation failed for '%s.%s': %v\n",
+				nicerFQN(f.Message()), f.Name().String(), err)
+		}
+		// If deprecation info is provided, the field is considered deprecated
+		deprecated = oasTrue()
+	}
+
+	// Create extensions map for field-level annotations
+	extensions := orderedmap.New[string, *yaml.Node]()
+	// Add field-level stability extension
+	addStabilityExtension(extensions, fieldStability)
+
+	// Add field-level deprecation extension
+	if fieldDeprecation != nil {
+		addSunsetExtension(extensions, fieldDeprecation.SunsetDate)
+	}
+
 	switch {
 	case f.Type().IsRepeated():
 		fteSchema := sc.FieldTypeElem(f.Type().Element(), readOnly)
@@ -263,6 +290,10 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			ReadOnly:    &readOnly,
 			Deprecated:  deprecated,
 			Items:       &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
+		}
+		// Add extensions if any exist
+		if extensions.Len() > 0 {
+			arraySchema.Extensions = extensions
 		}
 		return dm_base.CreateSchemaProxy(arraySchema)
 	case f.Type().IsMap():
@@ -275,15 +306,27 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			ReadOnly:             &readOnly,
 			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
+		// Add extensions if any exist
+		if extensions.Len() > 0 {
+			mv.Extensions = extensions
+		}
 		return dm_base.CreateSchemaProxy(mv)
 	case f.Type().IsEnum():
 		ev := sc.Enum(f.Type().Enum())
 		ev.Deprecated = deprecated
 		ev.Description = description
 		ev.ReadOnly = &readOnly
-		ev.Extensions = orderedmap.New[string, *yaml.Node]()
+		if ev.Extensions == nil {
+			ev.Extensions = orderedmap.New[string, *yaml.Node]()
+		}
 		// TODO: Make this optional instead of always true
 		ev.Extensions.Set("x-speakeasy-unknown-values", yamlString("allow"))
+
+		// Add field-level extensions
+		for pair := extensions.Oldest(); pair != nil; pair = pair.Next() {
+			ev.Extensions.Set(pair.Key, pair.Value)
+		}
+
 		mergeNullable(ev, nullable)
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
@@ -295,6 +338,10 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		mergeNullable(sv, nullable)
 		sv.Deprecated = deprecated
 		sv.Description = description
+		// Add extensions if any exist
+		if extensions.Len() > 0 {
+			sv.Extensions = extensions
+		}
 		return dm_base.CreateSchemaProxy(sv)
 	}
 }
@@ -336,6 +383,24 @@ func getReadOnlySpec(f pgs.Field) bool {
 		}
 	}
 	return false
+}
+
+func getFieldStability(f pgs.Field) apigw_v1.Stability {
+	for _, fo := range getFieldOptions(f) {
+		if fo.Stability != apigw_v1.Stability_STABILITY_UNSPECIFIED {
+			return fo.Stability
+		}
+	}
+	return apigw_v1.Stability_STABILITY_UNSPECIFIED
+}
+
+func getFieldDeprecation(f pgs.Field) *apigw_v1.Deprecation {
+	for _, fo := range getFieldOptions(f) {
+		if fo.Deprecation != nil {
+			return fo.Deprecation
+		}
+	}
+	return nil
 }
 
 func mergeNullable(s *dm_base.Schema, nullable *bool) {

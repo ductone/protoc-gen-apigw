@@ -2,7 +2,7 @@
 components:
   schemas:
     webhooks.v1.Body:
-      description: The Body message.
+      description: Webhook request body with stability and deprecation examples
       properties:
         callbackUrl:
           description: |-
@@ -130,12 +130,14 @@ components:
       x-speakeasy-include: true
       x-speakeasy-name-override: PayloadTest
     webhooks.v1.TaskView:
-      description: The TaskView message.
+      description: Task view with field-level stability annotations
       properties:
-        otherField:
-          description: The otherField field.
+        search[decoded]:
+          deprecated: true
+          description: The search[decoded] field.
           readOnly: false
           type: string
+          x-sunset: "2025-09-30"
         taskId:
           description: The taskId field.
           readOnly: false
