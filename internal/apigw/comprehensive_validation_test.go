@@ -7,8 +7,7 @@ import (
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 )
 
-// TestComprehensiveValidationScenarios tests all validation scenarios
-// for stability and deprecation features
+// TestComprehensiveValidationScenarios tests all validation scenarios for stability and deprecation features.
 func TestComprehensiveValidationScenarios(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -127,16 +126,14 @@ func TestComprehensiveValidationScenarios(t *testing.T) {
 				if tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
 					t.Errorf("Expected error containing %q but got: %v", tt.errContains, err)
 				}
-			} else {
-				if err != nil {
-					t.Errorf("Expected no error but got: %v", err)
-				}
+			} else if err != nil {
+				t.Errorf("Expected no error but got: %v", err)
 			}
 		})
 	}
 }
 
-// TestStabilityLevelValidation tests validation of stability levels
+// TestStabilityLevelValidation tests validation of stability levels.
 func TestStabilityLevelValidation(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -200,7 +197,7 @@ func TestStabilityLevelValidation(t *testing.T) {
 	}
 }
 
-// TestComplexValidationScenarios tests complex scenarios combining multiple validation rules
+// TestComplexValidationScenarios tests complex scenarios combining multiple validation rules.
 func TestComplexValidationScenarios(t *testing.T) {
 	tests := []struct {
 		name                 string
@@ -347,7 +344,7 @@ func TestComplexValidationScenarios(t *testing.T) {
 	}
 }
 
-// TestBoundaryDateValidation tests boundary conditions for date validation
+// TestBoundaryDateValidation tests boundary conditions for date validation.
 func TestBoundaryDateValidation(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -401,10 +398,8 @@ func TestBoundaryDateValidation(t *testing.T) {
 				if tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg) {
 					t.Errorf("Expected error containing %q but got: %v", tt.errMsg, err)
 				}
-			} else {
-				if err != nil {
-					t.Errorf("Expected no error but got: %v", err)
-				}
+			} else if err != nil {
+				t.Errorf("Expected no error but got: %v", err)
 			}
 		})
 	}

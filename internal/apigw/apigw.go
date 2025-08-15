@@ -17,7 +17,10 @@ func New() pgs.Module {
 	return &Module{ModuleBase: &pgs.ModuleBase{}, canonicalRouteMapper: map[string]*canonicalRoute{}}
 }
 
-const moduleName = "apigw"
+const (
+	moduleName = "apigw"
+	trueValue  = "true"
+)
 const version = "0.1.28"
 
 type Module struct {

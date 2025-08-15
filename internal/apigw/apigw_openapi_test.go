@@ -143,10 +143,8 @@ func Test_addStabilityExtension(t *testing.T) {
 				if node.Value != tt.wantValue {
 					t.Errorf("addStabilityExtension() set %s = %v, want %v", tt.wantKey, node.Value, tt.wantValue)
 				}
-			} else {
-				if exists {
-					t.Errorf("addStabilityExtension() should not set %s extension for unspecified stability", tt.wantKey)
-				}
+			} else if exists {
+				t.Errorf("addStabilityExtension() should not set %s extension for unspecified stability", tt.wantKey)
 			}
 		})
 	}
@@ -195,16 +193,14 @@ func Test_addSunsetExtension(t *testing.T) {
 				if node.Value != tt.wantValue {
 					t.Errorf("addSunsetExtension() set %s = %v, want %v", tt.wantKey, node.Value, tt.wantValue)
 				}
-			} else {
-				if exists {
-					t.Errorf("addSunsetExtension() should not set %s extension for empty sunset date", tt.wantKey)
-				}
+			} else if exists {
+				t.Errorf("addSunsetExtension() should not set %s extension for empty sunset date", tt.wantKey)
 			}
 		})
 	}
 }
 
-// Test that service-level extensions are properly handled
+// Test that service-level extensions are properly handled.
 func Test_serviceExtensionHandling(t *testing.T) {
 	tests := []struct {
 		name               string
@@ -350,7 +346,7 @@ func Test_serviceExtensionHandling(t *testing.T) {
 					t.Errorf("Expected %s extension to be set", tt.wantDeprecatedKey)
 					return
 				}
-				if node.Kind != yaml.ScalarNode || node.Value != "true" {
+				if node.Kind != yaml.ScalarNode || node.Value != trueValue {
 					t.Errorf("Expected %s = true, got %v", tt.wantDeprecatedKey, node.Value)
 				}
 			} else {
@@ -362,7 +358,7 @@ func Test_serviceExtensionHandling(t *testing.T) {
 	}
 }
 
-// Test field-level stability and deprecation functionality
+// Test field-level stability and deprecation functionality.
 func Test_fieldLevelStabilityAndDeprecation(t *testing.T) {
 	tests := []struct {
 		name               string
@@ -471,11 +467,12 @@ func Test_fieldLevelStabilityAndDeprecation(t *testing.T) {
 			}
 
 			// Test deprecation extraction
-			if gotDeprecation == nil && tt.wantDeprecation == nil {
+			switch {
+			case gotDeprecation == nil && tt.wantDeprecation == nil:
 				// Both nil, OK
-			} else if gotDeprecation == nil || tt.wantDeprecation == nil {
+			case gotDeprecation == nil || tt.wantDeprecation == nil:
 				t.Errorf("deprecation extraction = %v, want %v", gotDeprecation, tt.wantDeprecation)
-			} else if gotDeprecation.SunsetDate != tt.wantDeprecation.SunsetDate {
+			case gotDeprecation.SunsetDate != tt.wantDeprecation.SunsetDate:
 				t.Errorf("deprecation extraction = %v, want %v", gotDeprecation, tt.wantDeprecation)
 			}
 

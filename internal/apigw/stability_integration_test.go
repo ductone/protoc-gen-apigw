@@ -9,8 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// TestStabilityAndDeprecationIntegration tests end-to-end OpenAPI generation
-// with stability and deprecation features
+// TestStabilityAndDeprecationIntegration tests end-to-end OpenAPI generation with stability and deprecation features.
 func TestStabilityAndDeprecationIntegration(t *testing.T) {
 	// This test requires the test proto file to be compiled
 	// For now, we'll test the core functionality with mock data
@@ -23,8 +22,7 @@ func TestStabilityAndDeprecationIntegration(t *testing.T) {
 	// 4. Checks all stability and deprecation extensions
 }
 
-// TestOpenAPIExtensionGeneration tests that the correct OpenAPI extensions
-// are generated using the existing helper functions
+// TestOpenAPIExtensionGeneration tests that the correct OpenAPI extensions are generated using the existing helper functions.
 func TestOpenAPIExtensionGeneration(t *testing.T) {
 	tests := []struct {
 		name                   string
@@ -177,8 +175,7 @@ func TestOpenAPIExtensionGeneration(t *testing.T) {
 	}
 }
 
-// TestValidationIntegration tests that validation errors are properly caught
-// during OpenAPI generation
+// TestValidationIntegration tests that validation errors are properly caught during OpenAPI generation.
 func TestValidationIntegration(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -243,8 +240,7 @@ func TestValidationIntegration(t *testing.T) {
 	}
 }
 
-// TestMultiLevelAnnotationHandling tests scenarios where stability and deprecation
-// annotations exist at multiple levels (service, operation, field)
+// TestMultiLevelAnnotationHandling tests scenarios where stability and deprecation annotations exist at multiple levels (service, operation, field).
 func TestMultiLevelAnnotationHandling(t *testing.T) {
 	tests := []struct {
 		name                     string

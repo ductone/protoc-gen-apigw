@@ -96,10 +96,8 @@ func TestValidateSunsetDateFormat(t *testing.T) {
 				if tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg) {
 					t.Errorf("ValidateSunsetDateFormat() error = %v, want error containing %v", err, tt.errMsg)
 				}
-			} else {
-				if err != nil {
-					t.Errorf("ValidateSunsetDateFormat() unexpected error = %v", err)
-				}
+			} else if err != nil {
+				t.Errorf("ValidateSunsetDateFormat() unexpected error = %v", err)
 			}
 		})
 	}
@@ -147,10 +145,8 @@ func TestValidateSunsetDate(t *testing.T) {
 				if tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg) {
 					t.Errorf("ValidateSunsetDate() error = %v, want error containing %v", err, tt.errMsg)
 				}
-			} else {
-				if err != nil {
-					t.Errorf("ValidateSunsetDate() unexpected error = %v", err)
-				}
+			} else if err != nil {
+				t.Errorf("ValidateSunsetDate() unexpected error = %v", err)
 			}
 		})
 	}
@@ -211,10 +207,8 @@ func TestValidateDeprecationInfo(t *testing.T) {
 				if tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg) {
 					t.Errorf("ValidateDeprecationInfo() error = %v, want error containing %v", err, tt.errMsg)
 				}
-			} else {
-				if err != nil {
-					t.Errorf("ValidateDeprecationInfo() unexpected error = %v", err)
-				}
+			} else if err != nil {
+				t.Errorf("ValidateDeprecationInfo() unexpected error = %v", err)
 			}
 		})
 	}

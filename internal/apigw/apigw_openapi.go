@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 
@@ -744,12 +745,7 @@ func (mt *msgTracker) Add(m pgs.Message) *dm_base.SchemaProxy {
 }
 
 func contains[T comparable](needle T, haystack []T) bool {
-	for _, v := range haystack {
-		if v == needle {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(haystack, needle)
 }
 
 func oasTrue() *bool {
@@ -762,7 +758,7 @@ func oasBool(v bool) *bool {
 	return &b
 }
 
-// stabilityToString converts Stability enum values to OpenAPI extension strings
+// stabilityToString converts Stability enum values to OpenAPI extension strings.
 func stabilityToString(stability apigw_v1.Stability) string {
 	switch stability {
 	case apigw_v1.Stability_STABILITY_DRAFT:
@@ -780,7 +776,7 @@ func stabilityToString(stability apigw_v1.Stability) string {
 	}
 }
 
-// addStabilityExtension adds x-stability-level extension to OpenAPI operations
+// addStabilityExtension adds x-stability-level extension to OpenAPI operations.
 func addStabilityExtension(extensions *orderedmap.Map[string, *yaml.Node], stability apigw_v1.Stability) {
 	stabilityStr := stabilityToString(stability)
 	if stabilityStr != "" {
@@ -788,7 +784,7 @@ func addStabilityExtension(extensions *orderedmap.Map[string, *yaml.Node], stabi
 	}
 }
 
-// addSunsetExtension adds x-sunset extension to OpenAPI operations
+// addSunsetExtension adds x-sunset extension to OpenAPI operations.
 func addSunsetExtension(extensions *orderedmap.Map[string, *yaml.Node], sunsetDate string) {
 	if sunsetDate != "" {
 		extensions.Set("x-sunset", yamlString(sunsetDate))

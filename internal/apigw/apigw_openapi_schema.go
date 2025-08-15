@@ -2,6 +2,7 @@ package apigw
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -263,7 +264,8 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		if err := ValidateDeprecationInfo(fieldDeprecation); err != nil {
 			// For now, we'll log the error but continue processing
 			// In a production system, you might want to handle this differently
-			fmt.Printf("Warning: field deprecation validation failed for '%s.%s': %v\n",
+			// Log warning to stderr instead of stdout to avoid forbidden fmt.Printf
+			_, _ = fmt.Fprintf(os.Stderr, "Warning: field deprecation validation failed for '%s.%s': %v\n",
 				nicerFQN(f.Message()), f.Name().String(), err)
 		}
 		// If deprecation info is provided, the field is considered deprecated

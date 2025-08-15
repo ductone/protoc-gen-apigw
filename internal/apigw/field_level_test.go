@@ -9,7 +9,7 @@ import (
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 )
 
-// TestFieldLevelStabilityExtraction tests extraction of stability from field options
+// TestFieldLevelStabilityExtraction tests extraction of stability from field options.
 func TestFieldLevelStabilityExtraction(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -100,7 +100,7 @@ func TestFieldLevelStabilityExtraction(t *testing.T) {
 	}
 }
 
-// TestFieldLevelDeprecationExtraction tests extraction of deprecation from field options
+// TestFieldLevelDeprecationExtraction tests extraction of deprecation from field options.
 func TestFieldLevelDeprecationExtraction(t *testing.T) {
 	tests := []struct {
 		name            string
@@ -203,18 +203,19 @@ func TestFieldLevelDeprecationExtraction(t *testing.T) {
 			}
 
 			// Compare deprecation info
-			if gotDeprecation == nil && tt.wantDeprecation == nil {
+			switch {
+			case gotDeprecation == nil && tt.wantDeprecation == nil:
 				// Both nil, OK
-			} else if gotDeprecation == nil || tt.wantDeprecation == nil {
+			case gotDeprecation == nil || tt.wantDeprecation == nil:
 				t.Errorf("getFieldDeprecation() = %v, want %v", gotDeprecation, tt.wantDeprecation)
-			} else if gotDeprecation.SunsetDate != tt.wantDeprecation.SunsetDate {
+			case gotDeprecation.SunsetDate != tt.wantDeprecation.SunsetDate:
 				t.Errorf("getFieldDeprecation().SunsetDate = %v, want %v", gotDeprecation.SunsetDate, tt.wantDeprecation.SunsetDate)
 			}
 		})
 	}
 }
 
-// TestFieldLevelExtensionGenerationDetailed tests generation of field-level OpenAPI extensions
+// TestFieldLevelExtensionGenerationDetailed tests generation of field-level OpenAPI extensions.
 func TestFieldLevelExtensionGenerationDetailed(t *testing.T) {
 	tests := []struct {
 		name                string
@@ -411,7 +412,7 @@ func TestFieldLevelExtensionGenerationDetailed(t *testing.T) {
 			if tt.wantDeprecatedExt {
 				if !deprecatedExists {
 					t.Errorf("Expected deprecated extension to be set")
-				} else if deprecatedNode.Kind != yaml.ScalarNode || deprecatedNode.Value != "true" {
+				} else if deprecatedNode.Kind != yaml.ScalarNode || deprecatedNode.Value != trueValue {
 					t.Errorf("deprecated = %v, want true", deprecatedNode.Value)
 				}
 			} else {
@@ -423,7 +424,7 @@ func TestFieldLevelExtensionGenerationDetailed(t *testing.T) {
 	}
 }
 
-// TestFieldLevelComplexScenarios tests complex field-level scenarios
+// TestFieldLevelComplexScenarios tests complex field-level scenarios.
 func TestFieldLevelComplexScenarios(t *testing.T) {
 	tests := []struct {
 		name                string

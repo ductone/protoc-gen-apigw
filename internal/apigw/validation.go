@@ -1,6 +1,7 @@
 package apigw
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
@@ -8,18 +9,18 @@ import (
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
 )
 
-// Date format constants
+// Date format constants.
 const (
 	SunsetDateFormat = "2006-01-02" // YYYY-MM-DD format
 )
 
-// Error messages for validation
+// Error messages for validation.
 const (
 	ErrInvalidDateFormat = "sunset date must be in YYYY-MM-DD format"
 	ErrMissingSunsetDate = "deprecated item must have a sunset date"
 )
 
-// dateFormatRegex validates YYYY-MM-DD format
+// dateFormatRegex validates YYYY-MM-DD format.
 var dateFormatRegex = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 
 // ValidateSunsetDateFormat validates that the sunset date is in YYYY-MM-DD format
@@ -31,13 +32,13 @@ func ValidateSunsetDateFormat(date string) error {
 
 	// Check basic format with regex
 	if !dateFormatRegex.MatchString(date) {
-		return fmt.Errorf(ErrInvalidDateFormat)
+		return errors.New(ErrInvalidDateFormat)
 	}
 
 	// Parse the date to ensure it's a valid date
 	_, err := time.Parse(SunsetDateFormat, date)
 	if err != nil {
-		return fmt.Errorf("%s: %v", ErrInvalidDateFormat, err)
+		return fmt.Errorf("%s: %w", ErrInvalidDateFormat, err)
 	}
 
 	return nil
@@ -56,7 +57,7 @@ func ValidateDeprecationInfo(deprecation *apigw_v1.Deprecation) error {
 		return nil
 	}
 	if deprecation.SunsetDate == "" {
-		return fmt.Errorf(ErrMissingSunsetDate)
+		return errors.New(ErrMissingSunsetDate)
 	}
 	return ValidateSunsetDate(deprecation.SunsetDate)
 }
