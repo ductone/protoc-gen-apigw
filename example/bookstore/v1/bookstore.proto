@@ -13,12 +13,16 @@ option go_package = "github.com/ductone/protoc-gen-apigw/example/bookstore/v1";
 //
 // The API manages shelves and books resources. Shelves contain books.
 service BookstoreService {
+  option (apigw.v1.service).service = {
+    stability: STABILITY_STABLE
+  };
   // Returns a list of all shelves in the bookstore.
   rpc ListShelves(ListShelvesRequest) returns (ListShelvesResponse) {
     option (apigw.v1.method).operations = {
       method: "GET"
       route: "/shelves"
       group: "Shelves"
+      stability: STABILITY_STABLE
     };
   }
   // Creates a new shelf in the bookstore.
@@ -28,15 +32,21 @@ service BookstoreService {
       route: "/shelf"
       summary: "Create a New Shelf"
       group: "Shelves"
+      stability: STABILITY_BETA
     };
   }
 
   // Deletes a shelf, including all books that are stored on the shelf.
+  // This operation is deprecated and will be removed in the future.
   rpc DeleteShelf(DeleteShelfRequest) returns (DeleteShelfResponse) {
     option (apigw.v1.method).operations = {
       method: "DELETE"
       route: "/shelves/{shelf}"
       group: "Shelves"
+      stability: STABILITY_STABLE
+      deprecation: {
+        sunset_date: "2025-12-31"
+      }
     };
   }
 
@@ -46,6 +56,7 @@ service BookstoreService {
       method: "GET"
       route: "/genres"
       group: "Genres"
+      stability: STABILITY_ALPHA
     };
   }
 
@@ -56,6 +67,7 @@ service BookstoreService {
       route: "/genre"
       summary: "Create a New Genre"
       group: "Genres"
+      stability: STABILITY_DRAFT
     };
   }
 
@@ -253,9 +265,13 @@ message GetAuthorResponse {
 message Shelf {
   option (apigw.v1.message).message_options = {title: "Bookshelf"};
   // A unique shelf id.
-  string id = 1;
+  string id = 1 [(apigw.v1.field).field_options = {
+    stability: STABILITY_STABLE
+  }];
   // A theme of the shelf (fiction, poetry, etc).
-  string theme = 2;
+  string theme = 2 [(apigw.v1.field).field_options = {
+    stability: STABILITY_STABLE,
+  }];
 
   // To test json name is percentage decoded
   string search_decoded = 3 [json_name = "search[decoded]"];
@@ -273,9 +289,13 @@ message Genre {
     }
   };
   // A unique genre id.
-  int64 id = 1;
+  int64 id = 1 [(apigw.v1.field).field_options = {
+    stability: STABILITY_ALPHA
+  }];
   // A genre name.
-  string name = 2;
+  string name = 2 [(apigw.v1.field).field_options = {
+    stability: STABILITY_ALPHA
+  }];
 }
 
 // A book resource.
@@ -284,15 +304,29 @@ message Book {
     terraform_entity: {name: "Book"}
   };
   // A unique book id.
-  string id = 1 [(apigw.v1.field).field_options = {required_spec: true}];
+  string id = 1 [(apigw.v1.field).field_options = {
+    required_spec: true
+    stability: STABILITY_STABLE
+  }];
 
   // An author of the book.
-  string author = 2;
+  string author = 2 [(apigw.v1.field).field_options = {
+    stability: STABILITY_STABLE
+  }];
   // A book title.
-  string title = 3;
-  // Quotes from the book.
-  repeated string quotes = 4;
-  string shelf_id = 5;
+  string title = 3 [(apigw.v1.field).field_options = {
+    stability: STABILITY_STABLE
+  }];
+  // Quotes from the book - this field is in beta.
+  repeated string quotes = 4 [(apigw.v1.field).field_options = {
+    stability: STABILITY_BETA
+  }];
+  // Shelf ID - deprecated, use shelf reference instead
+  string shelf_id = 5 [(apigw.v1.field).field_options = {
+    deprecation: {
+      sunset_date: "2025-09-30"
+    }
+  }];
 }
 
 // An author resource.
@@ -308,9 +342,20 @@ message Author {
   repeated Gender genders = 8;
   string first_name = 3;
   string last_name = 4 [json_name = "lname"];
-  string metadata = 5 [(apigw.v1.field).field_options = {read_only_spec: true}];
-  google.protobuf.Timestamp created_at = 6 [(apigw.v1.field).field_options = {read_only_spec: true}];
-  repeated google.protobuf.Any books = 7;
+  string metadata = 5 [(apigw.v1.field).field_options = {
+    read_only_spec: true
+    stability: STABILITY_BETA
+  }];
+  google.protobuf.Timestamp created_at = 6 [(apigw.v1.field).field_options = {
+    read_only_spec: true
+    stability: STABILITY_STABLE
+  }];
+  // Books field is deprecated - use separate book lookup instead
+  repeated google.protobuf.Any books = 7 [(apigw.v1.field).field_options = {
+    deprecation: {
+      sunset_date: "2025-08-15"
+    }
+  }];
 }
 
 // Response to ListShelves call.

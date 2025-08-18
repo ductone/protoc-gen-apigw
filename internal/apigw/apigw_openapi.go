@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 
@@ -37,6 +38,41 @@ type route struct {
 const SchemaProxyRefPrefix = "#/components/schemas/"
 
 func (module *Module) buildOpenAPIService(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Document, error) {
+	// Extract service options
+	sext := &apigw_v1.ServiceOptions{}
+	_, err := in.Extension(apigw_v1.E_Service, sext)
+	if err != nil {
+		return nil, fmt.Errorf("apigw: failed to extract Service extension from '%s': %w", in.FullyQualifiedName(), err)
+	}
+
+	// Create service-level extensions
+	serviceExtensions := orderedmap.New[string, *yaml.Node]()
+
+	// Handle service-level stability
+	if sext.Service != nil {
+		addStabilityExtension(serviceExtensions, sext.Service.Stability)
+
+		// Handle service-level deprecation
+		isServiceDeprecated := in.Descriptor().GetOptions().GetDeprecated()
+		if sext.Service.Deprecation != nil {
+			// Validate service deprecation info
+			if err := ValidateDeprecationInfo(sext.Service.Deprecation); err != nil {
+				return nil, fmt.Errorf("service deprecation validation failed for '%s': %w", in.FullyQualifiedName(), err)
+			}
+
+			// If deprecation info is provided, the service is considered deprecated
+			isServiceDeprecated = true
+
+			// Add sunset extension
+			addSunsetExtension(serviceExtensions, sext.Service.Deprecation.SunsetDate)
+		}
+
+		// Add deprecated flag to service extensions if deprecated
+		if isServiceDeprecated {
+			serviceExtensions.Set("deprecated", yamlBool(true))
+		}
+	}
+
 	doc := &dm_v3.Document{
 		Version: "3.1.0",
 		// NOTE: Info is required to be a valid OAS,
@@ -46,6 +82,7 @@ func (module *Module) buildOpenAPIService(ctx pgsgo.Context, in pgs.Service) (*d
 			Title:       "API For " + nicerFQN(in),
 			Version:     "0.0.1",
 			Description: "This is an auto-generated API for " + nicerFQN(in) + ".\n",
+			Extensions:  serviceExtensions,
 		},
 		Servers: []*dm_v3.Server{
 			{
@@ -253,12 +290,30 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		extensions.Set("x-speakeasy-pagination", terraformPagination)
 	}
 
+	// Add stability extension for operation
+	addStabilityExtension(extensions, operation.Stability)
+
+	// Handle operation-level deprecation
+	isDeprecated := method.Descriptor().GetOptions().GetDeprecated()
+	if operation.Deprecation != nil {
+		// Validate deprecation info
+		if err := ValidateDeprecationInfo(operation.Deprecation); err != nil {
+			return nil, nil, nil, fmt.Errorf("operation deprecation validation failed for '%s': %w", method.FullyQualifiedName(), err)
+		}
+
+		// If deprecation info is provided, the operation is considered deprecated
+		isDeprecated = true
+
+		// Add sunset extension
+		addSunsetExtension(extensions, operation.Deprecation.SunsetDate)
+	}
+
 	outputRef := mt.Add(outObj)
 	op := &dm_v3.Operation{
 		OperationId: nicerFQN(method),
 		Summary:     module.operationSummary(operation, method),
 		Description: methodDescription,
-		Deprecated:  oasBool(method.Descriptor().GetOptions().GetDeprecated()),
+		Deprecated:  oasBool(isDeprecated),
 		Responses: &dm_v3.Responses{
 			Codes: orderedmap.ToOrderedMap(map[string]*dm_v3.Response{
 				"200": {
@@ -690,12 +745,7 @@ func (mt *msgTracker) Add(m pgs.Message) *dm_base.SchemaProxy {
 }
 
 func contains[T comparable](needle T, haystack []T) bool {
-	for _, v := range haystack {
-		if v == needle {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(haystack, needle)
 }
 
 func oasTrue() *bool {
@@ -706,4 +756,37 @@ func oasTrue() *bool {
 func oasBool(v bool) *bool {
 	b := v
 	return &b
+}
+
+// stabilityToString converts Stability enum values to OpenAPI extension strings.
+func stabilityToString(stability apigw_v1.Stability) string {
+	switch stability {
+	case apigw_v1.Stability_STABILITY_DRAFT:
+		return "draft"
+	case apigw_v1.Stability_STABILITY_ALPHA:
+		return "alpha"
+	case apigw_v1.Stability_STABILITY_BETA:
+		return "beta"
+	case apigw_v1.Stability_STABILITY_STABLE:
+		return "stable"
+	case apigw_v1.Stability_STABILITY_UNSPECIFIED:
+		return ""
+	default:
+		return ""
+	}
+}
+
+// addStabilityExtension adds x-stability-level extension to OpenAPI operations.
+func addStabilityExtension(extensions *orderedmap.Map[string, *yaml.Node], stability apigw_v1.Stability) {
+	stabilityStr := stabilityToString(stability)
+	if stabilityStr != "" {
+		extensions.Set("x-stability-level", yamlString(stabilityStr))
+	}
+}
+
+// addSunsetExtension adds x-sunset extension to OpenAPI operations.
+func addSunsetExtension(extensions *orderedmap.Map[string, *yaml.Node], sunsetDate string) {
+	if sunsetDate != "" {
+		extensions.Set("x-sunset", yamlString(sunsetDate))
+	}
 }

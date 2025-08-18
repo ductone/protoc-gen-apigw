@@ -7,6 +7,7 @@ import "google/protobuf/any.proto";
 
 option go_package = "gitlab.com/ductone/c1/pkg/pb/c1/webhooks/v1beta";
 
+// Webhook request body with stability and deprecation examples
 message Body {
   option (apigw.v1.message).message_options = {
     force_expose: true
@@ -60,9 +61,10 @@ message PayloadTest {
   option (apigw.v1.message).message_options = {force_expose: true};
 }
 
+// Task view with field-level stability annotations
 message TaskView {
   string task_id = 1;
-  string other_field = 2;
+  string other_field = 2 [json_name = "search[decoded]", deprecated = true, (apigw.v1.field).field_options = {deprecation: {sunset_date: "2025-09-30"}}];
 }
 
 message PayloadPolicyApprovalStep {
