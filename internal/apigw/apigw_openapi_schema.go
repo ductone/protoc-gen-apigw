@@ -105,6 +105,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		// but right now WKTs are just rendered inline, and not a Ref.
 		s := sc.schemaForWKT(WellKnownType(m))
 		s.ReadOnly = &readOnly
+		s.Nullable = nullable
 		return dm_base.CreateSchemaProxy(s)
 	}
 
@@ -147,7 +148,6 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	obj := &dm_base.Schema{
 		Type:       []string{"object"},
 		Properties: orderedmap.New[string, *dm_base.SchemaProxy](),
-		Nullable:   nullable,
 		Deprecated: deprecated,
 		Title:      sc.messageDocName(title, m),
 
@@ -253,6 +253,9 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		nullable = oasTrue()
 		description += "\nThis field is part of the `" + f.OneOf().Name().String() + "` oneof.\n" +
 			"See the documentation for `" + nicerFQN(f.Message()) + "` for more details."
+	} else {
+		// Use getNullableSpec to determine nullable based on required_spec
+		nullable = getNullableSpec(f)
 	}
 
 	// Get field-level stability and deprecation info
@@ -288,7 +291,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		arraySchema := &dm_base.Schema{
 			Type:        []string{"array"},
 			Description: description,
-			Nullable:    oasTrue(),
+			Nullable:    nullable,
 			ReadOnly:    &readOnly,
 			Deprecated:  deprecated,
 			Items:       &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
@@ -332,12 +335,22 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		mergeNullable(ev, nullable)
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
-		// todo: nested filters
-		return sc.Message(f.Type().Embed(), nil, nullable, readOnly, false)
+		ref := sc.Message(f.Type().Embed(), nil, nil, readOnly, false)
+		if nullable != nil && *nullable {
+			// Emit oneOf with null type for nullable reference
+			wrapper := &dm_base.Schema{
+				OneOf: []*dm_base.SchemaProxy{
+					ref,
+					dm_base.CreateSchemaProxy(&dm_base.Schema{Type: []string{"null"}}),
+				},
+			}
+			return dm_base.CreateSchemaProxy(wrapper)
+		}
+		return ref
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())
 		sv.ReadOnly = &readOnly
-		mergeNullable(sv, nullable)
+		sv.Nullable = nullable
 		sv.Deprecated = deprecated
 		sv.Description = description
 		// Add extensions if any exist
@@ -385,6 +398,16 @@ func getReadOnlySpec(f pgs.Field) bool {
 		}
 	}
 	return false
+}
+
+func getNullableSpec(f pgs.Field) *bool {
+	// If required_spec is false, then the field should be nullable
+	// If required_spec is true, then the field should not be nullable (return nil to omit the field)
+	required := getRequiredSpec(f)
+	if !required {
+		return oasTrue()
+	}
+	return nil
 }
 
 func getFieldStability(f pgs.Field) apigw_v1.Stability {
