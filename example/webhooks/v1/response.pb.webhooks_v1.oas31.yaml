@@ -16,7 +16,7 @@ components:
       description: |
         The ResponsePolicyApprovalStep message.
 
-        This message contains a oneof named action. Only a single field of the following list may be set at a time:
+        Only one of the following fields may be set:
           - approve
           - deny
           - reassign
@@ -26,18 +26,34 @@ components:
           oneOf:
             - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepApprove'
             - type: "null"
+          x-speakeasy-conflicts-with:
+            - deny
+            - reassign
+            - replacePolicy
         deny:
           oneOf:
             - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepDeny'
             - type: "null"
+          x-speakeasy-conflicts-with:
+            - approve
+            - reassign
+            - replacePolicy
         reassign:
           oneOf:
             - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepReassign'
             - type: "null"
+          x-speakeasy-conflicts-with:
+            - approve
+            - deny
+            - replacePolicy
         replacePolicy:
           oneOf:
             - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalReplacePolicy'
             - type: "null"
+          x-speakeasy-conflicts-with:
+            - approve
+            - deny
+            - reassign
         version:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
@@ -125,7 +141,7 @@ components:
       description: |
         The ResponseProvisionStep message.
 
-        This message contains a oneof named outcome. Only a single field of the following list may be set at a time:
+        Only one of the following fields may be set:
           - complete
           - errored
       properties:
@@ -133,10 +149,12 @@ components:
           oneOf:
             - $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepComplete'
             - type: "null"
+          x-speakeasy-conflicts-with: errored
         errored:
           oneOf:
             - $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepErrored'
             - type: "null"
+          x-speakeasy-conflicts-with: complete
         version:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response

@@ -26,6 +26,7 @@ components:
               readOnly: true
               type: string
             - type: "null"
+          x-stability-level: stable
         firstName:
           description: The firstName field.
           nullable: true
@@ -235,7 +236,7 @@ components:
       description: |
         The GetAuthorResponse message.
 
-        This message contains a oneof named genre. Only a single field of the following list may be set at a time:
+        Only one of the following fields may be set:
           - fiction
           - nonfiction
       properties:
@@ -251,6 +252,7 @@ components:
           nullable: true
           readOnly: false
           type: boolean
+          x-speakeasy-conflicts-with: nonfiction
         nonfiction:
           description: |-
             The nonfiction field.
@@ -259,6 +261,7 @@ components:
           nullable: true
           readOnly: false
           type: boolean
+          x-speakeasy-conflicts-with: fiction
       title: Get Author Response
       type: object
       x-speakeasy-name-override: GetAuthorResponse
