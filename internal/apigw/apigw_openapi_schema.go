@@ -99,6 +99,13 @@ func yamlStringSlice(in []string) *yaml.Node {
 	return rv
 }
 
+func yamlStringOrStringSlice(in []string) *yaml.Node {
+	if len(in) == 1 {
+		return yamlString(in[0])
+	}
+	return yamlStringSlice(in)
+}
+
 func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool, readOnly bool, forced bool) *dm_base.SchemaProxy {
 	if IsWellKnown(m) {
 		// TODO(pquera): we may want to customize this some day,
@@ -185,11 +192,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	}
 
 	for _, of := range m.OneOfs() {
-		_, _ = fmt.Fprintf(description,
-			"\n\nThis message contains a oneof named %s. "+
-				"Only a single field of the following list may be set at a time:\n",
-			of.Name().String(),
-		)
+		description.WriteString("\n\nOnly one of the following fields may be set:\n")
 
 		for _, f := range of.Fields() {
 			jn := jsonName(f)
@@ -285,6 +288,20 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		addSunsetExtension(extensions, fieldDeprecation.SunsetDate)
 	}
 
+	// Add conflicts-with extension for oneof fields
+	if f.OneOf() != nil {
+		conflicts := make([]string, 0)
+		for _, of := range f.OneOf().Fields() {
+			if of.Name().String() == f.Name().String() {
+				continue
+			}
+			conflicts = append(conflicts, jsonName(of))
+		}
+		if len(conflicts) > 0 {
+			extensions.Set("x-speakeasy-conflicts-with", yamlStringOrStringSlice(conflicts))
+		}
+	}
+
 	switch {
 	case f.Type().IsRepeated():
 		fteSchema := sc.FieldTypeElem(f.Type().Element(), readOnly)
@@ -344,6 +361,18 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 					dm_base.CreateSchemaProxy(&dm_base.Schema{Type: []string{"null"}}),
 				},
 			}
+			// Add extensions if any exist
+			if extensions.Len() > 0 {
+				wrapper.Extensions = extensions
+			}
+			return dm_base.CreateSchemaProxy(wrapper)
+		}
+		// If there are extensions to attach, wrap the ref in an allOf
+		if extensions.Len() > 0 {
+			wrapper := &dm_base.Schema{
+				AllOf: []*dm_base.SchemaProxy{ref},
+			}
+			wrapper.Extensions = extensions
 			return dm_base.CreateSchemaProxy(wrapper)
 		}
 		return ref
