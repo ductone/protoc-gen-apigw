@@ -242,6 +242,8 @@ func (sc *schemaContainer) FieldTypeElem(fte pgs.FieldTypeElem, readOnly bool) *
 func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	deprecated := oasBool(f.Descriptor().GetOptions().GetDeprecated())
 	description := strings.TrimSpace(f.SourceCodeInfo().LeadingComments())
+	fieldTerraformField := getFieldTerraformField(f)
+	// Add field-level terraform extension	
 	readOnly := getReadOnlySpec(f)
 	if description == "" {
 		jn := jsonName(f)
@@ -282,8 +284,12 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		ev.Description = description
 		ev.ReadOnly = &readOnly
 		ev.Extensions = orderedmap.New[string, *yaml.Node]()
+		if fieldTerraformField != nil {
+			addTerraformUpdateInPlaceExtension(ev.Extensions, fieldTerraformField.UpdateInPlace)
+		}
 		// TODO: Make this optional instead of always true
 		ev.Extensions.Set("x-speakeasy-unknown-values", yamlString("allow"))
+		
 		mergeNullable(ev, nullable)
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
@@ -297,6 +303,16 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		sv.Description = description
 		return dm_base.CreateSchemaProxy(sv)
 	}
+	
+}
+
+func getFieldTerraformField(f pgs.Field) *apigw_v1.TerraformField {
+	for _, fo := range getFieldOptions(f) {
+		if fo.TerraformField != nil {
+			return fo.TerraformField
+		}
+	}
+	return nil
 }
 
 func getMessageOptions(m pgs.Message) *apigw_v1.MessageOption {

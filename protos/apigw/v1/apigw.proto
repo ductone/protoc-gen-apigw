@@ -44,6 +44,8 @@ message FieldOption {
   bool required_spec = 1;
   // Sets the field as read only in the generated openAPI spec.
   bool read_only_spec = 2;
+  // Sets terraform-specific field configuration
+  TerraformField terraform_field = 3;
 }
 
 message FieldOptions {
@@ -68,6 +70,10 @@ message ServiceOptions {
 message Service {
   Stability stability = 1;
   string docs_path = 2;
+}
+
+message TerraformField {
+  bool update_in_place = 1;
 }
 
 message TerraformEntity {
