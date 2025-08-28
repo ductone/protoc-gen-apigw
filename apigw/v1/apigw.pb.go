@@ -447,9 +447,9 @@ type FieldOption struct {
 	// Sets deprecation information for this field
 	Deprecation *Deprecation `protobuf:"bytes,4,opt,name=deprecation,proto3" json:"deprecation,omitempty"`
 	// Sets the field as mutable in the generated terraform resource
-	TerraformMutable bool `protobuf:"varint,5,opt,name=terraform_mutable,json=terraformMutable,proto3" json:"terraform_mutable,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	TerraformImmutable bool `protobuf:"varint,5,opt,name=terraform_immutable,json=terraformImmutable,proto3" json:"terraform_immutable,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *FieldOption) Reset() {
@@ -510,9 +510,9 @@ func (x *FieldOption) GetDeprecation() *Deprecation {
 	return nil
 }
 
-func (x *FieldOption) GetTerraformMutable() bool {
+func (x *FieldOption) GetTerraformImmutable() bool {
 	if x != nil {
-		return x.TerraformMutable
+		return x.TerraformImmutable
 	}
 	return false
 }
@@ -1299,13 +1299,13 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\x10terraform_entity\x18\x01 \x01(\v2\x19.apigw.v1.TerraformEntityR\x0fterraformEntity\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12!\n" +
 	"\fforce_expose\x18\x03 \x01(\bR\vforceExpose\x120\n" +
-	"\x14webhook_request_name\x18\x04 \x01(\tR\x12webhookRequestName\"\xf1\x01\n" +
+	"\x14webhook_request_name\x18\x04 \x01(\tR\x12webhookRequestName\"\xf5\x01\n" +
 	"\vFieldOption\x12#\n" +
 	"\rrequired_spec\x18\x01 \x01(\bR\frequiredSpec\x12$\n" +
 	"\x0eread_only_spec\x18\x02 \x01(\bR\freadOnlySpec\x121\n" +
 	"\tstability\x18\x03 \x01(\x0e2\x13.apigw.v1.StabilityR\tstability\x127\n" +
-	"\vdeprecation\x18\x04 \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\x12+\n" +
-	"\x11terraform_mutable\x18\x05 \x01(\bR\x10terraformMutable\"J\n" +
+	"\vdeprecation\x18\x04 \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\x12/\n" +
+	"\x13terraform_immutable\x18\x05 \x01(\bR\x12terraformImmutable\"J\n" +
 	"\fFieldOptions\x12:\n" +
 	"\rfield_options\x18\x01 \x03(\v2\x15.apigw.v1.FieldOptionR\ffieldOptions\".\n" +
 	"\vDeprecation\x12\x1f\n" +

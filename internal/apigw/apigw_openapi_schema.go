@@ -251,7 +251,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	deprecated := oasBool(f.Descriptor().GetOptions().GetDeprecated())
 	description := strings.TrimSpace(f.SourceCodeInfo().LeadingComments())
 	readOnly := getReadOnlySpec(f)
-	present, terraformMutable := getTerraformMutable(f)
+	terraformImmutable := getTerraformImmutable(f)
 	if description == "" {
 		jn := jsonName(f)
 		description = "The " + jn + " field."
@@ -294,7 +294,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	}
 
 	// Add field-level terraform mutable extension
-	if present && !terraformMutable {
+	if terraformImmutable {
 		extensions.Set("x-speakeasy-plan-modifiers", yamlArray(yamlString("UseStateForUnknown")))
 	}
 
@@ -413,15 +413,13 @@ func getReadOnlySpec(f pgs.Field) bool {
 	return false
 }
 
-func getTerraformMutable(f pgs.Field) (bool,bool) {
+func getTerraformImmutable(f pgs.Field) bool{
 	for _, fo := range getFieldOptions(f) {
-		if fo.GetTerraformMutable() {
-			return true,true
-		} else {
-			return true, false
-		}
+		if fo.GetTerraformImmutable() {
+			return true
+		} 
 	}
-	return false, false
+	return false
 }
 
 func getNullableSpec(f pgs.Field) *bool {

@@ -49,7 +49,7 @@ message FieldOption {
   // Sets deprecation information for this field
   Deprecation deprecation = 4;
   // Sets the field as mutable in the generated terraform resource
-  bool terraform_mutable = 5;
+  bool terraform_immutable = 5;
 }
 
 message FieldOptions {
