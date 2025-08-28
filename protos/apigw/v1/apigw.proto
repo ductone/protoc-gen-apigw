@@ -94,6 +94,7 @@ message TerraformEntity {
   bool json = 3;
   int32 operation_number = 4;
   OptionalExclusion optional_exclusion = 5;
+  bool mutable = 6;
 
   enum OptionalExclusion {
     OPTIONAL_EXCLUSION_UNSPECIFIED = 0;

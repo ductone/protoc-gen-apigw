@@ -99,6 +99,13 @@ func yamlStringSlice(in []string) *yaml.Node {
 	return rv
 }
 
+func yamlArray(nodes ...*yaml.Node) *yaml.Node {
+	return &yaml.Node{
+		Kind:    yaml.SequenceNode,
+		Content: nodes,
+	}
+}
+
 func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool, readOnly bool, forced bool) *dm_base.SchemaProxy {
 	if IsWellKnown(m) {
 		// TODO(pquera): we may want to customize this some day,
@@ -111,6 +118,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 
 	terraformEntityName := ""
 	terraformEntityJSON := false
+	mutable := false
 	mopt := getMessageOptions(m)
 	title := ""
 	if mopt != nil {
@@ -118,6 +126,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		if terraformEntity != nil {
 			terraformEntityName = terraformEntity.Name
 			terraformEntityJSON = terraformEntity.Json
+			mutable = terraformEntity.Mutable
 		}
 		title = mopt.GetTitle()
 	}
@@ -161,6 +170,9 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	}
 	if terraformEntityJSON {
 		extensions.Set("x-speakeasy-type-override", yamlString("any"))
+	}
+	if mutable {
+		extensions.Set("x-speakeasy-plan-modifiers", yamlArray(yamlString("UseStateForUnknown")))
 	}
 	required := make([]string, 0)
 	for _, f := range m.NonOneOfFields() {
