@@ -99,6 +99,13 @@ func yamlStringSlice(in []string) *yaml.Node {
 	return rv
 }
 
+func yamlArray(nodes ...*yaml.Node) *yaml.Node {
+	return &yaml.Node{
+		Kind:    yaml.SequenceNode,
+		Content: nodes,
+	}
+}
+
 func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool, readOnly bool, forced bool) *dm_base.SchemaProxy {
 	if IsWellKnown(m) {
 		// TODO(pquera): we may want to customize this some day,
@@ -117,7 +124,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		terraformEntity := mopt.GetTerraformEntity()
 		if terraformEntity != nil {
 			terraformEntityName = terraformEntity.Name
-			terraformEntityJSON = terraformEntity.Json
+			terraformEntityJSON = terraformEntity.Json			
 		}
 		title = mopt.GetTitle()
 	}
@@ -161,7 +168,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	}
 	if terraformEntityJSON {
 		extensions.Set("x-speakeasy-type-override", yamlString("any"))
-	}
+	}	
 	required := make([]string, 0)
 	for _, f := range m.NonOneOfFields() {
 		jn := jsonName(f)
@@ -244,6 +251,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	deprecated := oasBool(f.Descriptor().GetOptions().GetDeprecated())
 	description := strings.TrimSpace(f.SourceCodeInfo().LeadingComments())
 	readOnly := getReadOnlySpec(f)
+	terraformImmutable := getTerraformImmutable(f)
 	if description == "" {
 		jn := jsonName(f)
 		description = "The " + jn + " field."
@@ -283,6 +291,11 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	// Add field-level deprecation extension
 	if fieldDeprecation != nil {
 		addSunsetExtension(extensions, fieldDeprecation.SunsetDate)
+	}
+
+	// Add field-level terraform mutable extension
+	if terraformImmutable {
+		extensions.Set("x-speakeasy-plan-modifiers", yamlArray(yamlString("UseStateForUnknown")))
 	}
 
 	switch {
@@ -396,6 +409,15 @@ func getReadOnlySpec(f pgs.Field) bool {
 		if fo.GetReadOnlySpec() {
 			return true
 		}
+	}
+	return false
+}
+
+func getTerraformImmutable(f pgs.Field) bool{
+	for _, fo := range getFieldOptions(f) {
+		if fo.GetTerraformImmutable() {
+			return true
+		} 
 	}
 	return false
 }
