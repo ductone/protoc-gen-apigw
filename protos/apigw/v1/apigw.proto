@@ -48,6 +48,8 @@ message FieldOption {
   Stability stability = 3;
   // Sets deprecation information for this field
   Deprecation deprecation = 4;
+  // Sets the field as mutable in the generated terraform resource
+  bool terraform_mutable = 5;
 }
 
 message FieldOptions {
@@ -93,8 +95,7 @@ message TerraformEntity {
   string name = 2;
   bool json = 3;
   int32 operation_number = 4;
-  OptionalExclusion optional_exclusion = 5;
-  bool mutable = 6;
+  OptionalExclusion optional_exclusion = 5;  
 
   enum OptionalExclusion {
     OPTIONAL_EXCLUSION_UNSPECIFIED = 0;

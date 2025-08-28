@@ -118,15 +118,13 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 
 	terraformEntityName := ""
 	terraformEntityJSON := false
-	mutable := false
 	mopt := getMessageOptions(m)
 	title := ""
 	if mopt != nil {
 		terraformEntity := mopt.GetTerraformEntity()
 		if terraformEntity != nil {
 			terraformEntityName = terraformEntity.Name
-			terraformEntityJSON = terraformEntity.Json
-			mutable = terraformEntity.Mutable
+			terraformEntityJSON = terraformEntity.Json			
 		}
 		title = mopt.GetTitle()
 	}
@@ -170,10 +168,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	}
 	if terraformEntityJSON {
 		extensions.Set("x-speakeasy-type-override", yamlString("any"))
-	}
-	if mutable {
-		extensions.Set("x-speakeasy-plan-modifiers", yamlArray(yamlString("UseStateForUnknown")))
-	}
+	}	
 	required := make([]string, 0)
 	for _, f := range m.NonOneOfFields() {
 		jn := jsonName(f)
@@ -256,6 +251,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	deprecated := oasBool(f.Descriptor().GetOptions().GetDeprecated())
 	description := strings.TrimSpace(f.SourceCodeInfo().LeadingComments())
 	readOnly := getReadOnlySpec(f)
+	terraformMutable := getTerraformMutable(f)
 	if description == "" {
 		jn := jsonName(f)
 		description = "The " + jn + " field."
@@ -295,6 +291,11 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	// Add field-level deprecation extension
 	if fieldDeprecation != nil {
 		addSunsetExtension(extensions, fieldDeprecation.SunsetDate)
+	}
+
+	// Add field-level terraform mutable extension
+	if terraformMutable {
+		extensions.Set("x-speakeasy-plan-modifiers", yamlArray(yamlString("UseStateForUnknown")))
 	}
 
 	switch {
@@ -406,6 +407,15 @@ func getRequiredSpec(f pgs.Field) bool {
 func getReadOnlySpec(f pgs.Field) bool {
 	for _, fo := range getFieldOptions(f) {
 		if fo.GetReadOnlySpec() {
+			return true
+		}
+	}
+	return false
+}
+
+func getTerraformMutable(f pgs.Field) bool {
+	for _, fo := range getFieldOptions(f) {
+		if fo.GetTerraformMutable() {
 			return true
 		}
 	}

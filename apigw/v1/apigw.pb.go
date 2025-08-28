@@ -445,9 +445,11 @@ type FieldOption struct {
 	// Sets the stability level for this field
 	Stability Stability `protobuf:"varint,3,opt,name=stability,proto3,enum=apigw.v1.Stability" json:"stability,omitempty"`
 	// Sets deprecation information for this field
-	Deprecation   *Deprecation `protobuf:"bytes,4,opt,name=deprecation,proto3" json:"deprecation,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Deprecation *Deprecation `protobuf:"bytes,4,opt,name=deprecation,proto3" json:"deprecation,omitempty"`
+	// Sets the field as mutable in the generated terraform resource
+	TerraformMutable bool `protobuf:"varint,5,opt,name=terraform_mutable,json=terraformMutable,proto3" json:"terraform_mutable,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *FieldOption) Reset() {
@@ -506,6 +508,13 @@ func (x *FieldOption) GetDeprecation() *Deprecation {
 		return x.Deprecation
 	}
 	return nil
+}
+
+func (x *FieldOption) GetTerraformMutable() bool {
+	if x != nil {
+		return x.TerraformMutable
+	}
+	return false
 }
 
 type FieldOptions struct {
@@ -751,7 +760,6 @@ type TerraformEntity struct {
 	Json              bool                                      `protobuf:"varint,3,opt,name=json,proto3" json:"json,omitempty"`
 	OperationNumber   int32                                     `protobuf:"varint,4,opt,name=operation_number,json=operationNumber,proto3" json:"operation_number,omitempty"`
 	OptionalExclusion TerraformEntity_OptionalExclusion         `protobuf:"varint,5,opt,name=optional_exclusion,json=optionalExclusion,proto3,enum=apigw.v1.TerraformEntity_OptionalExclusion" json:"optional_exclusion,omitempty"`
-	Mutable           bool                                      `protobuf:"varint,6,opt,name=mutable,proto3" json:"mutable,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -819,13 +827,6 @@ func (x *TerraformEntity) GetOptionalExclusion() TerraformEntity_OptionalExclusi
 		return x.OptionalExclusion
 	}
 	return TerraformEntity_OPTIONAL_EXCLUSION_UNSPECIFIED
-}
-
-func (x *TerraformEntity) GetMutable() bool {
-	if x != nil {
-		return x.Mutable
-	}
-	return false
 }
 
 type Pagination struct {
@@ -1298,12 +1299,13 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\x10terraform_entity\x18\x01 \x01(\v2\x19.apigw.v1.TerraformEntityR\x0fterraformEntity\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12!\n" +
 	"\fforce_expose\x18\x03 \x01(\bR\vforceExpose\x120\n" +
-	"\x14webhook_request_name\x18\x04 \x01(\tR\x12webhookRequestName\"\xc4\x01\n" +
+	"\x14webhook_request_name\x18\x04 \x01(\tR\x12webhookRequestName\"\xf1\x01\n" +
 	"\vFieldOption\x12#\n" +
 	"\rrequired_spec\x18\x01 \x01(\bR\frequiredSpec\x12$\n" +
 	"\x0eread_only_spec\x18\x02 \x01(\bR\freadOnlySpec\x121\n" +
 	"\tstability\x18\x03 \x01(\x0e2\x13.apigw.v1.StabilityR\tstability\x127\n" +
-	"\vdeprecation\x18\x04 \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\"J\n" +
+	"\vdeprecation\x18\x04 \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\x12+\n" +
+	"\x11terraform_mutable\x18\x05 \x01(\bR\x10terraformMutable\"J\n" +
 	"\fFieldOptions\x12:\n" +
 	"\rfield_options\x18\x01 \x03(\v2\x15.apigw.v1.FieldOptionR\ffieldOptions\".\n" +
 	"\vDeprecation\x12\x1f\n" +
@@ -1318,14 +1320,13 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\aService\x121\n" +
 	"\tstability\x18\x01 \x01(\x0e2\x13.apigw.v1.StabilityR\tstability\x12\x1b\n" +
 	"\tdocs_path\x18\x02 \x01(\tR\bdocsPath\x127\n" +
-	"\vdeprecation\x18\x03 \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\"\x9a\x05\n" +
+	"\vdeprecation\x18\x03 \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\"\x80\x05\n" +
 	"\x0fTerraformEntity\x12G\n" +
 	"\x04type\x18\x01 \x01(\x0e23.apigw.v1.TerraformEntity.TerraformEntityMethodTypeR\x04type\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04json\x18\x03 \x01(\bR\x04json\x12)\n" +
 	"\x10operation_number\x18\x04 \x01(\x05R\x0foperationNumber\x12Z\n" +
-	"\x12optional_exclusion\x18\x05 \x01(\x0e2+.apigw.v1.TerraformEntity.OptionalExclusionR\x11optionalExclusion\x12\x18\n" +
-	"\amutable\x18\x06 \x01(\bR\amutable\"\xeb\x01\n" +
+	"\x12optional_exclusion\x18\x05 \x01(\x0e2+.apigw.v1.TerraformEntity.OptionalExclusionR\x11optionalExclusion\"\xeb\x01\n" +
 	"\x19TerraformEntityMethodType\x12,\n" +
 	"(TERRAFORM_ENTITY_METHOD_TYPE_UNSPECIFIED\x10\x00\x12'\n" +
 	"#TERRAFORM_ENTITY_METHOD_TYPE_CREATE\x10\x01\x12%\n" +
