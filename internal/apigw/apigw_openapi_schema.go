@@ -266,6 +266,10 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			Deprecated:  deprecated,
 			Items:       &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
+		if fieldTerraformField != nil {
+			arraySchema.Extensions = orderedmap.New[string, *yaml.Node]()
+			addTerraformUpdateInPlaceExtension(arraySchema.Extensions, fieldTerraformField.UpdateInPlace)
+		}
 		return dm_base.CreateSchemaProxy(arraySchema)
 	case f.Type().IsMap():
 		fteSchema := sc.FieldTypeElem(f.Type().Element(), readOnly)
@@ -276,6 +280,10 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			Nullable:             nullable,
 			ReadOnly:             &readOnly,
 			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
+		}
+		if fieldTerraformField != nil {
+			mv.Extensions = orderedmap.New[string, *yaml.Node]()
+			addTerraformUpdateInPlaceExtension(mv.Extensions, fieldTerraformField.UpdateInPlace)
 		}
 		return dm_base.CreateSchemaProxy(mv)
 	case f.Type().IsEnum():
@@ -294,13 +302,20 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
 		// todo: nested filters
-		return sc.Message(f.Type().Embed(), nil, nullable, readOnly, false)
+		msgSchema := sc.Message(f.Type().Embed(), nil, nullable, readOnly, false)
+		// Note: For embedded messages, terraform extensions would need to be handled
+		// at the message level, not the field level, since we're returning a reference
+		return msgSchema
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())
 		sv.ReadOnly = &readOnly
 		mergeNullable(sv, nullable)
 		sv.Deprecated = deprecated
 		sv.Description = description
+		if fieldTerraformField != nil {
+			sv.Extensions = orderedmap.New[string, *yaml.Node]()
+			addTerraformUpdateInPlaceExtension(sv.Extensions, fieldTerraformField.UpdateInPlace)
+		}
 		return dm_base.CreateSchemaProxy(sv)
 	}
 	
