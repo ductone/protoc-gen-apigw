@@ -261,6 +261,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	// Get field-level stability and deprecation info
 	fieldStability := getFieldStability(f)
 	fieldDeprecation := getFieldDeprecation(f)
+	fieldTerraformField := getFieldTerraformField(f)
 
 	// Validate field-level deprecation if present
 	if fieldDeprecation != nil {
@@ -283,6 +284,11 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	// Add field-level deprecation extension
 	if fieldDeprecation != nil {
 		addSunsetExtension(extensions, fieldDeprecation.SunsetDate)
+	}
+
+	// Add field-level terraform extension
+	if fieldTerraformField != nil {
+		addTerraformUpdateInPlaceExtension(extensions, fieldTerraformField.UpdateInPlace)
 	}
 
 	switch {
@@ -423,6 +429,15 @@ func getFieldDeprecation(f pgs.Field) *apigw_v1.Deprecation {
 	for _, fo := range getFieldOptions(f) {
 		if fo.Deprecation != nil {
 			return fo.Deprecation
+		}
+	}
+	return nil
+}
+
+func getFieldTerraformField(f pgs.Field) *apigw_v1.TerraformField {
+	for _, fo := range getFieldOptions(f) {
+		if fo.TerraformField != nil {
+			return fo.TerraformField
 		}
 	}
 	return nil
