@@ -294,7 +294,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	}
 
 	// Add field-level terraform mutable extension
-	if terraformMutable {
+	if !terraformMutable {
 		extensions.Set("x-speakeasy-plan-modifiers", yamlArray(yamlString("UseStateForUnknown")))
 	}
 
