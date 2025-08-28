@@ -790,3 +790,10 @@ func addSunsetExtension(extensions *orderedmap.Map[string, *yaml.Node], sunsetDa
 		extensions.Set("x-sunset", yamlString(sunsetDate))
 	}
 }
+
+// addTerraformUpdateInPlaceExtension adds x-terraform-update-in-place extension to OpenAPI operations.
+func addTerraformUpdateInPlaceExtension(extensions *orderedmap.Map[string, *yaml.Node], updateInPlace bool) {
+	if updateInPlace {
+		extensions.Set("x-terraform-update-in-place", yamlString("true"))
+	}
+}

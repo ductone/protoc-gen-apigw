@@ -48,6 +48,8 @@ message FieldOption {
   Stability stability = 3;
   // Sets deprecation information for this field
   Deprecation deprecation = 4;
+  // Sets terraform-specific field configuration
+  TerraformField terraform_field = 5;
 }
 
 message FieldOptions {
@@ -64,6 +66,10 @@ enum Stability {
 
 message Deprecation {
   string sunset_date = 1;  // Required format: YYYY-MM-DD
+}
+
+message TerraformField {
+  bool update_in_place = 1;
 }
 
 message MethodOptions {
