@@ -295,7 +295,18 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			Deprecated:  deprecated,
 			Items:       &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
-		mergeNullable(arraySchema, nullable)
+		// If nullable, wrap with oneOf to include null
+		if nullable != nil && *nullable {
+			wrapper := oneOfSchemas(
+				dm_base.CreateSchemaProxy(arraySchema),
+				nullSchemaProxy(),
+			)
+			// Add extensions if any exist
+			if extensions.Len() > 0 {
+				wrapper.Extensions = extensions
+			}
+			return dm_base.CreateSchemaProxy(wrapper)
+		}
 		// Add extensions if any exist
 		if extensions.Len() > 0 {
 			arraySchema.Extensions = extensions
@@ -310,7 +321,18 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			ReadOnly:             &readOnly,
 			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
-		mergeNullable(mv, nullable)
+		// If nullable, wrap with oneOf to include null
+		if nullable != nil && *nullable {
+			wrapper := oneOfSchemas(
+				dm_base.CreateSchemaProxy(mv),
+				nullSchemaProxy(),
+			)
+			// Add extensions if any exist
+			if extensions.Len() > 0 {
+				wrapper.Extensions = extensions
+			}
+			return dm_base.CreateSchemaProxy(wrapper)
+		}
 		// Add extensions if any exist
 		if extensions.Len() > 0 {
 			mv.Extensions = extensions
@@ -338,12 +360,10 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		ref := sc.Message(f.Type().Embed(), nil, nil, readOnly, false)
 		if nullable != nil && *nullable {
 			// Emit oneOf with null type for nullable reference
-			wrapper := &dm_base.Schema{
-				OneOf: []*dm_base.SchemaProxy{
-					ref,
-					dm_base.CreateSchemaProxy(&dm_base.Schema{Type: []string{"null"}}),
-				},
-			}
+			wrapper := oneOfSchemas(
+				ref,
+				nullSchemaProxy(),
+			)
 			return dm_base.CreateSchemaProxy(wrapper)
 		}
 		return ref
@@ -359,6 +379,16 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		}
 		return dm_base.CreateSchemaProxy(sv)
 	}
+}
+
+// oneOfSchemas creates a schema with the provided proxies under oneOf
+func oneOfSchemas(proxies ...*dm_base.SchemaProxy) *dm_base.Schema {
+	return &dm_base.Schema{OneOf: proxies}
+}
+
+// nullSchemaProxy returns a proxy to a {type: null} schema
+func nullSchemaProxy() *dm_base.SchemaProxy {
+	return dm_base.CreateSchemaProxy(&dm_base.Schema{Type: []string{"null"}})
 }
 
 func getMessageOptions(m pgs.Message) *apigw_v1.MessageOption {
@@ -429,20 +459,26 @@ func getFieldDeprecation(f pgs.Field) *apigw_v1.Deprecation {
 }
 
 func mergeNullable(s *dm_base.Schema, nullable *bool) {
-	if nullable == nil || !*nullable {
+	if nullable == nil || !*nullable || s == nil {
 		return
 	}
-	addNullType(s)
-}
-
-func addNullType(s *dm_base.Schema) {
-	if s == nil {
+	// If already handled, just normalize nullable flag
+	if contains("null", s.Type) || len(s.OneOf) > 0 {
+		s.Nullable = nil
 		return
 	}
-	// ensure "null" appears in the schema type list
-	if !contains("null", s.Type) {
-		s.Type = append(s.Type, "null")
+	// Always prefer oneOf with null so consumers consistently see the pattern
+	child := &dm_base.Schema{
+		Type:   append([]string(nil), s.Type...),
+		Format: s.Format,
+		Enum:   s.Enum,
 	}
-	// clear legacy nullable usage
+	s.OneOf = []*dm_base.SchemaProxy{
+		dm_base.CreateSchemaProxy(child),
+		nullSchemaProxy(),
+	}
+	// Clear conflicting fields at wrapper level
+	s.Type = nil
+	s.Format = ""
 	s.Nullable = nil
 }

@@ -5,21 +5,21 @@ components:
       description: An author resource.
       properties:
         books:
-          deprecated: true
-          description: Books field is deprecated - use separate book lookup instead
-          items:
-            additionalProperties: true
-            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
-            properties:
-              '@type':
-                description: The type of the serialized message.
-                type: string
-            readOnly: false
-            type: object
-          readOnly: false
-          type:
-            - array
-            - "null"
+          oneOf:
+            - deprecated: true
+              description: Books field is deprecated - use separate book lookup instead
+              items:
+                additionalProperties: true
+                description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+                properties:
+                  '@type':
+                    description: The type of the serialized message.
+                    type: string
+                readOnly: false
+                type: object
+              readOnly: false
+              type: array
+            - type: "null"
           x-sunset: "2025-08-15"
         createdAt:
           oneOf:
@@ -29,53 +29,57 @@ components:
             - type: "null"
         firstName:
           description: The firstName field.
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
         gender:
           description: The gender field.
           enum:
             - GENDER_UNSPECIFIED
             - GENDER_MALE
             - GENDER_FEMALE
+          oneOf:
+            - enum:
+                - GENDER_UNSPECIFIED
+                - GENDER_MALE
+                - GENDER_FEMALE
+              type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
           x-speakeasy-unknown-values: allow
         genders:
-          description: The genders field.
-          items:
-            enum:
-              - GENDER_UNSPECIFIED
-              - GENDER_MALE
-              - GENDER_FEMALE
-            type: string
-            x-speakeasy-unknown-values: allow
-          readOnly: false
-          type:
-            - array
-            - "null"
+          oneOf:
+            - description: The genders field.
+              items:
+                enum:
+                  - GENDER_UNSPECIFIED
+                  - GENDER_MALE
+                  - GENDER_FEMALE
+                type: string
+                x-speakeasy-unknown-values: allow
+              readOnly: false
+              type: array
+            - type: "null"
         id:
           description: A unique author id.
-          format: int64
+          oneOf:
+            - format: int64
+              type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
         lname:
           description: The lname field.
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
         metadata:
           description: The metadata field.
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: true
-          type:
-            - string
-            - "null"
           x-stability-level: beta
       title: Author
       type: object
@@ -85,10 +89,10 @@ components:
       properties:
         author:
           description: An author of the book.
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
           x-stability-level: stable
         id:
           description: A unique book id.
@@ -96,28 +100,28 @@ components:
           type: string
           x-stability-level: stable
         quotes:
-          description: Quotes from the book - this field is in beta.
-          items:
-            type: string
-          readOnly: false
-          type:
-            - array
-            - "null"
+          oneOf:
+            - description: Quotes from the book - this field is in beta.
+              items:
+                type: string
+              readOnly: false
+              type: array
+            - type: "null"
           x-stability-level: beta
         shelfId:
           deprecated: true
           description: Shelf ID - deprecated, use shelf reference instead
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
           x-sunset: "2025-09-30"
         title:
           description: A book title.
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
           x-stability-level: stable
       required:
         - id
@@ -150,10 +154,10 @@ components:
       properties:
         name:
           description: The name field.
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
       title: Create Genre Request
       type: object
       x-speakeasy-name-override: CreateGenreRequest
@@ -227,18 +231,18 @@ components:
       properties:
         id:
           description: A unique genre id.
-          format: int64
+          oneOf:
+            - format: int64
+              type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
           x-stability-level: alpha
         name:
           description: A genre name.
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
           x-stability-level: alpha
       title: Genre
       type: object
@@ -262,19 +266,19 @@ components:
             The fiction field.
             This field is part of the `genre` oneof.
             See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
+          oneOf:
+            - type: boolean
+            - type: "null"
           readOnly: false
-          type:
-            - boolean
-            - "null"
         nonfiction:
           description: |-
             The nonfiction field.
             This field is part of the `genre` oneof.
             See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
+          oneOf:
+            - type: boolean
+            - type: "null"
           readOnly: false
-          type:
-            - boolean
-            - "null"
       title: Get Author Response
       type: object
       x-speakeasy-name-override: GetAuthorResponse
@@ -302,13 +306,13 @@ components:
       description: The ListBooksResponse message.
       properties:
         books:
-          description: The books field.
-          items:
-            $ref: '#/components/schemas/bookstore.v1.Book'
-          readOnly: false
-          type:
-            - array
-            - "null"
+          oneOf:
+            - description: The books field.
+              items:
+                $ref: '#/components/schemas/bookstore.v1.Book'
+              readOnly: false
+              type: array
+            - type: "null"
       title: List Books Response
       type: object
       x-speakeasy-name-override: ListBooksResponse
@@ -316,13 +320,13 @@ components:
       description: The ListGenresResponse message.
       properties:
         genres:
-          description: The genres field.
-          items:
-            $ref: '#/components/schemas/bookstore.v1.Genre'
-          readOnly: false
-          type:
-            - array
-            - "null"
+          oneOf:
+            - description: The genres field.
+              items:
+                $ref: '#/components/schemas/bookstore.v1.Genre'
+              readOnly: false
+              type: array
+            - type: "null"
       title: List Genres Response
       type: object
       x-speakeasy-name-override: ListGenresResponse
@@ -337,13 +341,13 @@ components:
                 - "null"
             - type: "null"
         shelves:
-          description: Shelves in the bookstore.
-          items:
-            $ref: '#/components/schemas/bookstore.v1.Shelf'
-          readOnly: false
-          type:
-            - array
-            - "null"
+          oneOf:
+            - description: Shelves in the bookstore.
+              items:
+                $ref: '#/components/schemas/bookstore.v1.Shelf'
+              readOnly: false
+              type: array
+            - type: "null"
       title: List Shelves Response
       type: object
       x-speakeasy-name-override: ListShelvesResponse
@@ -352,10 +356,10 @@ components:
       properties:
         anotherProp:
           description: This is a non recursive secondary prop
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
         page:
           oneOf:
             - $ref: '#/components/schemas/bookstore.v1.RecursivePage'
@@ -371,27 +375,27 @@ components:
             - $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
             - type: "null"
         extraPages:
-          description: This is a list of recursive pages
-          items:
-            $ref: '#/components/schemas/bookstore.v1.RecursivePage'
-          readOnly: false
-          type:
-            - array
-            - "null"
+          oneOf:
+            - description: This is a list of recursive pages
+              items:
+                $ref: '#/components/schemas/bookstore.v1.RecursivePage'
+              readOnly: false
+              type: array
+            - type: "null"
         pages:
-          description: This is a list of recursive books
-          items:
-            $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
-          readOnly: false
-          type:
-            - array
-            - "null"
+          oneOf:
+            - description: This is a list of recursive books
+              items:
+                $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
+              readOnly: false
+              type: array
+            - type: "null"
         prop:
           description: This is a non recursive prop
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
       title: Recursive Page
       type: object
       x-speakeasy-name-override: RecursivePage
@@ -400,29 +404,29 @@ components:
       properties:
         id:
           description: A unique shelf id.
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
           x-stability-level: stable
         search%5Bencoded%5D:
           description: To test json name is percentage encoded
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
         search[decoded]:
           description: To test json name is percentage decoded
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
         theme:
           description: A theme of the shelf (fiction, poetry, etc).
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
           x-stability-level: stable
       title: Bookshelf
       type: object
@@ -436,10 +440,10 @@ components:
             - type: "null"
         shelf:
           description: The ID of the shelf from which to retrieve a book.
+          oneOf:
+            - type: string
+            - type: "null"
           readOnly: false
-          type:
-            - string
-            - "null"
       title: Update Book Request
       type: object
       x-speakeasy-name-override: UpdateBookRequest
@@ -471,11 +475,11 @@ paths:
           required: true
           schema:
             description: The ID of the author resource to retrieve.
-            format: int64
+            oneOf:
+              - format: int64
+                type: string
+              - type: "null"
             readOnly: false
-            type:
-              - string
-              - "null"
       responses:
         "200":
           content:
@@ -520,10 +524,10 @@ paths:
           required: true
           schema:
             description: The genreId field.
+            oneOf:
+              - type: string
+              - type: "null"
             readOnly: false
-            type:
-              - string
-              - "null"
       requestBody:
         content:
           application/json:
@@ -550,10 +554,10 @@ paths:
           required: true
           schema:
             description: The genreId field.
+            oneOf:
+              - type: string
+              - type: "null"
             readOnly: false
-            type:
-              - string
-              - "null"
       responses:
         "200":
           content:
@@ -651,10 +655,10 @@ paths:
           required: true
           schema:
             description: The ID of the shelf to delete.
+            oneOf:
+              - type: string
+              - type: "null"
             readOnly: false
-            type:
-              - string
-              - "null"
       requestBody:
         content:
           application/json:
@@ -684,10 +688,10 @@ paths:
           required: true
           schema:
             description: ID of the shelf which books to list.
+            oneOf:
+              - type: string
+              - type: "null"
             readOnly: false
-            type:
-              - string
-              - "null"
       responses:
         "200":
           content:
@@ -722,10 +726,10 @@ paths:
           required: true
           schema:
             description: The ID of the shelf on which to create a book.
+            oneOf:
+              - type: string
+              - type: "null"
             readOnly: false
-            type:
-              - string
-              - "null"
       requestBody:
         content:
           application/json:
@@ -756,10 +760,10 @@ paths:
           schema:
             deprecated: true
             description: Shelf ID - deprecated, use shelf reference instead
+            oneOf:
+              - type: string
+              - type: "null"
             readOnly: false
-            type:
-              - string
-              - "null"
             x-sunset: "2025-09-30"
         - in: path
           name: book
@@ -797,45 +801,45 @@ paths:
           required: true
           schema:
             description: The ID of the shelf from which to retrieve a book.
+            oneOf:
+              - type: string
+              - type: "null"
             readOnly: false
-            type:
-              - string
-              - "null"
         - in: path
           name: book
           required: true
           schema:
             description: The ID of the book to retrieve.
-            format: int64
+            oneOf:
+              - format: int64
+                type: string
+              - type: "null"
             readOnly: false
-            type:
-              - string
-              - "null"
         - in: query
           name: author
           schema:
             description: The includeAuthor field.
+            oneOf:
+              - type: boolean
+              - type: "null"
             readOnly: false
-            type:
-              - boolean
-              - "null"
         - in: query
           name: page_size
           schema:
             description: The pageSize field.
-            format: int32
+            oneOf:
+              - format: int32
+                type: integer
+              - type: "null"
             readOnly: false
-            type:
-              - integer
-              - "null"
         - in: query
           name: page_token
           schema:
             description: The pageToken field.
+            oneOf:
+              - type: string
+              - type: "null"
             readOnly: false
-            type:
-              - string
-              - "null"
       responses:
         "200":
           content:
@@ -861,10 +865,10 @@ paths:
           schema:
             deprecated: true
             description: Shelf ID - deprecated, use shelf reference instead
+            oneOf:
+              - type: string
+              - type: "null"
             readOnly: false
-            type:
-              - string
-              - "null"
             x-sunset: "2025-09-30"
         - in: path
           name: book
