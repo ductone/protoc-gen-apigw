@@ -6,7 +6,6 @@ components:
       properties:
         policyStepId:
           description: The policyStepId field.
-          nullable: true
           readOnly: false
           type: string
       title: Policy Step
@@ -23,26 +22,17 @@ components:
           - replacePolicy
       properties:
         approve:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepApprove'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepApprove'
         deny:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepDeny'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepDeny'
         reassign:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepReassign'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepReassign'
         replacePolicy:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalReplacePolicy'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalReplacePolicy'
         version:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
-          nullable: true
           readOnly: false
           type: string
       title: Response Policy Approval Step
@@ -51,10 +41,10 @@ components:
       x-speakeasy-name-override: ResponsePolicyApprovalStep
     webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalReplacePolicy:
       description: The ResponsePolicyApprovalReplacePolicy message.
+      nullable: true
       properties:
         comment:
           description: The comment field.
-          nullable: true
           readOnly: false
           type: string
         policySteps:
@@ -69,10 +59,10 @@ components:
       x-speakeasy-name-override: ResponsePolicyApprovalReplacePolicy
     webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepApprove:
       description: The ResponsePolicyApprovalStepApprove message.
+      nullable: true
       properties:
         comment:
           description: optional comment
-          nullable: true
           readOnly: false
           type: string
       title: Response Policy Approval Step Approve
@@ -80,10 +70,10 @@ components:
       x-speakeasy-name-override: ResponsePolicyApprovalStepApprove
     webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepDeny:
       description: The ResponsePolicyApprovalStepDeny message.
+      nullable: true
       properties:
         comment:
           description: optional comment
-          nullable: true
           readOnly: false
           type: string
       title: Response Policy Approval Step Deny
@@ -91,10 +81,10 @@ components:
       x-speakeasy-name-override: ResponsePolicyApprovalStepDeny
     webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepReassign:
       description: The ResponsePolicyApprovalStepReassign message.
+      nullable: true
       properties:
         comment:
           description: optional comment
-          nullable: true
           readOnly: false
           type: string
         newStepUserIds:
@@ -114,7 +104,6 @@ components:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
-          nullable: true
           readOnly: false
           type: string
       title: Response Policy Post Action
@@ -130,18 +119,13 @@ components:
           - errored
       properties:
         complete:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepComplete'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepComplete'
         errored:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepErrored'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepErrored'
         version:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
-          nullable: true
           readOnly: false
           type: string
       title: Response Provision Step
@@ -150,10 +134,10 @@ components:
       x-speakeasy-name-override: ResponseProvisionStep
     webhooks.v1.ResponseProvisionStep.ResponseProvisionStepComplete:
       description: The ResponseProvisionStepComplete message.
+      nullable: true
       properties:
         comment:
           description: optional comment
-          nullable: true
           readOnly: false
           type: string
       title: Response Provision Step Complete
@@ -161,10 +145,10 @@ components:
       x-speakeasy-name-override: ResponseProvisionStepComplete
     webhooks.v1.ResponseProvisionStep.ResponseProvisionStepErrored:
       description: The ResponseProvisionStepErrored message.
+      nullable: true
       properties:
         comment:
           description: optional comment
-          nullable: true
           readOnly: false
           type: string
       title: Response Provision Step Errored
@@ -177,7 +161,6 @@ components:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
-          nullable: true
           readOnly: false
           type: string
       title: Response Test

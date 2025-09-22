@@ -12,7 +12,6 @@ components:
              If your receiver returns any other status code, it is expected to not use the callback url.
 
              This value will match the "Webhook-Callback-Url" header.
-          nullable: true
           readOnly: false
           type: string
         event:
@@ -26,26 +25,22 @@ components:
              - "webhooks.v1.PayloadPolicyApprovalStep"
              - "webhooks.v1.PayloadPolicyPostAction"
              - "webhooks.v1.PayloadProvisionStep"
-          nullable: true
           readOnly: false
           type: string
         payload:
-          oneOf:
-            - additionalProperties: true
-              description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
-              properties:
-                '@type':
-                  description: The type of the serialized message.
-                  type: string
-              readOnly: false
-              type: object
-            - type: "null"
+          additionalProperties: true
+          description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+          properties:
+            '@type':
+              description: The type of the serialized message.
+              type: string
+          readOnly: false
+          type: object
         version:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook body will use a different string.
 
              This value will match the "Webhook-Version" header.
-          nullable: true
           readOnly: false
           type: string
         webhookId:
@@ -53,7 +48,6 @@ components:
             Unique ID for this Webhook. Your receiver should only process this ID once.
 
              This value will match the "Webhook-Id" header.
-          nullable: true
           readOnly: false
           type: string
       title: Body
@@ -78,9 +72,7 @@ components:
           readOnly: false
           type: array
         taskView:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.TaskView'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Policy Approval Step
       type: object
       x-speakeasy-include: true
@@ -103,9 +95,7 @@ components:
           readOnly: false
           type: array
         taskView:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.TaskView'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Policy Post Action
       type: object
       x-speakeasy-include: true
@@ -128,9 +118,7 @@ components:
           readOnly: false
           type: array
         taskView:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.TaskView'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Provision Step
       type: object
       x-speakeasy-include: true
@@ -147,13 +135,11 @@ components:
         search[decoded]:
           deprecated: true
           description: The search[decoded] field.
-          nullable: true
           readOnly: false
           type: string
           x-sunset: "2025-09-30"
         taskId:
           description: The taskId field.
-          nullable: true
           readOnly: false
           type: string
       title: Task View
