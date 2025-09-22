@@ -105,7 +105,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		// but right now WKTs are just rendered inline, and not a Ref.
 		s := sc.schemaForWKT(WellKnownType(m))
 		s.ReadOnly = &readOnly
-		mergeNullable(s, nullable)
+		s.Nullable = nullable
 		return dm_base.CreateSchemaProxy(s)
 	}
 
@@ -291,11 +291,11 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		arraySchema := &dm_base.Schema{
 			Type:        []string{"array"},
 			Description: description,
+			Nullable:    nullable,
 			ReadOnly:    &readOnly,
 			Deprecated:  deprecated,
 			Items:       &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
-		mergeNullable(arraySchema, nullable)
 		// Add extensions if any exist
 		if extensions.Len() > 0 {
 			arraySchema.Extensions = extensions
@@ -307,10 +307,10 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			Type:                 []string{"object"},
 			Deprecated:           deprecated,
 			Description:          description,
+			Nullable:             nullable,
 			ReadOnly:             &readOnly,
 			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
-		mergeNullable(mv, nullable)
 		// Add extensions if any exist
 		if extensions.Len() > 0 {
 			mv.Extensions = extensions
@@ -350,7 +350,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())
 		sv.ReadOnly = &readOnly
-		mergeNullable(sv, nullable)
+		sv.Nullable = nullable
 		sv.Deprecated = deprecated
 		sv.Description = description
 		// Add extensions if any exist
@@ -432,17 +432,7 @@ func mergeNullable(s *dm_base.Schema, nullable *bool) {
 	if nullable == nil || !*nullable {
 		return
 	}
-	addNullType(s)
-}
-
-func addNullType(s *dm_base.Schema) {
-	if s == nil {
-		return
+	if *nullable {
+		s.Nullable = oasTrue()
 	}
-	// ensure "null" appears in the schema type list
-	if !contains("null", s.Type) {
-		s.Type = append(s.Type, "null")
-	}
-	// clear legacy nullable usage
-	s.Nullable = nil
 }

@@ -6,10 +6,9 @@ components:
       properties:
         policyStepId:
           description: The policyStepId field.
+          nullable: true
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
       title: Policy Step
       type: object
       x-speakeasy-name-override: PolicyStep
@@ -43,10 +42,9 @@ components:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
+          nullable: true
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
       title: Response Policy Approval Step
       type: object
       x-speakeasy-include: true
@@ -56,18 +54,16 @@ components:
       properties:
         comment:
           description: The comment field.
+          nullable: true
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
         policySteps:
           description: The policySteps field.
           items:
             $ref: '#/components/schemas/webhooks.v1.PolicyStep'
+          nullable: true
           readOnly: false
-          type:
-            - array
-            - "null"
+          type: array
       title: Response Policy Approval Replace Policy
       type: object
       x-speakeasy-name-override: ResponsePolicyApprovalReplacePolicy
@@ -76,10 +72,9 @@ components:
       properties:
         comment:
           description: optional comment
+          nullable: true
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
       title: Response Policy Approval Step Approve
       type: object
       x-speakeasy-name-override: ResponsePolicyApprovalStepApprove
@@ -88,10 +83,9 @@ components:
       properties:
         comment:
           description: optional comment
+          nullable: true
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
       title: Response Policy Approval Step Deny
       type: object
       x-speakeasy-name-override: ResponsePolicyApprovalStepDeny
@@ -100,18 +94,16 @@ components:
       properties:
         comment:
           description: optional comment
+          nullable: true
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
         newStepUserIds:
           description: The newStepUserIds field.
           items:
             type: string
+          nullable: true
           readOnly: false
-          type:
-            - array
-            - "null"
+          type: array
       title: Response Policy Approval Step Reassign
       type: object
       x-speakeasy-name-override: ResponsePolicyApprovalStepReassign
@@ -122,10 +114,9 @@ components:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
+          nullable: true
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
       title: Response Policy Post Action
       type: object
       x-speakeasy-include: true
@@ -150,10 +141,9 @@ components:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
+          nullable: true
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
       title: Response Provision Step
       type: object
       x-speakeasy-include: true
@@ -163,10 +153,9 @@ components:
       properties:
         comment:
           description: optional comment
+          nullable: true
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
       title: Response Provision Step Complete
       type: object
       x-speakeasy-name-override: ResponseProvisionStepComplete
@@ -175,10 +164,9 @@ components:
       properties:
         comment:
           description: optional comment
+          nullable: true
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
       title: Response Provision Step Errored
       type: object
       x-speakeasy-name-override: ResponseProvisionStepErrored
@@ -189,10 +177,9 @@ components:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
+          nullable: true
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
       title: Response Test
       type: object
       x-speakeasy-include: true
