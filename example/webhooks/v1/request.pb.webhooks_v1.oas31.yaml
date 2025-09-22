@@ -13,9 +13,7 @@ components:
 
              This value will match the "Webhook-Callback-Url" header.
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
         event:
           description: |-
             The type of event that triggered this Webhook.
@@ -28,38 +26,30 @@ components:
              - "webhooks.v1.PayloadPolicyPostAction"
              - "webhooks.v1.PayloadProvisionStep"
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
         payload:
-          oneOf:
-            - additionalProperties: true
-              description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
-              properties:
-                '@type':
-                  description: The type of the serialized message.
-                  type: string
-              readOnly: false
-              type: object
-            - type: "null"
+          additionalProperties: true
+          description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+          properties:
+            '@type':
+              description: The type of the serialized message.
+              type: string
+          readOnly: false
+          type: object
         version:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook body will use a different string.
 
              This value will match the "Webhook-Version" header.
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
         webhookId:
           description: |-
             Unique ID for this Webhook. Your receiver should only process this ID once.
 
              This value will match the "Webhook-Id" header.
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
       title: Body
       type: object
       x-speakeasy-include: true
@@ -78,14 +68,11 @@ components:
                 type: string
             readOnly: false
             type: object
+          nullable: true
           readOnly: false
-          type:
-            - array
-            - "null"
+          type: array
         taskView:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.TaskView'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Policy Approval Step
       type: object
       x-speakeasy-include: true
@@ -104,14 +91,11 @@ components:
                 type: string
             readOnly: false
             type: object
+          nullable: true
           readOnly: false
-          type:
-            - array
-            - "null"
+          type: array
         taskView:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.TaskView'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Policy Post Action
       type: object
       x-speakeasy-include: true
@@ -130,14 +114,11 @@ components:
                 type: string
             readOnly: false
             type: object
+          nullable: true
           readOnly: false
-          type:
-            - array
-            - "null"
+          type: array
         taskView:
-          oneOf:
-            - $ref: '#/components/schemas/webhooks.v1.TaskView'
-            - type: "null"
+          $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Provision Step
       type: object
       x-speakeasy-include: true
@@ -155,16 +136,12 @@ components:
           deprecated: true
           description: The search[decoded] field.
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
           x-sunset: "2025-09-30"
         taskId:
           description: The taskId field.
           readOnly: false
-          type:
-            - string
-            - "null"
+          type: string
       title: Task View
       type: object
       x-speakeasy-name-override: TaskView
