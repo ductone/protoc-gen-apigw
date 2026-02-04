@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	pgs "github.com/lyft/protoc-gen-star"
-	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+	pgs "github.com/lyft/protoc-gen-star/v2"
+	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
 	"google.golang.org/protobuf/testing/protopack"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"

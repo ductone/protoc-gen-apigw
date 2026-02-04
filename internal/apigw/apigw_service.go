@@ -5,8 +5,8 @@ import (
 	"io"
 	"path/filepath"
 
-	pgs "github.com/lyft/protoc-gen-star"
-	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+	pgs "github.com/lyft/protoc-gen-star/v2"
+	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
 )
 
 type serviceTemplateContext struct {

@@ -7,9 +7,8 @@ import (
 	"strconv"
 
 	"github.com/ductone/protoc-gen-apigw/internal/apigw"
-	pgs "github.com/lyft/protoc-gen-star"
-	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
-	"google.golang.org/protobuf/types/pluginpb"
+	pgs "github.com/lyft/protoc-gen-star/v2"
+	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
 )
 
 func main() {
