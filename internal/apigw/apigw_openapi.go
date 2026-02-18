@@ -384,7 +384,8 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 			}),
 		}
 	}
-	for _, sd := range mt.messages {
+	for _, k := range mt.SortedKeys() {
+		sd := mt.messages[k]
 		_ = sc.Message(sd.msg, sd.filter, nil, false, false)
 	}
 	components := &dm_v3.Components{
@@ -743,6 +744,18 @@ func (mt *msgTracker) Add(m pgs.Message) *dm_base.SchemaProxy {
 	fqn := nicerFQN(m)
 	mt.messages[fqn] = &schemaData{path: fqn, msg: m}
 	return dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix + fqn)
+}
+
+// SortedKeys returns the keys of mt.messages in sorted order.
+// This ensures deterministic schema generation regardless of Go's
+// randomized map iteration order.
+func (mt *msgTracker) SortedKeys() []string {
+	keys := make([]string, 0, len(mt.messages))
+	for k := range mt.messages {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func contains[T comparable](needle T, haystack []T) bool {
