@@ -79,11 +79,30 @@ func yamlString(in string) *yaml.Node {
 	return rv
 }
 
+func yamlInt(in int) *yaml.Node {
+	return &yaml.Node{
+		Kind:  yaml.ScalarNode,
+		Tag:   "!!int",
+		Value: strconv.Itoa(in),
+	}
+}
+
 func yamlBool(in bool) *yaml.Node {
 	return &yaml.Node{
 		Kind:  yaml.ScalarNode,
 		Tag:   "!!bool",
 		Value: strconv.FormatBool(in),
+	}
+}
+
+func yamlIntSlice(in []int) *yaml.Node {
+	inner := make([]*yaml.Node, 0, len(in))
+	for _, v := range in {
+		inner = append(inner, yamlInt(v))
+	}
+	return &yaml.Node{
+		Kind:    yaml.SequenceNode,
+		Content: inner,
 	}
 }
 
