@@ -282,7 +282,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	if terraformEntity != nil {
 		// Set the extension
 		extensions.Set("x-speakeasy-entity-operation", terraformEntity)
-		extensions.Set("x-speakeasy-entity-missing-codes", yamlStringSlice([]string{"404"}))
+		extensions.Set("x-speakeasy-entity-missing-codes", yamlIntSlice([]int{404}))
 	}
 
 	// Get pagination values
