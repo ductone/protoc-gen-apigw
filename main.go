@@ -15,10 +15,11 @@ import (
 func main() {
 	// Signal proto3 optional support to protoc.
 	// See: https://github.com/protocolbuffers/protobuf/blob/v3.17.0/docs/implementing_proto3_presence.md
-	feat := uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
+	supportedFeatures := uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
+
 	options := []pgs.InitOption{
 		pgs.DebugEnv("DEBUG_PROTOC_GEN_APIGW"),
-		pgs.SupportedFeatures(&feat),
+		pgs.SupportedFeatures(&supportedFeatures),
 	}
 
 	if ok, _ := strconv.ParseBool(os.Getenv("DEBUG_PROTOC_INPUT")); ok {

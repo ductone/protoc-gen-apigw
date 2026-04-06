@@ -204,7 +204,10 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		obj.Required = required
 	}
 
-	for _, of := range m.OneOfs() {
+	// RealOneOfs excludes synthetic oneofs that protoc generates for proto3
+	// optional fields. Without this, optional fields would be incorrectly
+	// documented as union type members in the OpenAPI description.
+	for _, of := range m.RealOneOfs() {
 		_, _ = fmt.Fprintf(description,
 			"\n\nThis message contains a oneof named %s. "+
 				"Only a single field of the following list may be set at a time:\n",
@@ -269,7 +272,9 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		description = "The " + jn + " field."
 	}
 	var nullable *bool
-	if f.OneOf() != nil {
+	// InRealOneOf excludes synthetic oneofs from proto3 optional fields,
+	// which would otherwise incorrectly set nullable and add oneof documentation.
+	if f.InRealOneOf() {
 		nullable = oasTrue()
 		description += "\nThis field is part of the `" + f.OneOf().Name().String() + "` oneof.\n" +
 			"See the documentation for `" + nicerFQN(f.Message()) + "` for more details."
