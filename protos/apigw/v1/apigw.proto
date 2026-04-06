@@ -37,6 +37,11 @@ message MessageOption {
 
   // Set this to process this message as the body of a webhook
   string webhook_request_name = 4;
+
+  // Override the x-speakeasy-name-override value for this message in the
+  // generated OpenAPI spec. Use this to resolve name collisions when two
+  // messages in different packages share the same short name (e.g., "Field").
+  string name_override = 5;
 }
 
 message FieldOption {

@@ -160,9 +160,10 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		_, _ = description.WriteString(comments)
 	}
 
+	nameOverride := speakeasyNameOverride(m, mopt)
 	deprecated := oasBool(m.Descriptor().GetOptions().GetDeprecated())
 	extensions := orderedmap.New[string, *yaml.Node]()
-	extensions.Set("x-speakeasy-name-override", yamlString(m.Name().UpperCamelCase().String()))
+	extensions.Set("x-speakeasy-name-override", yamlString(nameOverride))
 	obj := &dm_base.Schema{
 		Type:       []string{"object"},
 		Properties: orderedmap.New[string, *dm_base.SchemaProxy](),
@@ -203,7 +204,10 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 		obj.Required = required
 	}
 
-	for _, of := range m.OneOfs() {
+	// RealOneOfs excludes synthetic oneofs that protoc generates for proto3
+	// optional fields. Without this, optional fields would be incorrectly
+	// documented as union type members in the OpenAPI description.
+	for _, of := range m.RealOneOfs() {
 		_, _ = fmt.Fprintf(description,
 			"\n\nThis message contains a oneof named %s. "+
 				"Only a single field of the following list may be set at a time:\n",
@@ -268,7 +272,9 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		description = "The " + jn + " field."
 	}
 	var nullable *bool
-	if f.OneOf() != nil {
+	// InRealOneOf excludes synthetic oneofs from proto3 optional fields,
+	// which would otherwise incorrectly set nullable and add oneof documentation.
+	if f.InRealOneOf() {
 		nullable = oasTrue()
 		description += "\nThis field is part of the `" + f.OneOf().Name().String() + "` oneof.\n" +
 			"See the documentation for `" + nicerFQN(f.Message()) + "` for more details."
@@ -422,6 +428,16 @@ func getFieldDeprecation(f pgs.Field) *apigw_v1.Deprecation {
 		}
 	}
 	return nil
+}
+
+// speakeasyNameOverride returns the x-speakeasy-name-override value for a message.
+// If the message has an explicit name_override option set, that value is used.
+// Otherwise it falls back to the bare UpperCamelCase message name.
+func speakeasyNameOverride(m pgs.Message, mopt *apigw_v1.MessageOption) string {
+	if mopt != nil && mopt.GetNameOverride() != "" {
+		return mopt.GetNameOverride()
+	}
+	return m.Name().UpperCamelCase().String()
 }
 
 func mergeNullable(s *dm_base.Schema, nullable *bool) {

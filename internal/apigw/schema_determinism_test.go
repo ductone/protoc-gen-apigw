@@ -55,6 +55,7 @@ func (f *mockField) Name() pgs.Name                               { return f.nam
 func (f *mockField) FullyQualifiedName() string                   { return "." + string(f.name) }
 func (f *mockField) Message() pgs.Message                         { return f.msg }
 func (f *mockField) OneOf() pgs.OneOf                             { return f.oneOf }
+func (f *mockField) InRealOneOf() bool                            { return f.oneOf != nil }
 func (f *mockField) Type() pgs.FieldType                          { return f.ftype }
 func (f *mockField) Descriptor() *descriptor.FieldDescriptorProto { return f.descPB }
 func (f *mockField) SourceCodeInfo() pgs.SourceCodeInfo           { return &mockSourceCodeInfo{} }
@@ -88,6 +89,7 @@ func (m *mockMessage) IsWellKnown() bool                       { return false }
 func (m *mockMessage) WellKnownType() pgs.WellKnownType        { return pgs.UnknownWKT }
 func (m *mockMessage) NonOneOfFields() []pgs.Field             { return m.nonOneOfFields }
 func (m *mockMessage) OneOfs() []pgs.OneOf                     { return m.oneOfs }
+func (m *mockMessage) RealOneOfs() []pgs.OneOf                 { return m.oneOfs }
 func (m *mockMessage) SourceCodeInfo() pgs.SourceCodeInfo      { return &mockSourceCodeInfo{} }
 func (m *mockMessage) Descriptor() *descriptor.DescriptorProto { return m.descPB }
 func (m *mockMessage) Messages() []pgs.Message                 { return nil }
