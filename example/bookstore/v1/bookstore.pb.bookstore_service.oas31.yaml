@@ -611,6 +611,8 @@ paths:
       summary: List Books
       tags:
         - Books
+      x-speakeasy-entity-missing-codes:
+        - 404
       x-speakeasy-entity-operation:
         terraform-datasource:
           - Book#read#2
@@ -652,6 +654,8 @@ paths:
       summary: Create Book
       tags:
         - Books
+      x-speakeasy-entity-missing-codes:
+        - 404
       x-speakeasy-entity-operation:
         terraform-resource: Book#create
       x-speakeasy-group: Bookstore
@@ -693,6 +697,8 @@ paths:
       summary: Delete Book
       tags:
         - Books
+      x-speakeasy-entity-missing-codes:
+        - 404
       x-speakeasy-entity-operation:
         terraform-resource: Book#delete
       x-speakeasy-group: Bookstore
@@ -745,6 +751,8 @@ paths:
       summary: Get Book
       tags:
         - Books
+      x-speakeasy-entity-missing-codes:
+        - 404
       x-speakeasy-entity-operation:
         terraform-datasource:
         terraform-resource: Book#read
@@ -786,6 +794,8 @@ paths:
       summary: Update Book
       tags:
         - Books
+      x-speakeasy-entity-missing-codes:
+        - 404
       x-speakeasy-entity-operation:
         terraform-resource: Book#update
       x-speakeasy-group: Bookstore
