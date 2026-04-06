@@ -17,33 +17,15 @@
 package ast
 
 import (
-    `unsafe`
-    `unicode/utf8`
+	"unsafe"
 
-    `github.com/bytedance/sonic/internal/rt`
+	"github.com/bytedance/sonic/internal/rt"
 )
-
-//go:noescape
-//go:linkname memmove runtime.memmove
-//goland:noinspection GoUnusedParameter
-func memmove(to unsafe.Pointer, from unsafe.Pointer, n uintptr)
-
-//go:linkname unsafe_NewArray reflect.unsafe_NewArray
-//goland:noinspection GoUnusedParameter
-func unsafe_NewArray(typ *rt.GoType, n int) unsafe.Pointer
 
 //go:nosplit
 func mem2ptr(s []byte) unsafe.Pointer {
     return (*rt.GoSlice)(unsafe.Pointer(&s)).Ptr
 }
-
-var (
-    //go:linkname safeSet encoding/json.safeSet
-    safeSet [utf8.RuneSelf]bool
-
-    //go:linkname hex encoding/json.hex
-    hex string
-)
 
 //go:linkname unquoteBytes encoding/json.unquoteBytes
 func unquoteBytes(s []byte) (t []byte, ok bool)

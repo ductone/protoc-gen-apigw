@@ -448,7 +448,7 @@ func Test_fieldLevelStabilityAndDeprecation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Test the helper functions directly with field options
-			var gotStability apigw_v1.Stability = apigw_v1.Stability_STABILITY_UNSPECIFIED
+			var gotStability = apigw_v1.Stability_STABILITY_UNSPECIFIED
 			var gotDeprecation *apigw_v1.Deprecation
 
 			// Simulate what getFieldStability and getFieldDeprecation do

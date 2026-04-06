@@ -178,7 +178,7 @@ func (self *traverser) decodeArray() error {
     /* allocate array space and parse every element */
     if err := self.visitor.OnArrayBegin(_DEFAULT_NODE_CAP); err != nil {
         if err == VisitOPSkip {
-            // NOTICE: for user needs to skip entiry object
+            // NOTICE: for user needs to skip entry object
             self.parser.p -= 1
             if _, e := self.parser.skipFast(); e != 0 {
                 return e
@@ -233,7 +233,7 @@ func (self *traverser) decodeObject() error {
     /* allocate object space and decode each pair */
     if err := self.visitor.OnObjectBegin(_DEFAULT_NODE_CAP); err != nil {
         if err == VisitOPSkip {
-            // NOTICE: for user needs to skip entiry object
+            // NOTICE: for user needs to skip entry object
             self.parser.p -= 1
             if _, e := self.parser.skipFast(); e != 0 {
                 return e
@@ -251,6 +251,7 @@ func (self *traverser) decodeObject() error {
 
     /* check for empty object */
     if self.parser.s[self.parser.p] == '}' {
+        self.parser.p++
         return self.visitor.OnObjectEnd()
     }
 
@@ -326,6 +327,6 @@ func (self *traverser) decodeString(iv int64, ep int) error {
     return self.visitor.OnString(out)
 }
 
-// If visitor return this error on `OnObjectBegin()` or `OnArrayBegin()`, 
-// the transverer will skip entiry object or array
+// If visitor return this error on `OnObjectBegin()` or `OnArrayBegin()`,
+// the traverser will skip entry object or array
 var VisitOPSkip = errors.New("")

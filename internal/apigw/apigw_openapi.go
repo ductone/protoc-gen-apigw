@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/fatih/camelcase"
-	pgs "github.com/lyft/protoc-gen-star"
-	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+	pgs "github.com/lyft/protoc-gen-star/v2"
+	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 	dm_v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
@@ -239,7 +239,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		}
 		if p.IsParam {
 			paramName := canonicalRouteData.params[p.ParamIndex]
-			if _, err := snakeRoute.WriteString(fmt.Sprintf("{%s}", paramName)); err != nil {
+			if _, err := fmt.Fprintf(&snakeRoute, "{%s}", paramName); err != nil {
 				return nil, nil, nil, err
 			}
 		} else {

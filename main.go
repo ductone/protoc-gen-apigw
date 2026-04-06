@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/ductone/protoc-gen-apigw/internal/apigw"
-	pgs "github.com/lyft/protoc-gen-star"
-	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+	pgs "github.com/lyft/protoc-gen-star/v2"
+	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
@@ -38,7 +39,7 @@ func main() {
 	}
 
 	if fname := os.Getenv("DEBUG_PROTOC_USE_FILE"); fname != "" {
-		data, err := os.ReadFile(fname)
+		data, err := os.ReadFile(filepath.Clean(fname))
 		if err != nil {
 			panic(err)
 		}

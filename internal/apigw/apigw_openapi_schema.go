@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/fatih/camelcase"
-	pgs "github.com/lyft/protoc-gen-star"
+	pgs "github.com/lyft/protoc-gen-star/v2"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
 	"golang.org/x/text/cases"
