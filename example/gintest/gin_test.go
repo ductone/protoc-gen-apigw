@@ -29,11 +29,11 @@ func TestGinRouter(t *testing.T) {
 	// TODO(pquerna): table tests for a bunch of different methods and behavoirs
 
 	w := httptest.NewRecorder()
-	engine.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/shelves", nil))
+	engine.ServeHTTP(w, httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/shelves", nil))
 	require.Equal(t, http.StatusNotImplemented, w.Code)
 
 	w = httptest.NewRecorder()
-	engine.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/shelf", jsonify(t, map[string]interface{}{
+	engine.ServeHTTP(w, httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/shelf", jsonify(t, map[string]interface{}{
 		"shelf": map[string]interface{}{
 			"id":                  "123",
 			"theme":               "test",
@@ -48,13 +48,13 @@ func TestGinRouter(t *testing.T) {
 	require.True(t, proto.Equal(&bookstore_v1.Shelf{Id: "123", Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"}, rb.Shelf))
 
 	w = httptest.NewRecorder()
-	engine.ServeHTTP(w, httptest.NewRequest(http.MethodDelete, "/shelves/123", nil))
+	engine.ServeHTTP(w, httptest.NewRequestWithContext(context.Background(), http.MethodDelete, "/shelves/123", nil))
 	require.Equal(t, http.StatusOK, w.Code)
 	require.Equal(t, "{}", w.Body.String())
 	require.Equal(t, "foo", w.Header().Get("x-thing"))
 
 	w = httptest.NewRecorder()
-	engine.ServeHTTP(w, httptest.NewRequest(http.MethodDelete, "/shelves/123/books/456", nil))
+	engine.ServeHTTP(w, httptest.NewRequestWithContext(context.Background(), http.MethodDelete, "/shelves/123/books/456", nil))
 	require.Equal(t, http.StatusOK, w.Code)
 	require.Equal(t, "{}", w.Body.String())
 }

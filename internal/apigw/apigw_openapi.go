@@ -239,7 +239,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		}
 		if p.IsParam {
 			paramName := canonicalRouteData.params[p.ParamIndex]
-			if _, err := snakeRoute.WriteString(fmt.Sprintf("{%s}", paramName)); err != nil {
+			if _, err := fmt.Fprintf(&snakeRoute, "{%s}", paramName); err != nil {
 				return nil, nil, nil, err
 			}
 		} else {

@@ -85,7 +85,7 @@ func TestFieldLevelStabilityExtraction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Simulate the field stability extraction logic
-			var gotStability apigw_v1.Stability = apigw_v1.Stability_STABILITY_UNSPECIFIED
+			var gotStability = apigw_v1.Stability_STABILITY_UNSPECIFIED
 			for _, fo := range tt.fieldOptions {
 				if fo.Stability != apigw_v1.Stability_STABILITY_UNSPECIFIED {
 					gotStability = fo.Stability
@@ -335,7 +335,7 @@ func TestFieldLevelExtensionGenerationDetailed(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Extract field-level information
-			var fieldStability apigw_v1.Stability = apigw_v1.Stability_STABILITY_UNSPECIFIED
+			var fieldStability = apigw_v1.Stability_STABILITY_UNSPECIFIED
 			var fieldDeprecation *apigw_v1.Deprecation
 
 			for _, fo := range tt.fieldOptions {
@@ -520,7 +520,7 @@ func TestFieldLevelComplexScenarios(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Extract field-level information
-			var fieldStability apigw_v1.Stability = apigw_v1.Stability_STABILITY_UNSPECIFIED
+			var fieldStability = apigw_v1.Stability_STABILITY_UNSPECIFIED
 			var fieldDeprecation *apigw_v1.Deprecation
 
 			for _, fo := range tt.fieldOptions {

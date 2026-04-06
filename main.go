@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/ductone/protoc-gen-apigw/internal/apigw"
@@ -38,7 +39,7 @@ func main() {
 	}
 
 	if fname := os.Getenv("DEBUG_PROTOC_USE_FILE"); fname != "" {
-		data, err := os.ReadFile(fname)
+		data, err := os.ReadFile(filepath.Clean(fname))
 		if err != nil {
 			panic(err)
 		}
