@@ -3,9 +3,10 @@ package apigw
 import (
 	"testing"
 
-	"github.com/golang/protobuf/proto"                    //nolint:staticcheck // required by pgs v0.6.2 interfaces
-	"github.com/golang/protobuf/protoc-gen-go/descriptor" //nolint:staticcheck // required by pgs v0.6.2 interfaces
-	pgs "github.com/lyft/protoc-gen-star"
+	pgs "github.com/lyft/protoc-gen-star/v2"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoimpl"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 // Mock types for testing schema generation determinism.
@@ -17,7 +18,7 @@ import (
 // mockSourceCodeInfo implements pgs.SourceCodeInfo (all exported methods).
 type mockSourceCodeInfo struct{}
 
-func (m *mockSourceCodeInfo) Location() *descriptor.SourceCodeInfo_Location { return nil }
+func (m *mockSourceCodeInfo) Location() *descriptorpb.SourceCodeInfo_Location { return nil }
 func (m *mockSourceCodeInfo) LeadingComments() string                       { return "" }
 func (m *mockSourceCodeInfo) LeadingDetachedComments() []string             { return nil }
 func (m *mockSourceCodeInfo) TrailingComments() string                      { return "" }
@@ -48,7 +49,7 @@ type mockField struct {
 	msg    pgs.Message
 	oneOf  pgs.OneOf
 	ftype  pgs.FieldType
-	descPB *descriptor.FieldDescriptorProto
+	descPB *descriptorpb.FieldDescriptorProto
 }
 
 func (f *mockField) Name() pgs.Name                               { return f.name }
@@ -57,9 +58,9 @@ func (f *mockField) Message() pgs.Message                         { return f.msg
 func (f *mockField) OneOf() pgs.OneOf                             { return f.oneOf }
 func (f *mockField) InRealOneOf() bool                            { return f.oneOf != nil }
 func (f *mockField) Type() pgs.FieldType                          { return f.ftype }
-func (f *mockField) Descriptor() *descriptor.FieldDescriptorProto { return f.descPB }
+func (f *mockField) Descriptor() *descriptorpb.FieldDescriptorProto { return f.descPB }
 func (f *mockField) SourceCodeInfo() pgs.SourceCodeInfo           { return &mockSourceCodeInfo{} }
-func (f *mockField) Extension(_ *proto.ExtensionDesc, _ interface{}) (bool, error) {
+func (f *mockField) Extension(_ *protoimpl.ExtensionInfo, _ interface{}) (bool, error) {
 	return false, nil
 }
 
@@ -80,7 +81,7 @@ type mockMessage struct {
 	fqn            string
 	nonOneOfFields []pgs.Field
 	oneOfs         []pgs.OneOf
-	descPB         *descriptor.DescriptorProto
+	descPB         *descriptorpb.DescriptorProto
 }
 
 func (m *mockMessage) Name() pgs.Name                          { return m.name }
@@ -91,29 +92,29 @@ func (m *mockMessage) NonOneOfFields() []pgs.Field             { return m.nonOne
 func (m *mockMessage) OneOfs() []pgs.OneOf                     { return m.oneOfs }
 func (m *mockMessage) RealOneOfs() []pgs.OneOf                 { return m.oneOfs }
 func (m *mockMessage) SourceCodeInfo() pgs.SourceCodeInfo      { return &mockSourceCodeInfo{} }
-func (m *mockMessage) Descriptor() *descriptor.DescriptorProto { return m.descPB }
+func (m *mockMessage) Descriptor() *descriptorpb.DescriptorProto { return m.descPB }
 func (m *mockMessage) Messages() []pgs.Message                 { return nil }
 func (m *mockMessage) AllMessages() []pgs.Message              { return nil }
 func (m *mockMessage) MapEntries() []pgs.Message               { return nil }
 func (m *mockMessage) Enums() []pgs.Enum                       { return nil }
 func (m *mockMessage) AllEnums() []pgs.Enum                    { return nil }
 func (m *mockMessage) DefinedExtensions() []pgs.Extension      { return nil }
-func (m *mockMessage) Extension(_ *proto.ExtensionDesc, _ interface{}) (bool, error) {
+func (m *mockMessage) Extension(_ *protoimpl.ExtensionInfo, _ interface{}) (bool, error) {
 	return false, nil
 }
 
 // Helper constructors
 
-func newMockDescriptorProto() *descriptor.DescriptorProto {
-	return &descriptor.DescriptorProto{
-		Options: &descriptor.MessageOptions{},
+func newMockDescriptorProto() *descriptorpb.DescriptorProto {
+	return &descriptorpb.DescriptorProto{
+		Options: &descriptorpb.MessageOptions{},
 	}
 }
 
-func newMockFieldDescriptorProto(jsonName string) *descriptor.FieldDescriptorProto {
-	return &descriptor.FieldDescriptorProto{
+func newMockFieldDescriptorProto(jsonName string) *descriptorpb.FieldDescriptorProto {
+	return &descriptorpb.FieldDescriptorProto{
 		JsonName: proto.String(jsonName),
-		Options:  &descriptor.FieldOptions{},
+		Options:  &descriptorpb.FieldOptions{},
 	}
 }
 

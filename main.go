@@ -9,6 +9,7 @@ import (
 	"github.com/ductone/protoc-gen-apigw/internal/apigw"
 	pgs "github.com/lyft/protoc-gen-star/v2"
 	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
+	"google.golang.org/protobuf/types/pluginpb"
 )
 
 func main() {
