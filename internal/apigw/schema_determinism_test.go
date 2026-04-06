@@ -19,9 +19,9 @@ import (
 type mockSourceCodeInfo struct{}
 
 func (m *mockSourceCodeInfo) Location() *descriptorpb.SourceCodeInfo_Location { return nil }
-func (m *mockSourceCodeInfo) LeadingComments() string                       { return "" }
-func (m *mockSourceCodeInfo) LeadingDetachedComments() []string             { return nil }
-func (m *mockSourceCodeInfo) TrailingComments() string                      { return "" }
+func (m *mockSourceCodeInfo) LeadingComments() string                         { return "" }
+func (m *mockSourceCodeInfo) LeadingDetachedComments() []string               { return nil }
+func (m *mockSourceCodeInfo) TrailingComments() string                        { return "" }
 
 // mockFieldType implements pgs.FieldType via embedding + overrides.
 type mockFieldType struct {
@@ -52,14 +52,14 @@ type mockField struct {
 	descPB *descriptorpb.FieldDescriptorProto
 }
 
-func (f *mockField) Name() pgs.Name                               { return f.name }
-func (f *mockField) FullyQualifiedName() string                   { return "." + string(f.name) }
-func (f *mockField) Message() pgs.Message                         { return f.msg }
-func (f *mockField) OneOf() pgs.OneOf                             { return f.oneOf }
-func (f *mockField) InRealOneOf() bool                            { return f.oneOf != nil }
-func (f *mockField) Type() pgs.FieldType                          { return f.ftype }
+func (f *mockField) Name() pgs.Name                                 { return f.name }
+func (f *mockField) FullyQualifiedName() string                     { return "." + string(f.name) }
+func (f *mockField) Message() pgs.Message                           { return f.msg }
+func (f *mockField) OneOf() pgs.OneOf                               { return f.oneOf }
+func (f *mockField) InRealOneOf() bool                              { return f.oneOf != nil }
+func (f *mockField) Type() pgs.FieldType                            { return f.ftype }
 func (f *mockField) Descriptor() *descriptorpb.FieldDescriptorProto { return f.descPB }
-func (f *mockField) SourceCodeInfo() pgs.SourceCodeInfo           { return &mockSourceCodeInfo{} }
+func (f *mockField) SourceCodeInfo() pgs.SourceCodeInfo             { return &mockSourceCodeInfo{} }
 func (f *mockField) Extension(_ *protoimpl.ExtensionInfo, _ interface{}) (bool, error) {
 	return false, nil
 }
@@ -84,21 +84,21 @@ type mockMessage struct {
 	descPB         *descriptorpb.DescriptorProto
 }
 
-func (m *mockMessage) Name() pgs.Name                          { return m.name }
-func (m *mockMessage) FullyQualifiedName() string              { return m.fqn }
-func (m *mockMessage) IsWellKnown() bool                       { return false }
-func (m *mockMessage) WellKnownType() pgs.WellKnownType        { return pgs.UnknownWKT }
-func (m *mockMessage) NonOneOfFields() []pgs.Field             { return m.nonOneOfFields }
-func (m *mockMessage) OneOfs() []pgs.OneOf                     { return m.oneOfs }
-func (m *mockMessage) RealOneOfs() []pgs.OneOf                 { return m.oneOfs }
-func (m *mockMessage) SourceCodeInfo() pgs.SourceCodeInfo      { return &mockSourceCodeInfo{} }
+func (m *mockMessage) Name() pgs.Name                            { return m.name }
+func (m *mockMessage) FullyQualifiedName() string                { return m.fqn }
+func (m *mockMessage) IsWellKnown() bool                         { return false }
+func (m *mockMessage) WellKnownType() pgs.WellKnownType          { return pgs.UnknownWKT }
+func (m *mockMessage) NonOneOfFields() []pgs.Field               { return m.nonOneOfFields }
+func (m *mockMessage) OneOfs() []pgs.OneOf                       { return m.oneOfs }
+func (m *mockMessage) RealOneOfs() []pgs.OneOf                   { return m.oneOfs }
+func (m *mockMessage) SourceCodeInfo() pgs.SourceCodeInfo        { return &mockSourceCodeInfo{} }
 func (m *mockMessage) Descriptor() *descriptorpb.DescriptorProto { return m.descPB }
-func (m *mockMessage) Messages() []pgs.Message                 { return nil }
-func (m *mockMessage) AllMessages() []pgs.Message              { return nil }
-func (m *mockMessage) MapEntries() []pgs.Message               { return nil }
-func (m *mockMessage) Enums() []pgs.Enum                       { return nil }
-func (m *mockMessage) AllEnums() []pgs.Enum                    { return nil }
-func (m *mockMessage) DefinedExtensions() []pgs.Extension      { return nil }
+func (m *mockMessage) Messages() []pgs.Message                   { return nil }
+func (m *mockMessage) AllMessages() []pgs.Message                { return nil }
+func (m *mockMessage) MapEntries() []pgs.Message                 { return nil }
+func (m *mockMessage) Enums() []pgs.Enum                         { return nil }
+func (m *mockMessage) AllEnums() []pgs.Enum                      { return nil }
+func (m *mockMessage) DefinedExtensions() []pgs.Extension        { return nil }
 func (m *mockMessage) Extension(_ *protoimpl.ExtensionInfo, _ interface{}) (bool, error) {
 	return false, nil
 }
