@@ -56,6 +56,7 @@ func (f *mockField) Name() pgs.Name                               { return f.nam
 func (f *mockField) FullyQualifiedName() string                   { return "." + string(f.name) }
 func (f *mockField) Message() pgs.Message                         { return f.msg }
 func (f *mockField) OneOf() pgs.OneOf                             { return f.oneOf }
+func (f *mockField) InOneOf() bool                                { return f.oneOf != nil }
 func (f *mockField) InRealOneOf() bool                            { return f.oneOf != nil }
 func (f *mockField) Type() pgs.FieldType                          { return f.ftype }
 func (f *mockField) Descriptor() *descriptor.FieldDescriptorProto { return f.descPB }
