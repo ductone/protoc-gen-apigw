@@ -1,6 +1,7 @@
 package apigw
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"                    //nolint:staticcheck // required by pgs v0.6.2 interfaces
@@ -76,11 +77,12 @@ func (o *mockOneOf) Fields() []pgs.Field { return o.fields }
 // mockMessage implements pgs.Message via embedding + overrides.
 type mockMessage struct {
 	pgs.Message
-	name           pgs.Name
-	fqn            string
-	nonOneOfFields []pgs.Field
-	oneOfs         []pgs.OneOf
-	descPB         *descriptor.DescriptorProto
+	name                pgs.Name
+	fqn                 string
+	nonOneOfFields      []pgs.Field
+	syntheticOneOfField []pgs.Field
+	oneOfs              []pgs.OneOf
+	descPB              *descriptor.DescriptorProto
 }
 
 func (m *mockMessage) Name() pgs.Name                          { return m.name }
@@ -90,6 +92,7 @@ func (m *mockMessage) WellKnownType() pgs.WellKnownType        { return pgs.Unkn
 func (m *mockMessage) NonOneOfFields() []pgs.Field             { return m.nonOneOfFields }
 func (m *mockMessage) OneOfs() []pgs.OneOf                     { return m.oneOfs }
 func (m *mockMessage) RealOneOfs() []pgs.OneOf                 { return m.oneOfs }
+func (m *mockMessage) SyntheticOneOfFields() []pgs.Field       { return m.syntheticOneOfField }
 func (m *mockMessage) SourceCodeInfo() pgs.SourceCodeInfo      { return &mockSourceCodeInfo{} }
 func (m *mockMessage) Descriptor() *descriptor.DescriptorProto { return m.descPB }
 func (m *mockMessage) Messages() []pgs.Message                 { return nil }
@@ -371,4 +374,243 @@ func TestSchemaDeterminism_UserRef(t *testing.T) {
 			}
 		}
 	})
+}
+
+// getProperties returns the property names from a schema in the container.
+func getProperties(sc *schemaContainer, fqn string) []string {
+	proxy := sc.schemas.Value(fqn)
+	if proxy == nil {
+		return nil
+	}
+	schema := proxy.Schema()
+	if schema == nil || schema.Properties == nil {
+		return nil
+	}
+	var names []string
+	for pair := schema.Properties.Oldest(); pair != nil; pair = pair.Next() {
+		names = append(names, pair.Key)
+	}
+	return names
+}
+
+// getDescription returns the description from a schema in the container.
+func getDescription(sc *schemaContainer, fqn string) string {
+	proxy := sc.schemas.Value(fqn)
+	if proxy == nil {
+		return ""
+	}
+	schema := proxy.Schema()
+	if schema == nil {
+		return ""
+	}
+	return schema.Description
+}
+
+// buildThreeFieldTypeMessage creates a message with all three field types.
+//
+// This mirrors the following proto3 message definition:
+//
+//	message ThreeFieldMsg {
+//	  // Non-oneof fields: regular fields, not in any oneof.
+//	  // pgs exposes these via NonOneOfFields().
+//	  string name = 1;
+//	  string description = 2;
+//
+//	  // Proto3 optional fields: the `optional` keyword causes protoc to wrap
+//	  // each field in a synthetic (compiler-generated) oneof. This gives the
+//	  // field explicit presence semantics (can distinguish "not set" from the
+//	  // zero value). In the descriptor the oneof exists, but pgs marks it
+//	  // synthetic — so NonOneOfFields() skips these (they're in a oneof) and
+//	  // RealOneOfs() skips the oneof (it's synthetic). SyntheticOneOfFields()
+//	  // is the only way to reach them.
+//	  optional string optional_tag = 3;
+//	  optional string optional_note = 4;
+//
+//	  // Real oneof fields: an explicit oneof block written by the user.
+//	  // pgs exposes these via RealOneOfs(); each member field returns true
+//	  // from InRealOneOf(), which triggers nullable and oneof documentation.
+//	  oneof choice {
+//	    string choice_a = 5;
+//	    string choice_b = 6;
+//	  }
+//	}
+func buildThreeFieldTypeMessage() *mockMessage {
+	msg := &mockMessage{
+		name:   "ThreeFieldMsg",
+		fqn:    ".test.v1.ThreeFieldMsg",
+		descPB: newMockDescriptorProto(),
+	}
+
+	realOneOf := &mockOneOf{name: "choice"}
+	choiceA := newStringField("choiceA", msg)
+	choiceA.oneOf = realOneOf
+	choiceB := newStringField("choiceB", msg)
+	choiceB.oneOf = realOneOf
+	realOneOf.fields = []pgs.Field{choiceA, choiceB}
+
+	msg.nonOneOfFields = []pgs.Field{
+		newStringField("name", msg),
+		newStringField("description", msg),
+	}
+	msg.syntheticOneOfField = []pgs.Field{
+		newStringField("optionalTag", msg),
+		newStringField("optionalNote", msg),
+	}
+	msg.oneOfs = []pgs.OneOf{realOneOf}
+
+	return msg
+}
+
+// TestFieldTypes_AllPresent verifies that non-oneof, synthetic oneof (proto3
+// optional), and real oneof fields all appear as properties in the schema.
+func TestFieldTypes_AllPresent(t *testing.T) {
+	msg := buildThreeFieldTypeMessage()
+	sc := newSchemaContainer()
+	sc.Message(msg, nil, nil, false, false)
+
+	props := getProperties(sc, "test.v1.ThreeFieldMsg")
+	if props == nil {
+		t.Fatal("ThreeFieldMsg schema not found or has no properties")
+	}
+
+	expected := map[string]bool{
+		"name":         false,
+		"description":  false,
+		"optionalTag":  false,
+		"optionalNote": false,
+		"choiceA":      false,
+		"choiceB":      false,
+	}
+	for _, p := range props {
+		if _, ok := expected[p]; ok {
+			expected[p] = true
+		}
+	}
+	for name, found := range expected {
+		if !found {
+			t.Errorf("expected property %q not found in schema", name)
+		}
+	}
+}
+
+// TestFieldTypes_SyntheticNotNullable verifies that proto3 optional fields
+// (synthetic oneof) are NOT nullable, while real oneof fields ARE nullable.
+func TestFieldTypes_SyntheticNotNullable(t *testing.T) {
+	msg := buildThreeFieldTypeMessage()
+	sc := newSchemaContainer()
+	sc.Message(msg, nil, nil, false, false)
+
+	proxy := sc.schemas.Value("test.v1.ThreeFieldMsg")
+	if proxy == nil {
+		t.Fatal("ThreeFieldMsg schema not found")
+	}
+	schema := proxy.Schema()
+	if schema == nil {
+		t.Fatal("ThreeFieldMsg schema is nil")
+	}
+
+	// Real oneof fields should be nullable
+	for _, name := range []string{"choiceA", "choiceB"} {
+		sp := schema.Properties.Value(name)
+		if sp == nil {
+			t.Fatalf("property %q not found", name)
+		}
+		fs := sp.Schema()
+		if fs == nil {
+			t.Fatalf("schema for %q is nil", name)
+		}
+		if fs.Nullable == nil || !*fs.Nullable {
+			t.Errorf("real oneof field %q should be nullable", name)
+		}
+	}
+
+	// Synthetic oneof fields should NOT be nullable
+	for _, name := range []string{"optionalTag", "optionalNote"} {
+		sp := schema.Properties.Value(name)
+		if sp == nil {
+			t.Fatalf("property %q not found", name)
+		}
+		fs := sp.Schema()
+		if fs == nil {
+			t.Fatalf("schema for %q is nil", name)
+		}
+		if fs.Nullable != nil && *fs.Nullable {
+			t.Errorf("synthetic oneof field %q should NOT be nullable", name)
+		}
+	}
+
+	// Non-oneof fields should NOT be nullable
+	for _, name := range []string{"name", "description"} {
+		sp := schema.Properties.Value(name)
+		if sp == nil {
+			t.Fatalf("property %q not found", name)
+		}
+		fs := sp.Schema()
+		if fs == nil {
+			t.Fatalf("schema for %q is nil", name)
+		}
+		if fs.Nullable != nil && *fs.Nullable {
+			t.Errorf("non-oneof field %q should NOT be nullable", name)
+		}
+	}
+}
+
+// TestFieldTypes_OneOfDocumentation verifies that the schema description
+// documents real oneofs but does NOT mention synthetic oneofs.
+func TestFieldTypes_OneOfDocumentation(t *testing.T) {
+	msg := buildThreeFieldTypeMessage()
+	sc := newSchemaContainer()
+	sc.Message(msg, nil, nil, false, false)
+
+	desc := getDescription(sc, "test.v1.ThreeFieldMsg")
+
+	// Real oneof "choice" should be documented
+	if !strings.Contains(desc, "choice") {
+		t.Error("description should document real oneof 'choice'")
+	}
+	if !strings.Contains(desc, "choiceA") {
+		t.Error("description should list real oneof member 'choiceA'")
+	}
+	if !strings.Contains(desc, "choiceB") {
+		t.Error("description should list real oneof member 'choiceB'")
+	}
+
+	// Synthetic oneof fields should NOT be mentioned in the oneof documentation
+	if strings.Contains(desc, "optionalTag") {
+		t.Error("description should NOT mention synthetic oneof field 'optionalTag'")
+	}
+	if strings.Contains(desc, "optionalNote") {
+		t.Error("description should NOT mention synthetic oneof field 'optionalNote'")
+	}
+}
+
+// TestFieldTypes_FilterAppliesToSynthetic verifies that the filter parameter
+// excludes synthetic oneof fields just like it does non-oneof fields.
+func TestFieldTypes_FilterAppliesToSynthetic(t *testing.T) {
+	msg := buildThreeFieldTypeMessage()
+	sc := newSchemaContainer()
+	// Filter out "optionalTag" — it should be excluded from properties.
+	sc.Message(msg, []string{"optionalTag"}, nil, false, false)
+
+	props := getProperties(sc, "test.v1.ThreeFieldMsgInput")
+	if props == nil {
+		t.Fatal("ThreeFieldMsgInput schema not found or has no properties")
+	}
+
+	for _, p := range props {
+		if p == "optionalTag" {
+			t.Error("filtered synthetic oneof field 'optionalTag' should not be in properties")
+		}
+	}
+
+	// optionalNote should still be present
+	found := false
+	for _, p := range props {
+		if p == "optionalNote" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("unfiltered synthetic oneof field 'optionalNote' should be in properties")
+	}
 }
