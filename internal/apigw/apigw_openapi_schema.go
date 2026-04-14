@@ -297,7 +297,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		nullable = oasTrue()
 		description += "\nThis field is part of the `" + f.OneOf().Name().String() + "` oneof.\n" +
 			"See the documentation for `" + nicerFQN(f.Message()) + "` for more details."
-	} else if f.InOneOf() && !f.InRealOneOf() {
+	} else if f.InOneOf() {
 		// Proto3 optional fields are in synthetic oneofs — they should be
 		// nullable (they have field presence) but don't get oneof documentation.
 		nullable = oasTrue()
