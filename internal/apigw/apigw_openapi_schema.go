@@ -200,6 +200,27 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 
 		obj.Properties.Set(jn, sc.Field(f))
 	}
+	// SyntheticOneOfFields returns proto3 optional fields, which live in
+	// compiler-generated synthetic oneofs.  NonOneOfFields() skips them
+	// (they're in a oneof) and RealOneOfs() skips them (the oneof is
+	// synthetic), so without this pass they are silently dropped.
+	for _, f := range m.SyntheticOneOfFields() {
+		jn := jsonName(f)
+		if len(filter) != 0 {
+			if contains(f.Name().String(), filter) {
+				continue
+			}
+			if contains(jn, filter) {
+				continue
+			}
+		}
+
+		if getRequiredSpec(f) {
+			required = append(required, jn)
+		}
+
+		obj.Properties.Set(jn, sc.Field(f))
+	}
 	if len(required) > 0 {
 		obj.Required = required
 	}
