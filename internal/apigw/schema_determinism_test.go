@@ -92,7 +92,7 @@ func (m *mockMessage) WellKnownType() pgs.WellKnownType        { return pgs.Unkn
 func (m *mockMessage) NonOneOfFields() []pgs.Field             { return m.nonOneOfFields }
 func (m *mockMessage) OneOfs() []pgs.OneOf                     { return m.oneOfs }
 func (m *mockMessage) RealOneOfs() []pgs.OneOf                 { return m.oneOfs }
-func (m *mockMessage) SyntheticOneOfFields() []pgs.Field        { return m.syntheticOneOfField }
+func (m *mockMessage) SyntheticOneOfFields() []pgs.Field       { return m.syntheticOneOfField }
 func (m *mockMessage) SourceCodeInfo() pgs.SourceCodeInfo      { return &mockSourceCodeInfo{} }
 func (m *mockMessage) Descriptor() *descriptor.DescriptorProto { return m.descPB }
 func (m *mockMessage) Messages() []pgs.Message                 { return nil }
