@@ -406,10 +406,34 @@ func getDescription(sc *schemaContainer, fqn string) string {
 	return schema.Description
 }
 
-// buildThreeFieldTypeMessage creates a message with all three field types:
-//   - nonOneOfFields: regular fields not in any oneof
-//   - syntheticOneOfFields: proto3 optional fields (in synthetic oneofs)
-//   - realOneOfFields: fields in real oneofs
+// buildThreeFieldTypeMessage creates a message with all three field types.
+//
+// This mirrors the following proto3 message definition:
+//
+//	message ThreeFieldMsg {
+//	  // Non-oneof fields: regular fields, not in any oneof.
+//	  // pgs exposes these via NonOneOfFields().
+//	  string name = 1;
+//	  string description = 2;
+//
+//	  // Proto3 optional fields: the `optional` keyword causes protoc to wrap
+//	  // each field in a synthetic (compiler-generated) oneof. This gives the
+//	  // field explicit presence semantics (can distinguish "not set" from the
+//	  // zero value). In the descriptor the oneof exists, but pgs marks it
+//	  // synthetic — so NonOneOfFields() skips these (they're in a oneof) and
+//	  // RealOneOfs() skips the oneof (it's synthetic). SyntheticOneOfFields()
+//	  // is the only way to reach them.
+//	  optional string optional_tag = 3;
+//	  optional string optional_note = 4;
+//
+//	  // Real oneof fields: an explicit oneof block written by the user.
+//	  // pgs exposes these via RealOneOfs(); each member field returns true
+//	  // from InRealOneOf(), which triggers nullable and oneof documentation.
+//	  oneof choice {
+//	    string choice_a = 5;
+//	    string choice_b = 6;
+//	  }
+//	}
 func buildThreeFieldTypeMessage() *mockMessage {
 	msg := &mockMessage{
 		name:   "ThreeFieldMsg",
