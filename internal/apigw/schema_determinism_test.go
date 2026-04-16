@@ -44,13 +44,13 @@ func (ft *mockFieldType) Key() pgs.FieldTypeElem     { return nil }
 // mockField implements pgs.Field via embedding + overrides.
 type mockField struct {
 	pgs.Field
-	name            pgs.Name
-	jsonN           *string
-	msg             pgs.Message
-	oneOf           pgs.OneOf
-	proto3Optional  bool // when true, field is in a synthetic oneof (proto3 optional)
-	ftype           pgs.FieldType
-	descPB          *descriptor.FieldDescriptorProto
+	name           pgs.Name
+	jsonN          *string
+	msg            pgs.Message
+	oneOf          pgs.OneOf
+	proto3Optional bool // when true, field is in a synthetic oneof (proto3 optional)
+	ftype          pgs.FieldType
+	descPB         *descriptor.FieldDescriptorProto
 }
 
 func (f *mockField) Name() pgs.Name                               { return f.name }
