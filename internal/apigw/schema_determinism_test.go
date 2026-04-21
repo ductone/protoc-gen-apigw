@@ -44,19 +44,21 @@ func (ft *mockFieldType) Key() pgs.FieldTypeElem     { return nil }
 // mockField implements pgs.Field via embedding + overrides.
 type mockField struct {
 	pgs.Field
-	name   pgs.Name
-	jsonN  *string
-	msg    pgs.Message
-	oneOf  pgs.OneOf
-	ftype  pgs.FieldType
-	descPB *descriptor.FieldDescriptorProto
+	name           pgs.Name
+	jsonN          *string
+	msg            pgs.Message
+	oneOf          pgs.OneOf
+	proto3Optional bool // when true, field is in a synthetic oneof (proto3 optional)
+	ftype          pgs.FieldType
+	descPB         *descriptor.FieldDescriptorProto
 }
 
 func (f *mockField) Name() pgs.Name                               { return f.name }
 func (f *mockField) FullyQualifiedName() string                   { return "." + string(f.name) }
 func (f *mockField) Message() pgs.Message                         { return f.msg }
 func (f *mockField) OneOf() pgs.OneOf                             { return f.oneOf }
-func (f *mockField) InRealOneOf() bool                            { return f.oneOf != nil }
+func (f *mockField) InOneOf() bool                                { return f.oneOf != nil }
+func (f *mockField) InRealOneOf() bool                            { return f.oneOf != nil && !f.proto3Optional }
 func (f *mockField) Type() pgs.FieldType                          { return f.ftype }
 func (f *mockField) Descriptor() *descriptor.FieldDescriptorProto { return f.descPB }
 func (f *mockField) SourceCodeInfo() pgs.SourceCodeInfo           { return &mockSourceCodeInfo{} }
@@ -77,12 +79,12 @@ func (o *mockOneOf) Fields() []pgs.Field { return o.fields }
 // mockMessage implements pgs.Message via embedding + overrides.
 type mockMessage struct {
 	pgs.Message
-	name                pgs.Name
-	fqn                 string
-	nonOneOfFields      []pgs.Field
-	syntheticOneOfField []pgs.Field
-	oneOfs              []pgs.OneOf
-	descPB              *descriptor.DescriptorProto
+	name                 pgs.Name
+	fqn                  string
+	nonOneOfFields       []pgs.Field
+	syntheticOneOfFields []pgs.Field
+	oneOfs               []pgs.OneOf
+	descPB               *descriptor.DescriptorProto
 }
 
 func (m *mockMessage) Name() pgs.Name                          { return m.name }
@@ -90,9 +92,9 @@ func (m *mockMessage) FullyQualifiedName() string              { return m.fqn }
 func (m *mockMessage) IsWellKnown() bool                       { return false }
 func (m *mockMessage) WellKnownType() pgs.WellKnownType        { return pgs.UnknownWKT }
 func (m *mockMessage) NonOneOfFields() []pgs.Field             { return m.nonOneOfFields }
+func (m *mockMessage) SyntheticOneOfFields() []pgs.Field       { return m.syntheticOneOfFields }
 func (m *mockMessage) OneOfs() []pgs.OneOf                     { return m.oneOfs }
 func (m *mockMessage) RealOneOfs() []pgs.OneOf                 { return m.oneOfs }
-func (m *mockMessage) SyntheticOneOfFields() []pgs.Field       { return m.syntheticOneOfField }
 func (m *mockMessage) SourceCodeInfo() pgs.SourceCodeInfo      { return &mockSourceCodeInfo{} }
 func (m *mockMessage) Descriptor() *descriptor.DescriptorProto { return m.descPB }
 func (m *mockMessage) Messages() []pgs.Message                 { return nil }
@@ -144,6 +146,124 @@ func newEmbedField(name string, parent pgs.Message, embed pgs.Message, oneOf pgs
 			embed:   embed,
 		},
 		descPB: newMockFieldDescriptorProto(name),
+	}
+}
+
+// newProto3OptionalStringField creates a scalar string field that behaves like
+// a proto3 optional: it lives in a synthetic oneof (InOneOf=true) but is not in
+// a real oneof (InRealOneOf=false).
+func newProto3OptionalStringField(name string, parent pgs.Message) *mockField {
+	f := newStringField(name, parent)
+	syntheticOneOf := &mockOneOf{name: pgs.Name("_" + name)}
+	f.oneOf = syntheticOneOf
+	f.proto3Optional = true
+	syntheticOneOf.fields = []pgs.Field{f}
+	return f
+}
+
+// TestProto3OptionalNullable verifies the three nullable cases in Field():
+//   - plain field (no oneof)       → nullable is nil
+//   - real oneof field             → nullable is true, description mentions the oneof
+//   - proto3 optional (synthetic)  → nullable is true, no oneof documentation
+func TestProto3OptionalNullable(t *testing.T) {
+	parent := &mockMessage{
+		name:   "TestMessage",
+		fqn:    ".test.v1.TestMessage",
+		descPB: newMockDescriptorProto(),
+	}
+
+	sc := newSchemaContainer()
+
+	t.Run("plain_field_not_nullable", func(t *testing.T) {
+		field := newStringField("plainField", parent)
+		proxy := sc.Field(field)
+		schema := proxy.Schema()
+		if schema.Nullable != nil {
+			t.Errorf("plain field should have nullable=nil, got %v", *schema.Nullable)
+		}
+	})
+
+	t.Run("real_oneof_nullable_with_docs", func(t *testing.T) {
+		realOneOf := &mockOneOf{name: "my_choice"}
+		field := newStringField("oneofField", parent)
+		field.oneOf = realOneOf
+		realOneOf.fields = []pgs.Field{field}
+
+		proxy := sc.Field(field)
+		schema := proxy.Schema()
+		if schema.Nullable == nil || !*schema.Nullable {
+			t.Error("real oneof field should be nullable")
+		}
+		if schema.Description == "" {
+			t.Fatal("expected non-empty description")
+		}
+		wantSubstr := "part of the `my_choice` oneof"
+		if !strings.Contains(schema.Description, wantSubstr) {
+			t.Errorf("description should mention oneof name, got: %s", schema.Description)
+		}
+	})
+
+	t.Run("proto3_optional_nullable_no_oneof_docs", func(t *testing.T) {
+		field := newProto3OptionalStringField("optionalField", parent)
+
+		proxy := sc.Field(field)
+		schema := proxy.Schema()
+		if schema.Nullable == nil || !*schema.Nullable {
+			t.Error("proto3 optional field should be nullable")
+		}
+		forbiddenSubstr := "part of the"
+		if strings.Contains(schema.Description, forbiddenSubstr) {
+			t.Errorf("proto3 optional field should NOT have oneof documentation, got: %s", schema.Description)
+		}
+	})
+}
+
+// TestProto3OptionalFieldEmitted verifies that Message() includes proto3 optional
+// fields as properties. Without the SyntheticOneOfFields() iteration pass they
+// would be silently dropped — NonOneOfFields() excludes them (they're in a
+// synthetic oneof) and RealOneOfs() excludes the synthetic oneof.
+func TestProto3OptionalFieldEmitted(t *testing.T) {
+	msg := &mockMessage{
+		name:   "MixedMessage",
+		fqn:    ".test.v1.MixedMessage",
+		descPB: newMockDescriptorProto(),
+	}
+
+	plainField := newStringField("name", msg)
+	optionalField := newProto3OptionalStringField("nickname", msg)
+
+	msg.nonOneOfFields = []pgs.Field{plainField}
+	msg.syntheticOneOfFields = []pgs.Field{optionalField}
+
+	sc := newSchemaContainer()
+	sc.Message(msg, nil, nil, false, false)
+
+	proxy := sc.schemas.Value("test.v1.MixedMessage")
+	if proxy == nil {
+		t.Fatal("MixedMessage schema not found")
+	}
+	schema := proxy.Schema()
+
+	// Both fields should be present as properties.
+	if _, ok := schema.Properties.Get("name"); !ok {
+		t.Error("plain field 'name' missing from properties")
+	}
+	if _, ok := schema.Properties.Get("nickname"); !ok {
+		t.Error("proto3 optional field 'nickname' missing from properties")
+	}
+
+	// The optional field's schema should be nullable.
+	nickProxy, _ := schema.Properties.Get("nickname")
+	nickSchema := nickProxy.Schema()
+	if nickSchema.Nullable == nil || !*nickSchema.Nullable {
+		t.Error("proto3 optional field 'nickname' should be nullable")
+	}
+
+	// The plain field's schema should not be nullable.
+	nameProxy, _ := schema.Properties.Get("name")
+	nameSchema := nameProxy.Schema()
+	if nameSchema.Nullable != nil {
+		t.Errorf("plain field 'name' should have nullable=nil, got %v", *nameSchema.Nullable)
 	}
 }
 
@@ -452,7 +572,7 @@ func buildThreeFieldTypeMessage() *mockMessage {
 		newStringField("name", msg),
 		newStringField("description", msg),
 	}
-	msg.syntheticOneOfField = []pgs.Field{
+	msg.syntheticOneOfFields = []pgs.Field{
 		newStringField("optionalTag", msg),
 		newStringField("optionalNote", msg),
 	}
