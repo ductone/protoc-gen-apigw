@@ -358,6 +358,104 @@ func Test_serviceExtensionHandling(t *testing.T) {
 	}
 }
 
+func Test_resolveSpeakeasyGroup(t *testing.T) {
+	tests := []struct {
+		name           string
+		defaultGroup   string
+		operation      *apigw_v1.Operation
+		serviceOptions *apigw_v1.ServiceOptions
+		want           string
+	}{
+		{
+			name:         "no overrides returns default (stripped service FQN)",
+			defaultGroup: "AppOwners",
+			operation:    &apigw_v1.Operation{},
+			want:         "AppOwners",
+		},
+		{
+			name:         "service-level override applies when no operation override",
+			defaultGroup: "AppOwners",
+			operation:    &apigw_v1.Operation{},
+			serviceOptions: &apigw_v1.ServiceOptions{
+				Service: &apigw_v1.Service{GroupOverride: "AppOwnersV2"},
+			},
+			want: "AppOwnersV2",
+		},
+		{
+			name:         "operation-level override wins over default",
+			defaultGroup: "AppOwners",
+			operation:    &apigw_v1.Operation{GroupOverride: "CustomOwners"},
+			want:         "CustomOwners",
+		},
+		{
+			name:         "operation-level override wins over service-level",
+			defaultGroup: "AppOwners",
+			operation:    &apigw_v1.Operation{GroupOverride: "CustomOwners"},
+			serviceOptions: &apigw_v1.ServiceOptions{
+				Service: &apigw_v1.Service{GroupOverride: "AppOwnersV2"},
+			},
+			want: "CustomOwners",
+		},
+		{
+			name:         "nil serviceOptions is safe",
+			defaultGroup: "AppOwners",
+			operation:    &apigw_v1.Operation{},
+			want:         "AppOwners",
+		},
+		{
+			name:           "nil serviceOptions.Service is safe",
+			defaultGroup:   "AppOwners",
+			operation:      &apigw_v1.Operation{},
+			serviceOptions: &apigw_v1.ServiceOptions{},
+			want:           "AppOwners",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := resolveSpeakeasyGroup(tt.defaultGroup, tt.operation, tt.serviceOptions)
+			if got != tt.want {
+				t.Errorf("resolveSpeakeasyGroup() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_resolveSpeakeasyNameOverride(t *testing.T) {
+	tests := []struct {
+		name        string
+		defaultName string
+		operation   *apigw_v1.Operation
+		want        string
+	}{
+		{
+			name:        "no override returns default RPC method name",
+			defaultName: "Set",
+			operation:   &apigw_v1.Operation{},
+			want:        "Set",
+		},
+		{
+			name:        "operation-level override replaces default",
+			defaultName: "Set",
+			operation:   &apigw_v1.Operation{NameOverride: "SetV2"},
+			want:        "SetV2",
+		},
+		{
+			name:        "nil operation is safe",
+			defaultName: "Set",
+			operation:   nil,
+			want:        "Set",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := resolveSpeakeasyNameOverride(tt.defaultName, tt.operation)
+			if got != tt.want {
+				t.Errorf("resolveSpeakeasyNameOverride() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 // Test field-level stability and deprecation functionality.
 func Test_fieldLevelStabilityAndDeprecation(t *testing.T) {
 	tests := []struct {
