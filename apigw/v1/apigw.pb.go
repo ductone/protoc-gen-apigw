@@ -696,10 +696,16 @@ func (x *ServiceOptions) GetService() *Service {
 }
 
 type Service struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Stability     Stability              `protobuf:"varint,1,opt,name=stability,proto3,enum=apigw.v1.Stability" json:"stability,omitempty"`
-	DocsPath      string                 `protobuf:"bytes,2,opt,name=docs_path,json=docsPath,proto3" json:"docs_path,omitempty"`
-	Deprecation   *Deprecation           `protobuf:"bytes,3,opt,name=deprecation,proto3" json:"deprecation,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Stability   Stability              `protobuf:"varint,1,opt,name=stability,proto3,enum=apigw.v1.Stability" json:"stability,omitempty"`
+	DocsPath    string                 `protobuf:"bytes,2,opt,name=docs_path,json=docsPath,proto3" json:"docs_path,omitempty"`
+	Deprecation *Deprecation           `protobuf:"bytes,3,opt,name=deprecation,proto3" json:"deprecation,omitempty"`
+	// Override the x-speakeasy-group value for every method in this service in
+	// the generated OpenAPI spec. Use this to disambiguate v1/v2 proto service
+	// pairs (e.g. c1.api.app.v1.AppOwners vs c1.api.app.v2.AppOwners) that
+	// otherwise produce colliding SDK method receivers. Individual methods can
+	// still override via Operation.group_override.
+	GroupOverride string `protobuf:"bytes,4,opt,name=group_override,json=groupOverride,proto3" json:"group_override,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -753,6 +759,13 @@ func (x *Service) GetDeprecation() *Deprecation {
 		return x.Deprecation
 	}
 	return nil
+}
+
+func (x *Service) GetGroupOverride() string {
+	if x != nil {
+		return x.GroupOverride
+	}
+	return ""
 }
 
 type TerraformEntity struct {
@@ -1009,8 +1022,18 @@ type Operation struct {
 	Group            string                 `protobuf:"bytes,10,opt,name=group,proto3" json:"group,omitempty"`
 	Pagination       *Pagination            `protobuf:"bytes,11,opt,name=pagination,proto3" json:"pagination,omitempty"`
 	Deprecation      *Deprecation           `protobuf:"bytes,12,opt,name=deprecation,proto3" json:"deprecation,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// Override the x-speakeasy-group value for this operation. Takes precedence
+	// over Service.group_override. Prefer Service.group_override unless a
+	// single method genuinely needs to live in a different SDK namespace from
+	// the rest of its service.
+	GroupOverride string `protobuf:"bytes,13,opt,name=group_override,json=groupOverride,proto3" json:"group_override,omitempty"`
+	// Override the x-speakeasy-name-override value for this operation. By
+	// default the SDK method name is derived from the proto RPC method name.
+	// Use this to resolve collisions when two operations in the same group
+	// resolve to the same method name.
+	NameOverride  string `protobuf:"bytes,14,opt,name=name_override,json=nameOverride,proto3" json:"name_override,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Operation) Reset() {
@@ -1125,6 +1148,20 @@ func (x *Operation) GetDeprecation() *Deprecation {
 		return x.Deprecation
 	}
 	return nil
+}
+
+func (x *Operation) GetGroupOverride() string {
+	if x != nil {
+		return x.GroupOverride
+	}
+	return ""
+}
+
+func (x *Operation) GetNameOverride() string {
+	if x != nil {
+		return x.NameOverride
+	}
+	return ""
 }
 
 type RequestExample struct {
@@ -1318,11 +1355,12 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"operations\x18\x01 \x03(\v2\x13.apigw.v1.OperationR\n" +
 	"operations\"=\n" +
 	"\x0eServiceOptions\x12+\n" +
-	"\aservice\x18\x01 \x01(\v2\x11.apigw.v1.ServiceR\aservice\"\x92\x01\n" +
+	"\aservice\x18\x01 \x01(\v2\x11.apigw.v1.ServiceR\aservice\"\xb9\x01\n" +
 	"\aService\x121\n" +
 	"\tstability\x18\x01 \x01(\x0e2\x13.apigw.v1.StabilityR\tstability\x12\x1b\n" +
 	"\tdocs_path\x18\x02 \x01(\tR\bdocsPath\x127\n" +
-	"\vdeprecation\x18\x03 \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\"\x80\x05\n" +
+	"\vdeprecation\x18\x03 \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\x12%\n" +
+	"\x0egroup_override\x18\x04 \x01(\tR\rgroupOverride\"\x80\x05\n" +
 	"\x0fTerraformEntity\x12G\n" +
 	"\x04type\x18\x01 \x01(\x0e23.apigw.v1.TerraformEntity.TerraformEntityMethodTypeR\x04type\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
@@ -1359,7 +1397,7 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"-TERRAFORM_ENTITY_PAGINATION_INPUT_TYPE_CURSOR\x10\x01\"3\n" +
 	"\x10PaginationOutput\x12\x1f\n" +
 	"\vnext_cursor\x18\x01 \x01(\tR\n" +
-	"nextCursor\"\xeb\x04\n" +
+	"nextCursor\"\xb7\x05\n" +
 	"\tOperation\x12\x16\n" +
 	"\x06method\x18\x01 \x01(\tR\x06method\x12\x14\n" +
 	"\x05route\x18\x02 \x01(\tR\x05route\x124\n" +
@@ -1375,7 +1413,9 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\n" +
 	"pagination\x18\v \x01(\v2\x14.apigw.v1.PaginationR\n" +
 	"pagination\x127\n" +
-	"\vdeprecation\x18\f \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\x1a8\n" +
+	"\vdeprecation\x18\f \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\x12%\n" +
+	"\x0egroup_override\x18\r \x01(\tR\rgroupOverride\x12#\n" +
+	"\rname_override\x18\x0e \x01(\tR\fnameOverride\x1a8\n" +
 	"\n" +
 	"QueryEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +

@@ -1,0 +1,134 @@
+---
+components:
+  schemas:
+    bookstore.v2.CreateShelfRequest:
+      description: Request message for v2 CreateShelf.
+      properties:
+        theme:
+          description: The theme field.
+          readOnly: false
+          type: string
+      title: Create Shelf Request
+      type: object
+      x-speakeasy-name-override: CreateShelfRequestV2
+    bookstore.v2.CreateShelfResponse:
+      description: Response message for v2 CreateShelf.
+      properties:
+        shelfId:
+          description: The shelfId field.
+          readOnly: false
+          type: string
+      title: Create Shelf Response
+      type: object
+      x-speakeasy-name-override: CreateShelfResponseV2
+    bookstore.v2.GetShelfResponse:
+      description: Response message for v2 GetShelf.
+      properties:
+        shelfId:
+          description: The shelfId field.
+          readOnly: false
+          type: string
+        theme:
+          description: The theme field.
+          readOnly: false
+          type: string
+      title: Get Shelf Response
+      type: object
+      x-speakeasy-name-override: GetShelfResponseV2
+    bookstore.v2.ListShelvesResponse:
+      description: Response message for v2 ListShelves.
+      properties:
+        shelfIds:
+          description: The shelfIds field.
+          items:
+            type: string
+          nullable: true
+          readOnly: false
+          type: array
+      title: List Shelves Response
+      type: object
+      x-speakeasy-name-override: ListShelvesResponseV2
+info:
+  description: |
+    This is an auto-generated API for bookstore.v2.BookstoreService.
+  title: API For bookstore.v2.BookstoreService
+  version: 0.0.1
+  x-stability-level: draft
+openapi: 3.1.0
+paths:
+  /v2/shelves:
+    get:
+      description: |-
+        Shares its RPC name with bookstore.v1.BookstoreService.ListShelves.
+         Disambiguated via the service-level group_override above.
+      operationId: bookstore.v2.BookstoreService.ListShelves
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v2.ListShelvesResponse'
+          description: Response message for v2 ListShelves.
+      summary: List Shelves
+      tags:
+        - Shelves V2
+      x-speakeasy-group: BookstoreV2
+      x-speakeasy-name-override: ListShelves
+      x-stability-level: draft
+    post:
+      description: |-
+        Demonstrates Operation.name_override — replaces the default
+         x-speakeasy-name-override (RPC method name) for this single method.
+         Rare in practice; use when one operation in a service needs a
+         different SDK method name from what the proto declares.
+      operationId: bookstore.v2.BookstoreService.CreateShelf
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/bookstore.v2.CreateShelfRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v2.CreateShelfResponse'
+          description: Response message for v2 CreateShelf.
+      summary: Create Shelf
+      tags:
+        - Shelves V2
+      x-speakeasy-group: BookstoreV2
+      x-speakeasy-name-override: CreateShelfDraft
+      x-stability-level: draft
+  /v2/shelves/{shelf}:
+    get:
+      description: |-
+        Demonstrates Operation.group_override — takes precedence over the
+         service-level group_override for this one method. Rarer still; use
+         only when a single RPC needs to live in a different SDK namespace
+         from the rest of its service.
+      operationId: bookstore.v2.BookstoreService.GetShelf
+      parameters:
+        - in: path
+          name: shelf
+          required: true
+          schema:
+            description: The shelf field.
+            readOnly: false
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bookstore.v2.GetShelfResponse'
+          description: Response message for v2 GetShelf.
+      summary: Get Shelf
+      tags:
+        - Shelves V2
+      x-speakeasy-group: BookstoreV2Lookup
+      x-speakeasy-name-override: GetShelf
+      x-stability-level: draft
+servers:
+  - description: The server for bookstore.v2.BookstoreService.
+    url: /

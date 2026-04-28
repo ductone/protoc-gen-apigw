@@ -99,7 +99,7 @@ func (module *Module) buildOpenAPIService(ctx pgsgo.Context, in pgs.Service) (*d
 	}
 	mt := &msgTracker{}
 	for _, m := range in.Methods() {
-		route, op, components, err := module.buildOperation(ctx, m, mt)
+		route, op, components, err := module.buildOperation(ctx, m, mt, sext)
 		if err != nil {
 			return nil, fmt.Errorf("opeapi.buildOperation failed for '%s': %w", m.FullyQualifiedName(), err)
 		}
@@ -214,7 +214,30 @@ func (module *Module) getOpGroup(prefix string, operation *apigw_v1.Operation) s
 	return strings.Join(camelcase.Split(prefix), " ")
 }
 
-func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *msgTracker) (*route, *dm_v3.Operation, *dm_v3.Components, error) {
+// resolveSpeakeasyGroup picks the x-speakeasy-group value for an operation.
+// Precedence: operation.group_override > service.group_override > default
+// (the stripped service FQN that apigw derives from the proto service name).
+func resolveSpeakeasyGroup(defaultGroup string, operation *apigw_v1.Operation, serviceOptions *apigw_v1.ServiceOptions) string {
+	if operation != nil && operation.GroupOverride != "" {
+		return operation.GroupOverride
+	}
+	if serviceOptions != nil && serviceOptions.Service != nil && serviceOptions.Service.GroupOverride != "" {
+		return serviceOptions.Service.GroupOverride
+	}
+	return defaultGroup
+}
+
+// resolveSpeakeasyNameOverride picks the x-speakeasy-name-override value for
+// an operation. Precedence: operation.name_override > default (the proto RPC
+// method name).
+func resolveSpeakeasyNameOverride(defaultName string, operation *apigw_v1.Operation) string {
+	if operation != nil && operation.NameOverride != "" {
+		return operation.NameOverride
+	}
+	return defaultName
+}
+
+func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *msgTracker, serviceOptions *apigw_v1.ServiceOptions) (*route, *dm_v3.Operation, *dm_v3.Components, error) {
 	mext := &apigw_v1.MethodOptions{}
 	_, err := method.Extension(apigw_v1.E_Method, mext)
 	if err != nil {
@@ -274,8 +297,8 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		extensions.Set("tags",
 			yamlStringSlice([]string{module.getOpGroup(prefix, operation)}),
 		)
-		extensions.Set("x-speakeasy-group", yamlString(prefix))
-		extensions.Set("x-speakeasy-name-override", yamlString(methodName))
+		extensions.Set("x-speakeasy-group", yamlString(resolveSpeakeasyGroup(prefix, operation, serviceOptions)))
+		extensions.Set("x-speakeasy-name-override", yamlString(resolveSpeakeasyNameOverride(methodName, operation)))
 	}
 	terraformEntity := getTerraformEntityOperationExtension(operation)
 

@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package bookstore.v2;
+
+import "apigw/v1/apigw.proto";
+
+option go_package = "github.com/ductone/protoc-gen-apigw/example/bookstore/v2";
+
+// BookstoreService v2 intentionally shares its short name with
+// bookstore.v1.BookstoreService. Without a group_override the generator
+// would emit x-speakeasy-group: Bookstore for both versions, and the SDK
+// would end up with two colliding receivers named sdk.Bookstore.ListShelves
+// (one pointing at /shelves, one at /v2/shelves). Setting the
+// service-level group_override below routes every RPC in this service
+// into its own SDK namespace: sdk.BookstoreV2.ListShelves().
+service BookstoreService {
+  option (apigw.v1.service).service = {
+    stability: STABILITY_DRAFT
+    group_override: "BookstoreV2"
+  };
+
+  // Shares its RPC name with bookstore.v1.BookstoreService.ListShelves.
+  // Disambiguated via the service-level group_override above.
+  rpc ListShelves(ListShelvesRequest) returns (ListShelvesResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/v2/shelves"
+      group: "Shelves V2"
+      stability: STABILITY_DRAFT
+    };
+  }
+
+  // Demonstrates Operation.name_override — replaces the default
+  // x-speakeasy-name-override (RPC method name) for this single method.
+  // Rare in practice; use when one operation in a service needs a
+  // different SDK method name from what the proto declares.
+  rpc CreateShelf(CreateShelfRequest) returns (CreateShelfResponse) {
+    option (apigw.v1.method).operations = {
+      method: "POST"
+      route: "/v2/shelves"
+      group: "Shelves V2"
+      name_override: "CreateShelfDraft"
+      stability: STABILITY_DRAFT
+    };
+  }
+
+  // Demonstrates Operation.group_override — takes precedence over the
+  // service-level group_override for this one method. Rarer still; use
+  // only when a single RPC needs to live in a different SDK namespace
+  // from the rest of its service.
+  rpc GetShelf(GetShelfRequest) returns (GetShelfResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/v2/shelves/{shelf}"
+      group: "Shelves V2"
+      group_override: "BookstoreV2Lookup"
+      stability: STABILITY_DRAFT
+    };
+  }
+}
+
+// Request message for v2 ListShelves.
+message ListShelvesRequest {
+  option (apigw.v1.message).message_options = {name_override: "ListShelvesRequestV2"};
+}
+
+// Response message for v2 ListShelves.
+message ListShelvesResponse {
+  option (apigw.v1.message).message_options = {name_override: "ListShelvesResponseV2"};
+  repeated string shelf_ids = 1;
+}
+
+// Request message for v2 CreateShelf.
+message CreateShelfRequest {
+  option (apigw.v1.message).message_options = {name_override: "CreateShelfRequestV2"};
+  string theme = 1;
+}
+
+// Response message for v2 CreateShelf.
+message CreateShelfResponse {
+  option (apigw.v1.message).message_options = {name_override: "CreateShelfResponseV2"};
+  string shelf_id = 1;
+}
+
+// Request message for v2 GetShelf.
+message GetShelfRequest {
+  option (apigw.v1.message).message_options = {name_override: "GetShelfRequestV2"};
+  string shelf = 1;
+}
+
+// Response message for v2 GetShelf.
+message GetShelfResponse {
+  option (apigw.v1.message).message_options = {name_override: "GetShelfResponseV2"};
+  string shelf_id = 1;
+  string theme = 2;
+}

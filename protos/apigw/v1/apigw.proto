@@ -83,6 +83,13 @@ message Service {
   Stability stability = 1;
   string docs_path = 2;
   Deprecation deprecation = 3;
+
+  // Override the x-speakeasy-group value for every method in this service in
+  // the generated OpenAPI spec. Use this to disambiguate v1/v2 proto service
+  // pairs (e.g. c1.api.app.v1.AppOwners vs c1.api.app.v2.AppOwners) that
+  // otherwise produce colliding SDK method receivers. Individual methods can
+  // still override via Operation.group_override.
+  string group_override = 4;
 }
 
 message TerraformEntity {
@@ -153,6 +160,18 @@ message Operation {
   string group = 10;
   Pagination pagination = 11;
   Deprecation deprecation = 12;
+
+  // Override the x-speakeasy-group value for this operation. Takes precedence
+  // over Service.group_override. Prefer Service.group_override unless a
+  // single method genuinely needs to live in a different SDK namespace from
+  // the rest of its service.
+  string group_override = 13;
+
+  // Override the x-speakeasy-name-override value for this operation. By
+  // default the SDK method name is derived from the proto RPC method name.
+  // Use this to resolve collisions when two operations in the same group
+  // resolve to the same method name.
+  string name_override = 14;
 }
 
 message RequestExample {
