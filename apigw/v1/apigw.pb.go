@@ -456,7 +456,21 @@ type FieldOption struct {
 	// Sets the stability level for this field
 	Stability Stability `protobuf:"varint,3,opt,name=stability,proto3,enum=apigw.v1.Stability" json:"stability,omitempty"`
 	// Sets deprecation information for this field
-	Deprecation   *Deprecation `protobuf:"bytes,4,opt,name=deprecation,proto3" json:"deprecation,omitempty"`
+	Deprecation *Deprecation `protobuf:"bytes,4,opt,name=deprecation,proto3" json:"deprecation,omitempty"`
+	// Marks this field as a ConductorOne object-annotation bag (a
+	// map<string, string> following the convention in
+	// c1/.rfcs/object-annotations.md).
+	//
+	// When true, apigw emits an `x-speakeasy-terraform-plan-modifier`
+	// OpenAPI extension wiring the ConductorOne Terraform provider's
+	// shared `annotations.PlanModifier()` helper (in the
+	// `internal/annotations` package). The import path and helper
+	// expression are constants owned by apigw — the proto does not name
+	// them.
+	//
+	// Valid only on `map<string, string>` fields. The codegen logs a
+	// warning and skips the extension on any other type.
+	AnnotationBag bool `protobuf:"varint,5,opt,name=annotation_bag,json=annotationBag,proto3" json:"annotation_bag,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -517,6 +531,13 @@ func (x *FieldOption) GetDeprecation() *Deprecation {
 		return x.Deprecation
 	}
 	return nil
+}
+
+func (x *FieldOption) GetAnnotationBag() bool {
+	if x != nil {
+		return x.AnnotationBag
+	}
+	return false
 }
 
 type FieldOptions struct {
@@ -1339,12 +1360,13 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12!\n" +
 	"\fforce_expose\x18\x03 \x01(\bR\vforceExpose\x120\n" +
 	"\x14webhook_request_name\x18\x04 \x01(\tR\x12webhookRequestName\x12#\n" +
-	"\rname_override\x18\x05 \x01(\tR\fnameOverride\"\xc4\x01\n" +
+	"\rname_override\x18\x05 \x01(\tR\fnameOverride\"\xeb\x01\n" +
 	"\vFieldOption\x12#\n" +
 	"\rrequired_spec\x18\x01 \x01(\bR\frequiredSpec\x12$\n" +
 	"\x0eread_only_spec\x18\x02 \x01(\bR\freadOnlySpec\x121\n" +
 	"\tstability\x18\x03 \x01(\x0e2\x13.apigw.v1.StabilityR\tstability\x127\n" +
-	"\vdeprecation\x18\x04 \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\"J\n" +
+	"\vdeprecation\x18\x04 \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\x12%\n" +
+	"\x0eannotation_bag\x18\x05 \x01(\bR\rannotationBag\"J\n" +
 	"\fFieldOptions\x12:\n" +
 	"\rfield_options\x18\x01 \x03(\v2\x15.apigw.v1.FieldOptionR\ffieldOptions\".\n" +
 	"\vDeprecation\x12\x1f\n" +

@@ -53,6 +53,9 @@ message FieldOption {
   Stability stability = 3;
   // Sets deprecation information for this field
   Deprecation deprecation = 4;
+  // Marks a map<string, string> field as a C1 object-annotation bag.
+  // Codegen emits an x-speakeasy-terraform-plan-modifier extension.
+  bool annotation_bag = 5;
 }
 
 message FieldOptions {
