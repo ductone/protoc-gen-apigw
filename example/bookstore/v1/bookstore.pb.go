@@ -924,7 +924,9 @@ type Book struct {
 	// Quotes from the book - this field is in beta.
 	Quotes []string `protobuf:"bytes,4,rep,name=quotes,proto3" json:"quotes,omitempty"`
 	// Shelf ID - deprecated, use shelf reference instead
-	ShelfId       string `protobuf:"bytes,5,opt,name=shelf_id,json=shelfId,proto3" json:"shelf_id,omitempty"`
+	ShelfId string `protobuf:"bytes,5,opt,name=shelf_id,json=shelfId,proto3" json:"shelf_id,omitempty"`
+	// Free-form key/value metadata bag.
+	Annotations   map[string]string `protobuf:"bytes,6,rep,name=annotations,proto3" json:"annotations,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -992,6 +994,13 @@ func (x *Book) GetShelfId() string {
 		return x.ShelfId
 	}
 	return ""
+}
+
+func (x *Book) GetAnnotations() map[string]string {
+	if x != nil {
+		return x.Annotations
+	}
+	return nil
 }
 
 // An author resource.
@@ -1885,7 +1894,7 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tB\b\xa2\xde\x03\x04\n" +
 	"\x02\x18\x02R\x04name:\x11\xaa\xde\x03\r\n" +
 	"\v\n" +
-	"\t\x12\x05Genre\x18\x01\"\xc7\x01\n" +
+	"\t\x12\x05Genre\x18\x01\"\xd8\x02\n" +
 	"\x04Book\x12\x1a\n" +
 	"\x02id\x18\x01 \x01(\tB\n" +
 	"\xa2\xde\x03\x06\n" +
@@ -1899,7 +1908,12 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"\bshelf_id\x18\x05 \x01(\tB\x14\xa2\xde\x03\x10\n" +
 	"\x0e\"\f\n" +
 	"\n" +
-	"2025-09-30R\ashelfId:\x0e\xaa\xde\x03\n" +
+	"2025-09-30R\ashelfId\x12O\n" +
+	"\vannotations\x18\x06 \x03(\v2#.bookstore.v1.Book.AnnotationsEntryB\b\xa2\xde\x03\x04\n" +
+	"\x02(\x01R\vannotations\x1a>\n" +
+	"\x10AnnotationsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01:\x0e\xaa\xde\x03\n" +
 	"\n" +
 	"\b\n" +
 	"\x06\x12\x04Book\"\xb4\x03\n" +
@@ -2039,7 +2053,7 @@ func file_bookstore_v1_bookstore_proto_rawDescGZIP() []byte {
 }
 
 var file_bookstore_v1_bookstore_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_bookstore_v1_bookstore_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
+var file_bookstore_v1_bookstore_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
 var file_bookstore_v1_bookstore_proto_goTypes = []any{
 	(Author_Gender)(0),            // 0: bookstore.v1.Author.Gender
 	(*CreateGenreRequest)(nil),    // 1: bookstore.v1.CreateGenreRequest
@@ -2076,9 +2090,10 @@ var file_bookstore_v1_bookstore_proto_goTypes = []any{
 	(*RecursiveBookResponse)(nil), // 32: bookstore.v1.RecursiveBookResponse
 	(*RecursivePage)(nil),         // 33: bookstore.v1.RecursivePage
 	(*ListBooksResponse)(nil),     // 34: bookstore.v1.ListBooksResponse
-	(*timestamppb.Timestamp)(nil), // 35: google.protobuf.Timestamp
-	(*anypb.Any)(nil),             // 36: google.protobuf.Any
-	(*fieldmaskpb.FieldMask)(nil), // 37: google.protobuf.FieldMask
+	nil,                           // 35: bookstore.v1.Book.AnnotationsEntry
+	(*timestamppb.Timestamp)(nil), // 36: google.protobuf.Timestamp
+	(*anypb.Any)(nil),             // 37: google.protobuf.Any
+	(*fieldmaskpb.FieldMask)(nil), // 38: google.protobuf.FieldMask
 }
 var file_bookstore_v1_bookstore_proto_depIdxs = []int32{
 	18, // 0: bookstore.v1.CreateGenreResponse.genre:type_name -> bookstore.v1.Genre
@@ -2089,54 +2104,55 @@ var file_bookstore_v1_bookstore_proto_depIdxs = []int32{
 	19, // 5: bookstore.v1.GetBookResponse.book:type_name -> bookstore.v1.Book
 	19, // 6: bookstore.v1.UpdateBookResponse.book:type_name -> bookstore.v1.Book
 	20, // 7: bookstore.v1.GetAuthorResponse.author:type_name -> bookstore.v1.Author
-	0,  // 8: bookstore.v1.Author.gender:type_name -> bookstore.v1.Author.Gender
-	0,  // 9: bookstore.v1.Author.genders:type_name -> bookstore.v1.Author.Gender
-	35, // 10: bookstore.v1.Author.created_at:type_name -> google.protobuf.Timestamp
-	36, // 11: bookstore.v1.Author.books:type_name -> google.protobuf.Any
-	17, // 12: bookstore.v1.ListShelvesResponse.shelves:type_name -> bookstore.v1.Shelf
-	37, // 13: bookstore.v1.ListShelvesResponse.mask:type_name -> google.protobuf.FieldMask
-	17, // 14: bookstore.v1.CreateShelfRequest.shelf:type_name -> bookstore.v1.Shelf
-	19, // 15: bookstore.v1.CreateBookRequest.book:type_name -> bookstore.v1.Book
-	19, // 16: bookstore.v1.UpdateBookRequest.book:type_name -> bookstore.v1.Book
-	19, // 17: bookstore.v1.DeleteBookRequest.book:type_name -> bookstore.v1.Book
-	33, // 18: bookstore.v1.RecursiveBookResponse.page:type_name -> bookstore.v1.RecursivePage
-	32, // 19: bookstore.v1.RecursivePage.books:type_name -> bookstore.v1.RecursiveBookResponse
-	32, // 20: bookstore.v1.RecursivePage.pages:type_name -> bookstore.v1.RecursiveBookResponse
-	33, // 21: bookstore.v1.RecursivePage.extra_pages:type_name -> bookstore.v1.RecursivePage
-	19, // 22: bookstore.v1.ListBooksResponse.books:type_name -> bookstore.v1.Book
-	10, // 23: bookstore.v1.BookstoreService.ListShelves:input_type -> bookstore.v1.ListShelvesRequest
-	22, // 24: bookstore.v1.BookstoreService.CreateShelf:input_type -> bookstore.v1.CreateShelfRequest
-	24, // 25: bookstore.v1.BookstoreService.DeleteShelf:input_type -> bookstore.v1.DeleteShelfRequest
-	7,  // 26: bookstore.v1.BookstoreService.ListGenres:input_type -> bookstore.v1.ListGenresRequest
-	1,  // 27: bookstore.v1.BookstoreService.CreateGenre:input_type -> bookstore.v1.CreateGenreRequest
-	3,  // 28: bookstore.v1.BookstoreService.GetGenre:input_type -> bookstore.v1.GetGenreRequest
-	5,  // 29: bookstore.v1.BookstoreService.DeleteGenre:input_type -> bookstore.v1.DeleteGenreRequest
-	26, // 30: bookstore.v1.BookstoreService.CreateBook:input_type -> bookstore.v1.CreateBookRequest
-	27, // 31: bookstore.v1.BookstoreService.GetBook:input_type -> bookstore.v1.GetBookRequest
-	25, // 32: bookstore.v1.BookstoreService.ListBooks:input_type -> bookstore.v1.ListBooksRequest
-	29, // 33: bookstore.v1.BookstoreService.DeleteBook:input_type -> bookstore.v1.DeleteBookRequest
-	28, // 34: bookstore.v1.BookstoreService.UpdateBook:input_type -> bookstore.v1.UpdateBookRequest
-	30, // 35: bookstore.v1.BookstoreService.GetAuthor:input_type -> bookstore.v1.GetAuthorRequest
-	31, // 36: bookstore.v1.BookstoreService.RecursiveBook:input_type -> bookstore.v1.RecursiveBookRequest
-	21, // 37: bookstore.v1.BookstoreService.ListShelves:output_type -> bookstore.v1.ListShelvesResponse
-	12, // 38: bookstore.v1.BookstoreService.CreateShelf:output_type -> bookstore.v1.CreateShelfResponse
-	9,  // 39: bookstore.v1.BookstoreService.DeleteShelf:output_type -> bookstore.v1.DeleteShelfResponse
-	8,  // 40: bookstore.v1.BookstoreService.ListGenres:output_type -> bookstore.v1.ListGenresResponse
-	2,  // 41: bookstore.v1.BookstoreService.CreateGenre:output_type -> bookstore.v1.CreateGenreResponse
-	4,  // 42: bookstore.v1.BookstoreService.GetGenre:output_type -> bookstore.v1.GetGenreResponse
-	6,  // 43: bookstore.v1.BookstoreService.DeleteGenre:output_type -> bookstore.v1.DeleteGenreResponse
-	13, // 44: bookstore.v1.BookstoreService.CreateBook:output_type -> bookstore.v1.CreateBookResponse
-	14, // 45: bookstore.v1.BookstoreService.GetBook:output_type -> bookstore.v1.GetBookResponse
-	34, // 46: bookstore.v1.BookstoreService.ListBooks:output_type -> bookstore.v1.ListBooksResponse
-	11, // 47: bookstore.v1.BookstoreService.DeleteBook:output_type -> bookstore.v1.DeleteBookResponse
-	15, // 48: bookstore.v1.BookstoreService.UpdateBook:output_type -> bookstore.v1.UpdateBookResponse
-	16, // 49: bookstore.v1.BookstoreService.GetAuthor:output_type -> bookstore.v1.GetAuthorResponse
-	32, // 50: bookstore.v1.BookstoreService.RecursiveBook:output_type -> bookstore.v1.RecursiveBookResponse
-	37, // [37:51] is the sub-list for method output_type
-	23, // [23:37] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	35, // 8: bookstore.v1.Book.annotations:type_name -> bookstore.v1.Book.AnnotationsEntry
+	0,  // 9: bookstore.v1.Author.gender:type_name -> bookstore.v1.Author.Gender
+	0,  // 10: bookstore.v1.Author.genders:type_name -> bookstore.v1.Author.Gender
+	36, // 11: bookstore.v1.Author.created_at:type_name -> google.protobuf.Timestamp
+	37, // 12: bookstore.v1.Author.books:type_name -> google.protobuf.Any
+	17, // 13: bookstore.v1.ListShelvesResponse.shelves:type_name -> bookstore.v1.Shelf
+	38, // 14: bookstore.v1.ListShelvesResponse.mask:type_name -> google.protobuf.FieldMask
+	17, // 15: bookstore.v1.CreateShelfRequest.shelf:type_name -> bookstore.v1.Shelf
+	19, // 16: bookstore.v1.CreateBookRequest.book:type_name -> bookstore.v1.Book
+	19, // 17: bookstore.v1.UpdateBookRequest.book:type_name -> bookstore.v1.Book
+	19, // 18: bookstore.v1.DeleteBookRequest.book:type_name -> bookstore.v1.Book
+	33, // 19: bookstore.v1.RecursiveBookResponse.page:type_name -> bookstore.v1.RecursivePage
+	32, // 20: bookstore.v1.RecursivePage.books:type_name -> bookstore.v1.RecursiveBookResponse
+	32, // 21: bookstore.v1.RecursivePage.pages:type_name -> bookstore.v1.RecursiveBookResponse
+	33, // 22: bookstore.v1.RecursivePage.extra_pages:type_name -> bookstore.v1.RecursivePage
+	19, // 23: bookstore.v1.ListBooksResponse.books:type_name -> bookstore.v1.Book
+	10, // 24: bookstore.v1.BookstoreService.ListShelves:input_type -> bookstore.v1.ListShelvesRequest
+	22, // 25: bookstore.v1.BookstoreService.CreateShelf:input_type -> bookstore.v1.CreateShelfRequest
+	24, // 26: bookstore.v1.BookstoreService.DeleteShelf:input_type -> bookstore.v1.DeleteShelfRequest
+	7,  // 27: bookstore.v1.BookstoreService.ListGenres:input_type -> bookstore.v1.ListGenresRequest
+	1,  // 28: bookstore.v1.BookstoreService.CreateGenre:input_type -> bookstore.v1.CreateGenreRequest
+	3,  // 29: bookstore.v1.BookstoreService.GetGenre:input_type -> bookstore.v1.GetGenreRequest
+	5,  // 30: bookstore.v1.BookstoreService.DeleteGenre:input_type -> bookstore.v1.DeleteGenreRequest
+	26, // 31: bookstore.v1.BookstoreService.CreateBook:input_type -> bookstore.v1.CreateBookRequest
+	27, // 32: bookstore.v1.BookstoreService.GetBook:input_type -> bookstore.v1.GetBookRequest
+	25, // 33: bookstore.v1.BookstoreService.ListBooks:input_type -> bookstore.v1.ListBooksRequest
+	29, // 34: bookstore.v1.BookstoreService.DeleteBook:input_type -> bookstore.v1.DeleteBookRequest
+	28, // 35: bookstore.v1.BookstoreService.UpdateBook:input_type -> bookstore.v1.UpdateBookRequest
+	30, // 36: bookstore.v1.BookstoreService.GetAuthor:input_type -> bookstore.v1.GetAuthorRequest
+	31, // 37: bookstore.v1.BookstoreService.RecursiveBook:input_type -> bookstore.v1.RecursiveBookRequest
+	21, // 38: bookstore.v1.BookstoreService.ListShelves:output_type -> bookstore.v1.ListShelvesResponse
+	12, // 39: bookstore.v1.BookstoreService.CreateShelf:output_type -> bookstore.v1.CreateShelfResponse
+	9,  // 40: bookstore.v1.BookstoreService.DeleteShelf:output_type -> bookstore.v1.DeleteShelfResponse
+	8,  // 41: bookstore.v1.BookstoreService.ListGenres:output_type -> bookstore.v1.ListGenresResponse
+	2,  // 42: bookstore.v1.BookstoreService.CreateGenre:output_type -> bookstore.v1.CreateGenreResponse
+	4,  // 43: bookstore.v1.BookstoreService.GetGenre:output_type -> bookstore.v1.GetGenreResponse
+	6,  // 44: bookstore.v1.BookstoreService.DeleteGenre:output_type -> bookstore.v1.DeleteGenreResponse
+	13, // 45: bookstore.v1.BookstoreService.CreateBook:output_type -> bookstore.v1.CreateBookResponse
+	14, // 46: bookstore.v1.BookstoreService.GetBook:output_type -> bookstore.v1.GetBookResponse
+	34, // 47: bookstore.v1.BookstoreService.ListBooks:output_type -> bookstore.v1.ListBooksResponse
+	11, // 48: bookstore.v1.BookstoreService.DeleteBook:output_type -> bookstore.v1.DeleteBookResponse
+	15, // 49: bookstore.v1.BookstoreService.UpdateBook:output_type -> bookstore.v1.UpdateBookResponse
+	16, // 50: bookstore.v1.BookstoreService.GetAuthor:output_type -> bookstore.v1.GetAuthorResponse
+	32, // 51: bookstore.v1.BookstoreService.RecursiveBook:output_type -> bookstore.v1.RecursiveBookResponse
+	38, // [38:52] is the sub-list for method output_type
+	24, // [24:38] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_bookstore_v1_bookstore_proto_init() }
@@ -2154,7 +2170,7 @@ func file_bookstore_v1_bookstore_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bookstore_v1_bookstore_proto_rawDesc), len(file_bookstore_v1_bookstore_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   34,
+			NumMessages:   35,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -327,6 +327,10 @@ message Book {
       sunset_date: "2025-09-30"
     }
   }];
+  // Free-form key/value metadata bag.
+  map<string, string> annotations = 6 [(apigw.v1.field).field_options = {
+    annotation_bag: true
+  }];
 }
 
 // An author resource.

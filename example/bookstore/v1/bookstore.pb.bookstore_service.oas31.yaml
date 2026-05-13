@@ -69,6 +69,16 @@ components:
     bookstore.v1.Book:
       description: A book resource.
       properties:
+        annotations:
+          additionalProperties:
+            type: string
+          description: Free-form key/value metadata bag.
+          readOnly: false
+          type: object
+          x-speakeasy-terraform-plan-modifier:
+            imports:
+              - github.com/conductorone/terraform-provider-conductorone/internal/annotations
+            schemaDefinition: annotations.PlanModifier()
         author:
           description: An author of the book.
           readOnly: false

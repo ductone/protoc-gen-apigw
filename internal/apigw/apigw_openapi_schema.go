@@ -330,6 +330,9 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		addSunsetExtension(extensions, fieldDeprecation.SunsetDate)
 	}
 
+	// Add object-annotation-bag extension
+	addAnnotationBagExtension(extensions, f)
+
 	switch {
 	case f.Type().IsRepeated():
 		fteSchema := sc.FieldTypeElem(f.Type().Element(), readOnly)
