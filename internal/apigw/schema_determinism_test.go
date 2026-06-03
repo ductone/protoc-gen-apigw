@@ -1,13 +1,39 @@
 package apigw
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"                    //nolint:staticcheck // required by pgs v0.6.2 interfaces
 	"github.com/golang/protobuf/protoc-gen-go/descriptor" //nolint:staticcheck // required by pgs v0.6.2 interfaces
 	pgs "github.com/lyft/protoc-gen-star"
+	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 )
+
+// schemaIsNullable reports whether a field schema is nullable per OpenAPI 3.1.
+// Nullability is expressed either as "null" in the schema's type set (inline
+// scalars/objects/arrays) or as a oneOf member whose type is "null" (used to
+// wrap a nullable $ref, since a bare $ref cannot carry a sibling type).
+func schemaIsNullable(s *dm_base.Schema) bool {
+	if s == nil {
+		return false
+	}
+	if slices.Contains(s.Type, "null") {
+		return true
+	}
+	for _, member := range s.OneOf {
+		// Skip the $ref member: it is unresolved in these unit tests and only
+		// the inline { type: "null" } member carries the nullability marker.
+		if member == nil || member.IsReference() {
+			continue
+		}
+		if ms := member.Schema(); ms != nil && slices.Contains(ms.Type, "null") {
+			return true
+		}
+	}
+	return false
+}
 
 // Mock types for testing schema generation determinism.
 //
@@ -178,8 +204,8 @@ func TestProto3OptionalNullable(t *testing.T) {
 		field := newStringField("plainField", parent)
 		proxy := sc.Field(field)
 		schema := proxy.Schema()
-		if schema.Nullable != nil {
-			t.Errorf("plain field should have nullable=nil, got %v", *schema.Nullable)
+		if schemaIsNullable(schema) {
+			t.Errorf("plain field should not be nullable, got type %v", schema.Type)
 		}
 	})
 
@@ -191,7 +217,7 @@ func TestProto3OptionalNullable(t *testing.T) {
 
 		proxy := sc.Field(field)
 		schema := proxy.Schema()
-		if schema.Nullable == nil || !*schema.Nullable {
+		if !schemaIsNullable(schema) {
 			t.Error("real oneof field should be nullable")
 		}
 		if schema.Description == "" {
@@ -208,7 +234,7 @@ func TestProto3OptionalNullable(t *testing.T) {
 
 		proxy := sc.Field(field)
 		schema := proxy.Schema()
-		if schema.Nullable == nil || !*schema.Nullable {
+		if !schemaIsNullable(schema) {
 			t.Error("proto3 optional field should be nullable")
 		}
 		forbiddenSubstr := "part of the"
@@ -236,7 +262,7 @@ func TestProto3OptionalFieldEmitted(t *testing.T) {
 	msg.syntheticOneOfFields = []pgs.Field{optionalField}
 
 	sc := newSchemaContainer()
-	sc.Message(msg, nil, nil, false, false)
+	sc.Message(msg, nil, false, false)
 
 	proxy := sc.schemas.Value("test.v1.MixedMessage")
 	if proxy == nil {
@@ -255,15 +281,15 @@ func TestProto3OptionalFieldEmitted(t *testing.T) {
 	// The optional field's schema should be nullable.
 	nickProxy, _ := schema.Properties.Get("nickname")
 	nickSchema := nickProxy.Schema()
-	if nickSchema.Nullable == nil || !*nickSchema.Nullable {
+	if !schemaIsNullable(nickSchema) {
 		t.Error("proto3 optional field 'nickname' should be nullable")
 	}
 
 	// The plain field's schema should not be nullable.
 	nameProxy, _ := schema.Properties.Get("name")
 	nameSchema := nameProxy.Schema()
-	if nameSchema.Nullable != nil {
-		t.Errorf("plain field 'name' should have nullable=nil, got %v", *nameSchema.Nullable)
+	if schemaIsNullable(nameSchema) {
+		t.Errorf("plain field 'name' should not be nullable, got type %v", nameSchema.Type)
 	}
 }
 
@@ -363,42 +389,71 @@ func getNullable(sc *schemaContainer, fqn string) (bool, bool) {
 	if schema == nil {
 		return false, false
 	}
-	return schema.Nullable != nil && *schema.Nullable, true
+	return schemaIsNullable(schema), true
+}
+
+// propertyIsNullable reports whether a named property of a schema in the
+// container is nullable. Used to assert use-site nullability (the oneOf wrapper)
+// independently of the referenced definition.
+func propertyIsNullable(sc *schemaContainer, fqn, prop string) bool {
+	proxy := sc.schemas.Value(fqn)
+	if proxy == nil {
+		return false
+	}
+	schema := proxy.Schema()
+	if schema == nil || schema.Properties == nil {
+		return false
+	}
+	sp := schema.Properties.Value(prop)
+	if sp == nil {
+		return false
+	}
+	// A bare $ref property is never nullable: nullable references are wrapped in
+	// a oneOf (a non-reference proxy) at the use site.
+	if sp.IsReference() {
+		return false
+	}
+	return schemaIsNullable(sp.Schema())
 }
 
 // TestSchemaDeterminism_ConnectorRef tests that ConnectorRef produces a
 // deterministic schema when processed via msgTracker.SortedKeys().
 func TestSchemaDeterminism_ConnectorRef(t *testing.T) {
-	// Verify the bug: processing order affects nullable.
-	t.Run("order_matters", func(t *testing.T) {
+	// Verify the fix: the shared definition is never marked nullable, so its
+	// schema no longer depends on processing order. Nullability now lives at the
+	// use site as a oneOf wrapper, eliminating the 3.0-era order-dependent bug.
+	t.Run("definition_never_nullable_order_independent", func(t *testing.T) {
 		parentA, parentB := buildConnectorRefScenario()
 
-		// ParentA first → ConnectorRef NOT nullable
+		// ParentA (non-oneof ref) first.
 		sc1 := newSchemaContainer()
-		sc1.Message(parentA, nil, nil, false, false)
-		sc1.Message(parentB, nil, nil, false, false)
+		sc1.Message(parentA, nil, false, false)
+		sc1.Message(parentB, nil, false, false)
 		nullable1, ok := getNullable(sc1, "test.v1.ConnectorRef")
 		if !ok {
 			t.Fatal("ConnectorRef schema not found")
 		}
 
-		// ParentB first → ConnectorRef IS nullable
+		// ParentB (oneof ref) first.
 		sc2 := newSchemaContainer()
-		sc2.Message(parentB, nil, nil, false, false)
-		sc2.Message(parentA, nil, nil, false, false)
+		sc2.Message(parentB, nil, false, false)
+		sc2.Message(parentA, nil, false, false)
 		nullable2, ok := getNullable(sc2, "test.v1.ConnectorRef")
 		if !ok {
 			t.Fatal("ConnectorRef schema not found")
 		}
 
-		if nullable1 == nullable2 {
-			t.Fatal("expected different nullable results when processing order changes")
+		if nullable1 || nullable2 {
+			t.Errorf("ConnectorRef definition should never be nullable regardless of order; got %v and %v", nullable1, nullable2)
 		}
-		if nullable1 {
-			t.Error("expected ConnectorRef NOT nullable when non-OneOf parent is first")
+
+		// Use-site nullability is correct: the oneof member is nullable, the
+		// non-oneof reference is not.
+		if !propertyIsNullable(sc2, "test.v1.ConnectorAction", "connectorRef") {
+			t.Error("ConnectorAction.connectorRef (oneof member) should be nullable at the use site")
 		}
-		if !nullable2 {
-			t.Error("expected ConnectorRef nullable when OneOf parent is first")
+		if propertyIsNullable(sc2, "test.v1.AccountLifecycleAction", "connectorRef") {
+			t.Error("AccountLifecycleAction.connectorRef (non-oneof) should not be nullable")
 		}
 	})
 
@@ -416,7 +471,7 @@ func TestSchemaDeterminism_ConnectorRef(t *testing.T) {
 			sc := newSchemaContainer()
 			for _, k := range mt.SortedKeys() {
 				sd := mt.messages[k]
-				sc.Message(sd.msg, sd.filter, nil, false, false)
+				sc.Message(sd.msg, sd.filter, false, false)
 			}
 
 			nullable, ok := getNullable(sc, "test.v1.ConnectorRef")
@@ -434,36 +489,40 @@ func TestSchemaDeterminism_ConnectorRef(t *testing.T) {
 // TestSchemaDeterminism_UserRef tests the UserRef scenario from the c1
 // automations API.
 func TestSchemaDeterminism_UserRef(t *testing.T) {
-	// Verify the bug: processing order affects nullable.
-	t.Run("order_matters", func(t *testing.T) {
+	// Verify the fix: the shared definition is never nullable, so order no
+	// longer affects the schema. Nullability lives at each use site instead.
+	t.Run("definition_never_nullable_order_independent", func(t *testing.T) {
 		nonOneOfParent, oneOfParent := buildUserRefScenario()
 
-		// OneOf parent first → UserRef IS nullable
+		// OneOf parent first.
 		sc1 := newSchemaContainer()
-		sc1.Message(oneOfParent, nil, nil, false, false)
-		sc1.Message(nonOneOfParent, nil, nil, false, false)
+		sc1.Message(oneOfParent, nil, false, false)
+		sc1.Message(nonOneOfParent, nil, false, false)
 		nullable1, ok := getNullable(sc1, "test.v1.UserRef")
 		if !ok {
 			t.Fatal("UserRef schema not found")
 		}
 
-		// Non-OneOf parent first → UserRef NOT nullable
+		// Non-OneOf parent first.
 		sc2 := newSchemaContainer()
-		sc2.Message(nonOneOfParent, nil, nil, false, false)
-		sc2.Message(oneOfParent, nil, nil, false, false)
+		sc2.Message(nonOneOfParent, nil, false, false)
+		sc2.Message(oneOfParent, nil, false, false)
 		nullable2, ok := getNullable(sc2, "test.v1.UserRef")
 		if !ok {
 			t.Fatal("UserRef schema not found")
 		}
 
-		if nullable1 == nullable2 {
-			t.Fatal("expected different nullable results when processing order changes")
+		if nullable1 || nullable2 {
+			t.Errorf("UserRef definition should never be nullable regardless of order; got %v and %v", nullable1, nullable2)
 		}
-		if !nullable1 {
-			t.Error("expected UserRef nullable when OneOf parent is first")
+
+		// Use-site nullability is correct: the oneof member is nullable, the
+		// non-oneof reference is not.
+		if !propertyIsNullable(sc1, "test.v1.UpdateUser", "userRef") {
+			t.Error("UpdateUser.userRef (oneof member) should be nullable at the use site")
 		}
-		if nullable2 {
-			t.Error("expected UserRef NOT nullable when non-OneOf parent is first")
+		if propertyIsNullable(sc1, "test.v1.CreateRevokeTasks", "userRef") {
+			t.Error("CreateRevokeTasks.userRef (non-oneof) should not be nullable")
 		}
 	})
 
@@ -481,7 +540,7 @@ func TestSchemaDeterminism_UserRef(t *testing.T) {
 			sc := newSchemaContainer()
 			for _, k := range mt.SortedKeys() {
 				sd := mt.messages[k]
-				sc.Message(sd.msg, sd.filter, nil, false, false)
+				sc.Message(sd.msg, sd.filter, false, false)
 			}
 
 			nullable, ok := getNullable(sc, "test.v1.UserRef")
@@ -586,7 +645,7 @@ func buildThreeFieldTypeMessage() *mockMessage {
 func TestFieldTypes_AllPresent(t *testing.T) {
 	msg := buildThreeFieldTypeMessage()
 	sc := newSchemaContainer()
-	sc.Message(msg, nil, nil, false, false)
+	sc.Message(msg, nil, false, false)
 
 	props := getProperties(sc, "test.v1.ThreeFieldMsg")
 	if props == nil {
@@ -618,7 +677,7 @@ func TestFieldTypes_AllPresent(t *testing.T) {
 func TestFieldTypes_SyntheticNotNullable(t *testing.T) {
 	msg := buildThreeFieldTypeMessage()
 	sc := newSchemaContainer()
-	sc.Message(msg, nil, nil, false, false)
+	sc.Message(msg, nil, false, false)
 
 	proxy := sc.schemas.Value("test.v1.ThreeFieldMsg")
 	if proxy == nil {
@@ -639,7 +698,7 @@ func TestFieldTypes_SyntheticNotNullable(t *testing.T) {
 		if fs == nil {
 			t.Fatalf("schema for %q is nil", name)
 		}
-		if fs.Nullable == nil || !*fs.Nullable {
+		if !schemaIsNullable(fs) {
 			t.Errorf("real oneof field %q should be nullable", name)
 		}
 	}
@@ -654,7 +713,7 @@ func TestFieldTypes_SyntheticNotNullable(t *testing.T) {
 		if fs == nil {
 			t.Fatalf("schema for %q is nil", name)
 		}
-		if fs.Nullable != nil && *fs.Nullable {
+		if schemaIsNullable(fs) {
 			t.Errorf("synthetic oneof field %q should NOT be nullable", name)
 		}
 	}
@@ -669,7 +728,7 @@ func TestFieldTypes_SyntheticNotNullable(t *testing.T) {
 		if fs == nil {
 			t.Fatalf("schema for %q is nil", name)
 		}
-		if fs.Nullable != nil && *fs.Nullable {
+		if schemaIsNullable(fs) {
 			t.Errorf("non-oneof field %q should NOT be nullable", name)
 		}
 	}
@@ -680,7 +739,7 @@ func TestFieldTypes_SyntheticNotNullable(t *testing.T) {
 func TestFieldTypes_OneOfDocumentation(t *testing.T) {
 	msg := buildThreeFieldTypeMessage()
 	sc := newSchemaContainer()
-	sc.Message(msg, nil, nil, false, false)
+	sc.Message(msg, nil, false, false)
 
 	desc := getDescription(sc, "test.v1.ThreeFieldMsg")
 
@@ -710,7 +769,7 @@ func TestFieldTypes_FilterAppliesToSynthetic(t *testing.T) {
 	msg := buildThreeFieldTypeMessage()
 	sc := newSchemaContainer()
 	// Filter out "optionalTag" — it should be excluded from properties.
-	sc.Message(msg, []string{"optionalTag"}, nil, false, false)
+	sc.Message(msg, []string{"optionalTag"}, false, false)
 
 	props := getProperties(sc, "test.v1.ThreeFieldMsgInput")
 	if props == nil {

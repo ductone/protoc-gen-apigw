@@ -31,8 +31,7 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 		}
 	case pgs.EmptyWKT:
 		return &dm_base.Schema{
-			Type:     []string{"object"},
-			Nullable: oasTrue(),
+			Type: []string{"object", "null"},
 		}
 	case pgs.StructWKT:
 		// todo: pquerna: is this the right mapping for an arbitrary Struct?
@@ -47,70 +46,58 @@ func (sc *schemaContainer) schemaForWKT(wkt pgs.WellKnownType) *dm_base.Schema {
 		}
 	case pgs.ValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"string", "number", "object", "array", "boolean", "null"},
-			Nullable: oasTrue(),
+			Type: []string{"string", "number", "object", "array", "boolean", "null"},
 		}
 	case pgs.ListValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"array"},
-			Nullable: oasTrue(),
+			Type: []string{"array", "null"},
 		}
 	case pgs.DoubleValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"number"},
-			Format:   "double",
-			Nullable: oasTrue(),
+			Type:   []string{"number", "null"},
+			Format: "double",
 		}
 	case pgs.FloatValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"number"},
-			Format:   "float",
-			Nullable: oasTrue(),
+			Type:   []string{"number", "null"},
+			Format: "float",
 		}
 	case pgs.Int64ValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"string"},
-			Format:   "int64",
-			Nullable: oasTrue(),
+			Type:   []string{"string", "null"},
+			Format: "int64",
 		}
 	case pgs.UInt64ValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"string"},
-			Format:   "uint64",
-			Nullable: oasTrue(),
+			Type:   []string{"string", "null"},
+			Format: "uint64",
 		}
 	case pgs.Int32ValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"integer"},
-			Format:   "int32",
-			Nullable: oasTrue(),
+			Type:   []string{"integer", "null"},
+			Format: "int32",
 		}
 	case pgs.UInt32ValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"integer"},
-			Format:   "int64",
-			Nullable: oasTrue(),
+			Type:   []string{"integer", "null"},
+			Format: "int64",
 		}
 	case pgs.BoolValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"boolean"},
-			Nullable: oasTrue(),
+			Type: []string{"boolean", "null"},
 		}
 	case pgs.StringValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"string"},
-			Nullable: oasTrue(),
+			Type: []string{"string", "null"},
 		}
 	case pgs.BytesValueWKT:
 		return &dm_base.Schema{
-			Type:     []string{"string"},
-			Format:   "bytes",
-			Nullable: oasTrue(),
+			Type:   []string{"string", "null"},
+			Format: "bytes",
 		}
 	case FieldMaskWKT:
 		return &dm_base.Schema{
-			Type:     []string{"string"},
-			Nullable: oasTrue(),
+			Type: []string{"string", "null"},
 		}
 	case pgs.UnknownWKT:
 		// TODO: handle these.. if any are really needed

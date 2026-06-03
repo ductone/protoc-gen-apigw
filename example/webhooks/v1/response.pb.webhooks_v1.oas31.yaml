@@ -6,7 +6,6 @@ components:
       properties:
         policyStepId:
           description: The policyStepId field.
-          readOnly: false
           type: string
       title: Policy Step
       type: object
@@ -22,18 +21,25 @@ components:
           - replacePolicy
       properties:
         approve:
-          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepApprove'
+          oneOf:
+            - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepApprove'
+            - type: "null"
         deny:
-          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepDeny'
+          oneOf:
+            - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepDeny'
+            - type: "null"
         reassign:
-          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepReassign'
+          oneOf:
+            - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepReassign'
+            - type: "null"
         replacePolicy:
-          $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalReplacePolicy'
+          oneOf:
+            - $ref: '#/components/schemas/webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalReplacePolicy'
+            - type: "null"
         version:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
-          readOnly: false
           type: string
       title: Response Policy Approval Step
       type: object
@@ -41,59 +47,51 @@ components:
       x-speakeasy-name-override: ResponsePolicyApprovalStep
     webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalReplacePolicy:
       description: The ResponsePolicyApprovalReplacePolicy message.
-      nullable: true
       properties:
         comment:
           description: The comment field.
-          readOnly: false
           type: string
         policySteps:
           description: The policySteps field.
           items:
             $ref: '#/components/schemas/webhooks.v1.PolicyStep'
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
       title: Response Policy Approval Replace Policy
       type: object
       x-speakeasy-name-override: ResponsePolicyApprovalReplacePolicy
     webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepApprove:
       description: The ResponsePolicyApprovalStepApprove message.
-      nullable: true
       properties:
         comment:
           description: optional comment
-          readOnly: false
           type: string
       title: Response Policy Approval Step Approve
       type: object
       x-speakeasy-name-override: ResponsePolicyApprovalStepApprove
     webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepDeny:
       description: The ResponsePolicyApprovalStepDeny message.
-      nullable: true
       properties:
         comment:
           description: optional comment
-          readOnly: false
           type: string
       title: Response Policy Approval Step Deny
       type: object
       x-speakeasy-name-override: ResponsePolicyApprovalStepDeny
     webhooks.v1.ResponsePolicyApprovalStep.ResponsePolicyApprovalStepReassign:
       description: The ResponsePolicyApprovalStepReassign message.
-      nullable: true
       properties:
         comment:
           description: optional comment
-          readOnly: false
           type: string
         newStepUserIds:
           description: The newStepUserIds field.
           items:
             type: string
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
       title: Response Policy Approval Step Reassign
       type: object
       x-speakeasy-name-override: ResponsePolicyApprovalStepReassign
@@ -104,7 +102,6 @@ components:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
-          readOnly: false
           type: string
       title: Response Policy Post Action
       type: object
@@ -119,14 +116,17 @@ components:
           - errored
       properties:
         complete:
-          $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepComplete'
+          oneOf:
+            - $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepComplete'
+            - type: "null"
         errored:
-          $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepErrored'
+          oneOf:
+            - $ref: '#/components/schemas/webhooks.v1.ResponseProvisionStep.ResponseProvisionStepErrored'
+            - type: "null"
         version:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
-          readOnly: false
           type: string
       title: Response Provision Step
       type: object
@@ -134,22 +134,18 @@ components:
       x-speakeasy-name-override: ResponseProvisionStep
     webhooks.v1.ResponseProvisionStep.ResponseProvisionStepComplete:
       description: The ResponseProvisionStepComplete message.
-      nullable: true
       properties:
         comment:
           description: optional comment
-          readOnly: false
           type: string
       title: Response Provision Step Complete
       type: object
       x-speakeasy-name-override: ResponseProvisionStepComplete
     webhooks.v1.ResponseProvisionStep.ResponseProvisionStepErrored:
       description: The ResponseProvisionStepErrored message.
-      nullable: true
       properties:
         comment:
           description: optional comment
-          readOnly: false
           type: string
       title: Response Provision Step Errored
       type: object
@@ -161,7 +157,6 @@ components:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook Response
              will use a different string.
-          readOnly: false
           type: string
       title: Response Test
       type: object

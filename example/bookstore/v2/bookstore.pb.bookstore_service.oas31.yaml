@@ -6,7 +6,6 @@ components:
       properties:
         theme:
           description: The theme field.
-          readOnly: false
           type: string
       title: Create Shelf Request
       type: object
@@ -16,7 +15,6 @@ components:
       properties:
         shelfId:
           description: The shelfId field.
-          readOnly: false
           type: string
       title: Create Shelf Response
       type: object
@@ -26,11 +24,9 @@ components:
       properties:
         shelfId:
           description: The shelfId field.
-          readOnly: false
           type: string
         theme:
           description: The theme field.
-          readOnly: false
           type: string
       title: Get Shelf Response
       type: object
@@ -42,9 +38,9 @@ components:
           description: The shelfIds field.
           items:
             type: string
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
       title: List Shelves Response
       type: object
       x-speakeasy-name-override: ListShelvesResponseV2
@@ -114,7 +110,6 @@ paths:
           required: true
           schema:
             description: The shelf field.
-            readOnly: false
             type: string
       responses:
         "200":

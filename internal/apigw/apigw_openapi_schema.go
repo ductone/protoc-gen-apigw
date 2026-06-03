@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -118,12 +119,12 @@ func yamlStringSlice(in []string) *yaml.Node {
 	return rv
 }
 
-func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *bool, readOnly bool, forced bool) *dm_base.SchemaProxy {
+func (sc *schemaContainer) Message(m pgs.Message, filter []string, readOnly bool, forced bool) *dm_base.SchemaProxy {
 	if IsWellKnown(m) {
 		// TODO(pquera): we may want to customize this some day,
 		// but right now WKTs are just rendered inline, and not a Ref.
 		s := sc.schemaForWKT(WellKnownType(m))
-		s.ReadOnly = &readOnly
+		s.ReadOnly = oasReadOnly(readOnly)
 		return dm_base.CreateSchemaProxy(s)
 	}
 
@@ -167,7 +168,6 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, nullable *boo
 	obj := &dm_base.Schema{
 		Type:       []string{"object"},
 		Properties: orderedmap.New[string, *dm_base.SchemaProxy](),
-		Nullable:   nullable,
 		Deprecated: deprecated,
 		Title:      sc.messageDocName(title, m),
 
@@ -273,7 +273,7 @@ func (sc *schemaContainer) Enum(e pgs.Enum) *dm_base.Schema {
 func (sc *schemaContainer) FieldTypeElem(fte pgs.FieldTypeElem, readOnly bool) *dm_base.SchemaProxy {
 	switch {
 	case fte.IsEmbed():
-		return sc.Message(fte.Embed(), nil, nil, readOnly, false)
+		return sc.Message(fte.Embed(), nil, readOnly, false)
 	case fte.IsEnum():
 		ev := sc.Enum(fte.Enum())
 		ev.Extensions = orderedmap.New[string, *yaml.Node]()
@@ -337,10 +337,9 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 	case f.Type().IsRepeated():
 		fteSchema := sc.FieldTypeElem(f.Type().Element(), readOnly)
 		arraySchema := &dm_base.Schema{
-			Type:        []string{"array"},
+			Type:        []string{"array", "null"},
 			Description: description,
-			Nullable:    oasTrue(),
-			ReadOnly:    &readOnly,
+			ReadOnly:    oasReadOnly(readOnly),
 			Deprecated:  deprecated,
 			Items:       &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
@@ -355,10 +354,10 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			Type:                 []string{"object"},
 			Deprecated:           deprecated,
 			Description:          description,
-			Nullable:             nullable,
-			ReadOnly:             &readOnly,
+			ReadOnly:             oasReadOnly(readOnly),
 			AdditionalProperties: &dm_base.DynamicValue[*dm_base.SchemaProxy, bool]{A: fteSchema},
 		}
+		applyNullable(mv, nullable)
 		// Add extensions if any exist
 		if extensions.Len() > 0 {
 			mv.Extensions = extensions
@@ -368,7 +367,7 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		ev := sc.Enum(f.Type().Enum())
 		ev.Deprecated = deprecated
 		ev.Description = description
-		ev.ReadOnly = &readOnly
+		ev.ReadOnly = oasReadOnly(readOnly)
 		if ev.Extensions == nil {
 			ev.Extensions = orderedmap.New[string, *yaml.Node]()
 		}
@@ -380,15 +379,23 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			ev.Extensions.Set(pair.Key, pair.Value)
 		}
 
-		mergeNullable(ev, nullable)
+		applyNullable(ev, nullable)
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
 		// todo: nested filters
-		return sc.Message(f.Type().Embed(), nil, nullable, readOnly, false)
+		ref := sc.Message(f.Type().Embed(), nil, readOnly, false)
+		// Well-known types are rendered inline (not as a $ref) and are not
+		// marked nullable here, preserving prior behavior. Message $refs that
+		// have field presence (proto3 optional / oneof members) are wrapped so
+		// they may also be null, the 3.1 way.
+		if nullable != nil && *nullable && !IsWellKnown(f.Type().Embed()) {
+			return nullableRef(ref)
+		}
+		return ref
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())
-		sv.ReadOnly = &readOnly
-		mergeNullable(sv, nullable)
+		sv.ReadOnly = oasReadOnly(readOnly)
+		applyNullable(sv, nullable)
 		sv.Deprecated = deprecated
 		sv.Description = description
 		// Add extensions if any exist
@@ -466,11 +473,30 @@ func speakeasyNameOverride(m pgs.Message, mopt *apigw_v1.MessageOption) string {
 	return m.Name().UpperCamelCase().String()
 }
 
-func mergeNullable(s *dm_base.Schema, nullable *bool) {
+// applyNullable expresses nullability the OpenAPI 3.1 way, by adding "null" to
+// the schema's type set (e.g. `type: [string, "null"]`). OpenAPI 3.1 removed
+// the 3.0-era `nullable` keyword — emitting it in a 3.1 document is ignored by
+// JSON-Schema-based tooling, which is why downstream SDK generators had to
+// rewrite every field. This only applies to type-bearing (inline) schemas; a
+// nullable `$ref` must be wrapped instead (see nullableRef).
+func applyNullable(s *dm_base.Schema, nullable *bool) {
 	if nullable == nil || !*nullable {
 		return
 	}
-	if *nullable {
-		s.Nullable = oasTrue()
+	if !slices.Contains(s.Type, "null") {
+		s.Type = append(s.Type, "null")
 	}
+}
+
+// nullableRef wraps a schema proxy (typically a `$ref`) so it may also be null,
+// the OpenAPI 3.1 way: `oneOf: [ <ref>, { type: "null" } ]`. A bare `$ref`
+// cannot carry a sibling type, so the 3.0 trick of marking the referenced
+// definition `nullable: true` is both invalid in 3.1 and leaks nullability onto
+// every other use of that definition. Wrapping at the use site keeps the shared
+// definition clean.
+func nullableRef(ref *dm_base.SchemaProxy) *dm_base.SchemaProxy {
+	null := dm_base.CreateSchemaProxy(&dm_base.Schema{Type: []string{"null"}})
+	return dm_base.CreateSchemaProxy(&dm_base.Schema{
+		OneOf: []*dm_base.SchemaProxy{ref, null},
+	})
 }

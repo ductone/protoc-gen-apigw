@@ -140,7 +140,7 @@ func (module *Module) buildOpenAPIWithoutService(ctx pgsgo.Context, in pgs.File)
 		}
 		found = true
 
-		schemaProxy := sc.Message(m, nil, nil, false, true)
+		schemaProxy := sc.Message(m, nil, false, true)
 		if opts.WebhookRequestName != "" {
 			_, exists := doc.Webhooks.Get(opts.WebhookRequestName)
 			if !exists {
@@ -409,7 +409,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	}
 	for _, k := range mt.SortedKeys() {
 		sd := mt.messages[k]
-		_ = sc.Message(sd.msg, sd.filter, nil, false, false)
+		_ = sc.Message(sd.msg, sd.filter, false, false)
 	}
 	components := &dm_v3.Components{
 		Schemas: sc.schemas,
@@ -788,6 +788,17 @@ func contains[T comparable](needle T, haystack []T) bool {
 func oasTrue() *bool {
 	b := true
 	return &b
+}
+
+// oasReadOnly returns a pointer to true when the field is read-only, and nil
+// otherwise. readOnly defaults to false in JSON Schema / OpenAPI 3.1, so
+// emitting `readOnly: false` is pure noise — we only ever serialize the key
+// when it is meaningfully true.
+func oasReadOnly(readOnly bool) *bool {
+	if !readOnly {
+		return nil
+	}
+	return oasTrue()
 }
 
 func oasBool(v bool) *bool {
