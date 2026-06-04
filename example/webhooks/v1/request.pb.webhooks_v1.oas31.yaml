@@ -32,7 +32,9 @@ components:
             '@type':
               description: The type of the serialized message.
               type: string
-          type: object
+          type:
+            - object
+            - "null"
         version:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook body will use a different string.
