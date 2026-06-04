@@ -133,6 +133,17 @@ func (m *mockMessage) Extension(_ *proto.ExtensionDesc, _ interface{}) (bool, er
 	return false, nil
 }
 
+// mockWKTMessage implements pgs.Message for a well-known type (e.g.
+// google.protobuf.Struct or Timestamp). IsWellKnown reports true and
+// WellKnownType returns the configured WKT, so Field() renders it inline.
+type mockWKTMessage struct {
+	mockMessage
+	wkt pgs.WellKnownType
+}
+
+func (m *mockWKTMessage) IsWellKnown() bool                { return true }
+func (m *mockWKTMessage) WellKnownType() pgs.WellKnownType { return m.wkt }
+
 // Helper constructors
 
 func newMockDescriptorProto() *descriptor.DescriptorProto {
@@ -242,6 +253,44 @@ func TestProto3OptionalNullable(t *testing.T) {
 			t.Errorf("proto3 optional field should NOT have oneof documentation, got: %s", schema.Description)
 		}
 	})
+}
+
+// TestWellKnownSingularFieldNullable verifies that a singular well-known-type
+// message field is rendered nullable. WKTs render inline rather than as a $ref,
+// so they can't be wrapped with oneOf+null; instead "null" is added to the
+// inline type union (e.g. google.protobuf.Struct -> type: [object, null]).
+//
+// A singular message field has presence in proto3, and the JSON API returns
+// null when it is unset; without "null" in the type union an SDK generated from
+// the spec rejects that null during response validation.
+func TestWellKnownSingularFieldNullable(t *testing.T) {
+	parent := &mockMessage{
+		name:   "TestMessage",
+		fqn:    ".test.v1.TestMessage",
+		descPB: newMockDescriptorProto(),
+	}
+
+	cases := []struct {
+		name string
+		wkt  pgs.WellKnownType
+	}{
+		{"struct_object", pgs.StructWKT},
+		{"timestamp_string", pgs.TimestampWKT},
+		{"duration_string", pgs.DurationWKT},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			sc := newSchemaContainer()
+			wkt := &mockWKTMessage{wkt: tc.wkt}
+			field := newEmbedField("wktField", parent, wkt, nil)
+
+			schema := sc.Field(field).Schema()
+			if !schemaIsNullable(schema) {
+				t.Errorf("singular %s field should be nullable, got type %v", tc.name, schema.Type)
+			}
+		})
+	}
 }
 
 // TestProto3OptionalFieldEmitted verifies that Message() includes proto3 optional

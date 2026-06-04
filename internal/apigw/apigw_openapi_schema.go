@@ -383,15 +383,27 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		return dm_base.CreateSchemaProxy(ev)
 	case f.Type().IsEmbed():
 		// todo: nested filters
-		ref := sc.Message(f.Type().Embed(), nil, readOnly, false)
-		// Well-known types are rendered inline (not as a $ref) and are not
-		// marked nullable here, preserving prior behavior. Every other singular
-		// message field has presence in proto3, and the JSON API returns null
-		// when it is unset, so wrap the $ref so the schema admits null the 3.1
-		// way (oneOf: [ <ref>, { type: "null" } ]).
-		if IsWellKnown(f.Type().Embed()) {
-			return ref
+		embed := f.Type().Embed()
+		// Singular message fields have presence in proto3, and the JSON API
+		// returns null when one is unset. The schema must admit that null, or
+		// an SDK generated from the spec rejects the null the API returns.
+		if IsWellKnown(embed) {
+			// Well-known types are rendered inline rather than as a $ref, so
+			// they can't be wrapped with nullableRef. Instead, add "null" to
+			// the inline type union directly (e.g. google.protobuf.Struct ->
+			// type: [object, null]). Several WKTs (Empty, Value, the wrapper
+			// types, FieldMask, ...) already include "null"; this is a no-op
+			// for those.
+			s := sc.schemaForWKT(WellKnownType(embed))
+			s.ReadOnly = oasReadOnly(readOnly)
+			if !slices.Contains(s.Type, "null") {
+				s.Type = append(s.Type, "null")
+			}
+			return dm_base.CreateSchemaProxy(s)
 		}
+		// Other message fields are emitted as a $ref, wrapped so the schema
+		// admits null the 3.1 way (oneOf: [ <ref>, { type: "null" } ]).
+		ref := sc.Message(embed, nil, readOnly, false)
 		return nullableRef(ref)
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())

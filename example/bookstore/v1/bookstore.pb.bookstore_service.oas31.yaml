@@ -22,7 +22,9 @@ components:
         createdAt:
           format: date-time
           readOnly: true
-          type: string
+          type:
+            - string
+            - "null"
         firstName:
           description: The firstName field.
           type: string
