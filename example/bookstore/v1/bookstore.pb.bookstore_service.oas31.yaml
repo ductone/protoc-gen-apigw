@@ -108,7 +108,9 @@ components:
       description: Request message for CreateBook method.
       properties:
         book:
-          $ref: '#/components/schemas/bookstore.v1.Book'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.Book'
+            - type: "null"
       title: Create Book Request
       type: object
       x-speakeasy-name-override: CreateBookRequest
@@ -116,7 +118,9 @@ components:
       description: The CreateBookResponse message.
       properties:
         book:
-          $ref: '#/components/schemas/bookstore.v1.Book'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.Book'
+            - type: "null"
       title: Create Book Response
       type: object
       x-speakeasy-name-override: CreateBookResponse
@@ -133,7 +137,9 @@ components:
       description: The CreateGenreResponse message.
       properties:
         genre:
-          $ref: '#/components/schemas/bookstore.v1.Genre'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.Genre'
+            - type: "null"
       title: Create Genre Response
       type: object
       x-speakeasy-name-override: CreateGenreResponse
@@ -141,7 +147,9 @@ components:
       description: Request message for CreateShelf method.
       properties:
         shelf:
-          $ref: '#/components/schemas/bookstore.v1.Shelf'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.Shelf'
+            - type: "null"
       title: Create Shelf Request
       type: object
       x-speakeasy-name-override: CreateShelfRequest
@@ -149,7 +157,9 @@ components:
       description: The CreateShelfResponse message.
       properties:
         shelf:
-          $ref: '#/components/schemas/bookstore.v1.Shelf'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.Shelf'
+            - type: "null"
       title: Create Shelf Response
       type: object
       x-speakeasy-name-override: CreateShelfResponse
@@ -157,7 +167,9 @@ components:
       description: Request message for DeleteBook method.
       properties:
         book:
-          $ref: '#/components/schemas/bookstore.v1.Book'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.Book'
+            - type: "null"
       title: Delete Book Request
       type: object
       x-speakeasy-name-override: DeleteBookRequest
@@ -212,7 +224,9 @@ components:
           - nonfiction
       properties:
         author:
-          $ref: '#/components/schemas/bookstore.v1.Author'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.Author'
+            - type: "null"
         fiction:
           description: |-
             The fiction field.
@@ -236,7 +250,9 @@ components:
       description: The GetBookResponse message.
       properties:
         book:
-          $ref: '#/components/schemas/bookstore.v1.Book'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.Book'
+            - type: "null"
       title: Get Book Response
       type: object
       x-speakeasy-name-override: GetBookResponse
@@ -244,7 +260,9 @@ components:
       description: The GetGenreResponse message.
       properties:
         genre:
-          $ref: '#/components/schemas/bookstore.v1.Genre'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.Genre'
+            - type: "null"
       title: Get Genre Response
       type: object
       x-speakeasy-name-override: GetGenreResponse
@@ -298,7 +316,9 @@ components:
           description: This is a non recursive secondary prop
           type: string
         page:
-          $ref: '#/components/schemas/bookstore.v1.RecursivePage'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.RecursivePage'
+            - type: "null"
       title: Recursive Book Response
       type: object
       x-speakeasy-name-override: RecursiveBookResponse
@@ -306,7 +326,9 @@ components:
       description: A recursive page for the recursive response
       properties:
         books:
-          $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
+            - type: "null"
         extraPages:
           description: This is a list of recursive pages
           items:
@@ -351,7 +373,9 @@ components:
       description: Request message for UpdateBook method
       properties:
         book:
-          $ref: '#/components/schemas/bookstore.v1.Book'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.Book'
+            - type: "null"
         shelf:
           description: The ID of the shelf from which to retrieve a book.
           type: string
@@ -362,7 +386,9 @@ components:
       description: The UpdateBookResponse message.
       properties:
         book:
-          $ref: '#/components/schemas/bookstore.v1.Book'
+          oneOf:
+            - $ref: '#/components/schemas/bookstore.v1.Book'
+            - type: "null"
       title: Update Book Response
       type: object
       x-speakeasy-name-override: UpdateBookResponse

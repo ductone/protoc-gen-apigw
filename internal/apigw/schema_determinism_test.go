@@ -447,13 +447,14 @@ func TestSchemaDeterminism_ConnectorRef(t *testing.T) {
 			t.Errorf("ConnectorRef definition should never be nullable regardless of order; got %v and %v", nullable1, nullable2)
 		}
 
-		// Use-site nullability is correct: the oneof member is nullable, the
-		// non-oneof reference is not.
+		// Use-site nullability: every singular message reference is nullable
+		// (proto3 message fields have presence and the JSON API returns null
+		// when unset), whether or not the field is a oneof member.
 		if !propertyIsNullable(sc2, "test.v1.ConnectorAction", "connectorRef") {
 			t.Error("ConnectorAction.connectorRef (oneof member) should be nullable at the use site")
 		}
-		if propertyIsNullable(sc2, "test.v1.AccountLifecycleAction", "connectorRef") {
-			t.Error("AccountLifecycleAction.connectorRef (non-oneof) should not be nullable")
+		if !propertyIsNullable(sc2, "test.v1.AccountLifecycleAction", "connectorRef") {
+			t.Error("AccountLifecycleAction.connectorRef (singular message) should be nullable at the use site")
 		}
 	})
 
@@ -516,13 +517,14 @@ func TestSchemaDeterminism_UserRef(t *testing.T) {
 			t.Errorf("UserRef definition should never be nullable regardless of order; got %v and %v", nullable1, nullable2)
 		}
 
-		// Use-site nullability is correct: the oneof member is nullable, the
-		// non-oneof reference is not.
+		// Use-site nullability: every singular message reference is nullable
+		// (proto3 message fields have presence and the JSON API returns null
+		// when unset), whether or not the field is a oneof member.
 		if !propertyIsNullable(sc1, "test.v1.UpdateUser", "userRef") {
 			t.Error("UpdateUser.userRef (oneof member) should be nullable at the use site")
 		}
-		if propertyIsNullable(sc1, "test.v1.CreateRevokeTasks", "userRef") {
-			t.Error("CreateRevokeTasks.userRef (non-oneof) should not be nullable")
+		if !propertyIsNullable(sc1, "test.v1.CreateRevokeTasks", "userRef") {
+			t.Error("CreateRevokeTasks.userRef (singular message) should be nullable at the use site")
 		}
 	})
 

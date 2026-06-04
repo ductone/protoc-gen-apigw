@@ -385,13 +385,14 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 		// todo: nested filters
 		ref := sc.Message(f.Type().Embed(), nil, readOnly, false)
 		// Well-known types are rendered inline (not as a $ref) and are not
-		// marked nullable here, preserving prior behavior. Message $refs that
-		// have field presence (proto3 optional / oneof members) are wrapped so
-		// they may also be null, the 3.1 way.
-		if nullable != nil && *nullable && !IsWellKnown(f.Type().Embed()) {
-			return nullableRef(ref)
+		// marked nullable here, preserving prior behavior. Every other singular
+		// message field has presence in proto3, and the JSON API returns null
+		// when it is unset, so wrap the $ref so the schema admits null the 3.1
+		// way (oneOf: [ <ref>, { type: "null" } ]).
+		if IsWellKnown(f.Type().Embed()) {
+			return ref
 		}
-		return ref
+		return nullableRef(ref)
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())
 		sv.ReadOnly = oasReadOnly(readOnly)
