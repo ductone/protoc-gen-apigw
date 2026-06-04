@@ -14,11 +14,10 @@ components:
               '@type':
                 description: The type of the serialized message.
                 type: string
-            readOnly: false
             type: object
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
           x-sunset: "2025-08-15"
         createdAt:
           format: date-time
@@ -26,7 +25,6 @@ components:
           type: string
         firstName:
           description: The firstName field.
-          readOnly: false
           type: string
         gender:
           description: The gender field.
@@ -34,7 +32,6 @@ components:
             - GENDER_UNSPECIFIED
             - GENDER_MALE
             - GENDER_FEMALE
-          readOnly: false
           type: string
           x-speakeasy-unknown-values: allow
         genders:
@@ -46,17 +43,15 @@ components:
               - GENDER_FEMALE
             type: string
             x-speakeasy-unknown-values: allow
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
         id:
           description: A unique author id.
           format: int64
-          readOnly: false
           type: string
         lname:
           description: The lname field.
-          readOnly: false
           type: string
         metadata:
           description: The metadata field.
@@ -73,7 +68,6 @@ components:
           additionalProperties:
             type: string
           description: Free-form key/value metadata bag.
-          readOnly: false
           type: object
           x-speakeasy-terraform-plan-modifier:
             imports:
@@ -81,31 +75,27 @@ components:
             schemaDefinition: annotations.PlanModifier()
         author:
           description: An author of the book.
-          readOnly: false
           type: string
           x-stability-level: stable
         id:
           description: A unique book id.
-          readOnly: false
           type: string
           x-stability-level: stable
         quotes:
           description: Quotes from the book - this field is in beta.
           items:
             type: string
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
           x-stability-level: beta
         shelfId:
           deprecated: true
           description: Shelf ID - deprecated, use shelf reference instead
-          readOnly: false
           type: string
           x-sunset: "2025-09-30"
         title:
           description: A book title.
-          readOnly: false
           type: string
           x-stability-level: stable
       required:
@@ -135,7 +125,6 @@ components:
       properties:
         name:
           description: The name field.
-          readOnly: false
           type: string
       title: Create Genre Request
       type: object
@@ -203,12 +192,10 @@ components:
         id:
           description: A unique genre id.
           format: int64
-          readOnly: false
           type: string
           x-stability-level: alpha
         name:
           description: A genre name.
-          readOnly: false
           type: string
           x-stability-level: alpha
       title: Genre
@@ -231,17 +218,17 @@ components:
             The fiction field.
             This field is part of the `genre` oneof.
             See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
-          nullable: true
-          readOnly: false
-          type: boolean
+          type:
+            - boolean
+            - "null"
         nonfiction:
           description: |-
             The nonfiction field.
             This field is part of the `genre` oneof.
             See the documentation for `bookstore.v1.GetAuthorResponse` for more details.
-          nullable: true
-          readOnly: false
-          type: boolean
+          type:
+            - boolean
+            - "null"
       title: Get Author Response
       type: object
       x-speakeasy-name-override: GetAuthorResponse
@@ -268,9 +255,9 @@ components:
           description: The books field.
           items:
             $ref: '#/components/schemas/bookstore.v1.Book'
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
       title: List Books Response
       type: object
       x-speakeasy-name-override: ListBooksResponse
@@ -281,9 +268,9 @@ components:
           description: The genres field.
           items:
             $ref: '#/components/schemas/bookstore.v1.Genre'
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
       title: List Genres Response
       type: object
       x-speakeasy-name-override: ListGenresResponse
@@ -291,16 +278,16 @@ components:
       description: Response to ListShelves call.
       properties:
         mask:
-          nullable: true
-          readOnly: false
-          type: string
+          type:
+            - string
+            - "null"
         shelves:
           description: Shelves in the bookstore.
           items:
             $ref: '#/components/schemas/bookstore.v1.Shelf'
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
       title: List Shelves Response
       type: object
       x-speakeasy-name-override: ListShelvesResponse
@@ -309,7 +296,6 @@ components:
       properties:
         anotherProp:
           description: This is a non recursive secondary prop
-          readOnly: false
           type: string
         page:
           $ref: '#/components/schemas/bookstore.v1.RecursivePage'
@@ -325,19 +311,18 @@ components:
           description: This is a list of recursive pages
           items:
             $ref: '#/components/schemas/bookstore.v1.RecursivePage'
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
         pages:
           description: This is a list of recursive books
           items:
             $ref: '#/components/schemas/bookstore.v1.RecursiveBookResponse'
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
         prop:
           description: This is a non recursive prop
-          readOnly: false
           type: string
       title: Recursive Page
       type: object
@@ -347,20 +332,16 @@ components:
       properties:
         id:
           description: A unique shelf id.
-          readOnly: false
           type: string
           x-stability-level: stable
         search%5Bencoded%5D:
           description: To test json name is percentage encoded
-          readOnly: false
           type: string
         search[decoded]:
           description: To test json name is percentage decoded
-          readOnly: false
           type: string
         theme:
           description: A theme of the shelf (fiction, poetry, etc).
-          readOnly: false
           type: string
           x-stability-level: stable
       title: Bookshelf
@@ -373,7 +354,6 @@ components:
           $ref: '#/components/schemas/bookstore.v1.Book'
         shelf:
           description: The ID of the shelf from which to retrieve a book.
-          readOnly: false
           type: string
       title: Update Book Request
       type: object
@@ -405,7 +385,6 @@ paths:
           schema:
             description: The ID of the author resource to retrieve.
             format: int64
-            readOnly: false
             type: string
       responses:
         "200":
@@ -451,7 +430,6 @@ paths:
           required: true
           schema:
             description: The genreId field.
-            readOnly: false
             type: string
       requestBody:
         content:
@@ -479,7 +457,6 @@ paths:
           required: true
           schema:
             description: The genreId field.
-            readOnly: false
             type: string
       responses:
         "200":
@@ -578,7 +555,6 @@ paths:
           required: true
           schema:
             description: The ID of the shelf to delete.
-            readOnly: false
             type: string
       requestBody:
         content:
@@ -609,7 +585,6 @@ paths:
           required: true
           schema:
             description: ID of the shelf which books to list.
-            readOnly: false
             type: string
       responses:
         "200":
@@ -647,7 +622,6 @@ paths:
           required: true
           schema:
             description: The ID of the shelf on which to create a book.
-            readOnly: false
             type: string
       requestBody:
         content:
@@ -681,7 +655,6 @@ paths:
           schema:
             deprecated: true
             description: Shelf ID - deprecated, use shelf reference instead
-            readOnly: false
             type: string
             x-sunset: "2025-09-30"
         - in: path
@@ -689,7 +662,6 @@ paths:
           required: true
           schema:
             description: A unique book id.
-            readOnly: false
             type: string
             x-stability-level: stable
       requestBody:
@@ -722,7 +694,6 @@ paths:
           required: true
           schema:
             description: The ID of the shelf from which to retrieve a book.
-            readOnly: false
             type: string
         - in: path
           name: book
@@ -730,26 +701,22 @@ paths:
           schema:
             description: The ID of the book to retrieve.
             format: int64
-            readOnly: false
             type: string
         - in: query
           name: author
           schema:
             description: The includeAuthor field.
-            readOnly: false
             type: boolean
         - in: query
           name: page_size
           schema:
             description: The pageSize field.
             format: int32
-            readOnly: false
             type: integer
         - in: query
           name: page_token
           schema:
             description: The pageToken field.
-            readOnly: false
             type: string
       responses:
         "200":
@@ -778,7 +745,6 @@ paths:
           schema:
             deprecated: true
             description: Shelf ID - deprecated, use shelf reference instead
-            readOnly: false
             type: string
             x-sunset: "2025-09-30"
         - in: path
@@ -786,7 +752,6 @@ paths:
           required: true
           schema:
             description: A unique book id.
-            readOnly: false
             type: string
             x-stability-level: stable
       requestBody:

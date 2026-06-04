@@ -12,7 +12,6 @@ components:
              If your receiver returns any other status code, it is expected to not use the callback url.
 
              This value will match the "Webhook-Callback-Url" header.
-          readOnly: false
           type: string
         event:
           description: |-
@@ -25,7 +24,6 @@ components:
              - "webhooks.v1.PayloadPolicyApprovalStep"
              - "webhooks.v1.PayloadPolicyPostAction"
              - "webhooks.v1.PayloadProvisionStep"
-          readOnly: false
           type: string
         payload:
           additionalProperties: true
@@ -34,21 +32,18 @@ components:
             '@type':
               description: The type of the serialized message.
               type: string
-          readOnly: false
           type: object
         version:
           description: |-
             version contains the constant value "v1". Future versions of the Webhook body will use a different string.
 
              This value will match the "Webhook-Version" header.
-          readOnly: false
           type: string
         webhookId:
           description: |-
             Unique ID for this Webhook. Your receiver should only process this ID once.
 
              This value will match the "Webhook-Id" header.
-          readOnly: false
           type: string
       title: Body
       type: object
@@ -66,11 +61,10 @@ components:
               '@type':
                 description: The type of the serialized message.
                 type: string
-            readOnly: false
             type: object
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
         taskView:
           $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Policy Approval Step
@@ -89,11 +83,10 @@ components:
               '@type':
                 description: The type of the serialized message.
                 type: string
-            readOnly: false
             type: object
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
         taskView:
           $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Policy Post Action
@@ -112,11 +105,10 @@ components:
               '@type':
                 description: The type of the serialized message.
                 type: string
-            readOnly: false
             type: object
-          nullable: true
-          readOnly: false
-          type: array
+          type:
+            - array
+            - "null"
         taskView:
           $ref: '#/components/schemas/webhooks.v1.TaskView'
       title: Payload Provision Step
@@ -135,12 +127,10 @@ components:
         search[decoded]:
           deprecated: true
           description: The search[decoded] field.
-          readOnly: false
           type: string
           x-sunset: "2025-09-30"
         taskId:
           description: The taskId field.
-          readOnly: false
           type: string
       title: Task View
       type: object
