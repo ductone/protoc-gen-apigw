@@ -76,6 +76,37 @@ message Deprecation {
 
 message MethodOptions {
   repeated Operation operations = 1;
+
+  // classification labels the underlying RPC's action shape. Mirrors
+  // bundle.v1.Operation.classification in ductone/mcp-axiomatic. Format is
+  // an optional "<status>:<action>" prefix where status ∈
+  // {"available", "bypassed", "featured"} and action ∈
+  // {"read", "write", "destructive", "dangerous", "sensitive"}. Bare
+  // action values (e.g. "destructive") and empty are also accepted.
+  // Free-form at the schema level — downstream consumers (e.g. an
+  // AI-guardrail translator in c1) own interpretation.
+  string classification = 2;
+
+  // delegation carries per-RPC risk and sensitivity tags. Mirrors
+  // bundle.v1.DelegationMeta in ductone/mcp-axiomatic — field names and
+  // numbers stay aligned. Describes the intrinsic risk shape of the RPC,
+  // independent of the route(s) under operations[] that expose it.
+  DelegationMeta delegation = 3;
+}
+
+message DelegationMeta {
+  // "critical" / "high" / "medium" / "low".
+  string risk_level = 1;
+  // Default approval tier: "auto" (proceed) / "confirm" (warn then proceed) /
+  // "approve" (require human approval before execution).
+  string default_tier = 2;
+  // Whether the operation is reversible. Unset means unknown.
+  bool reversible = 3;
+  // Action verb: "read" / "create" / "update" / "delete" / "admin".
+  string mutation_scope = 4;
+  // Free-form sensitivity tags consumed by downstream translators
+  // (e.g. "pii", "secrets", "financial", "production", "lifecycle").
+  repeated string sensitivity_tags = 5;
 }
 
 message ServiceOptions {
