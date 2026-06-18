@@ -76,36 +76,85 @@ message Deprecation {
 
 message MethodOptions {
   repeated Operation operations = 1;
+  // delegation carries per-RPC AI-guardrail tags. Describes the intrinsic
+  // risk shape of the RPC, independent of the route(s) under operations[]
+  // that expose it. Consumed by the lethal-trifecta translator in c1's
+  // pkg/aigov/derive to produce per-turn capability scores.
+  //
+  // Field names and numbers in DelegationMeta mirror
+  // bundle.v1.DelegationMeta in ductone/mcp-axiomatic so a single
+  // translator can consume either surface. mcp-axiomatic encodes
+  // equivalent values as strings (parsed by the translator); apigw uses
+  // typed enums directly.
+  DelegationMeta delegation = 2;
+}
 
-  // classification labels the underlying RPC's action shape. Mirrors
-  // bundle.v1.Operation.classification in ductone/mcp-axiomatic. Format is
-  // an optional "<status>:<action>" prefix where status ∈
-  // {"available", "bypassed", "featured"} and action ∈
-  // {"read", "write", "destructive", "dangerous", "sensitive"}. Bare
-  // action values (e.g. "destructive") and empty are also accepted.
-  // Free-form at the schema level — downstream consumers (e.g. an
-  // AI-guardrail translator in c1) own interpretation.
-  string classification = 2;
+// Severity tier for AI-guardrail risk scoring. Aligned with NIST FIPS 199
+// (LOW / MODERATE / HIGH), with an additional CRITICAL tier used by
+// ductone/mcp-axiomatic for incident-grade risk. MEDIUM corresponds to
+// FIPS 199 "MODERATE".
+enum Severity {
+  SEVERITY_UNSPECIFIED = 0;
+  SEVERITY_LOW = 1;
+  SEVERITY_MEDIUM = 2;
+  SEVERITY_HIGH = 3;
+  SEVERITY_CRITICAL = 4;
+}
 
-  // delegation carries per-RPC risk and sensitivity tags. Mirrors
-  // bundle.v1.DelegationMeta in ductone/mcp-axiomatic — field names and
-  // numbers stay aligned. Describes the intrinsic risk shape of the RPC,
-  // independent of the route(s) under operations[] that expose it.
-  DelegationMeta delegation = 3;
+// Action verb describing what the RPC does to its target resource(s).
+// Orthogonal to apigw.Operation.method (the HTTP verb); a single gRPC
+// method can be POST + MUTATION_SCOPE_DELETE, etc.
+enum MutationScope {
+  MUTATION_SCOPE_UNSPECIFIED = 0;
+  MUTATION_SCOPE_READ = 1;
+  MUTATION_SCOPE_CREATE = 2;
+  MUTATION_SCOPE_UPDATE = 3;
+  MUTATION_SCOPE_DELETE = 4;
+  // ADMIN covers configuration / policy / governance / role / permission
+  // changes — anything that alters how the system itself behaves, as
+  // opposed to CRUD on tenant-owned data.
+  MUTATION_SCOPE_ADMIN = 5;
+}
+
+// Default user-experience gate for the AI-guardrail policy engine when a
+// call matches this RPC. Customer policy may override (e.g. promote AUTO
+// to CONFIRM for sensitive tenants) but cannot soften below the tier the
+// author declared.
+enum DefaultTier {
+  DEFAULT_TIER_UNSPECIFIED = 0;
+  // Proceed without user prompt.
+  DEFAULT_TIER_AUTO = 1;
+  // Surface a one-click confirmation prompt before execution.
+  DEFAULT_TIER_CONFIRM = 2;
+  // Require a human approver (ticket / approval workflow) before execution.
+  DEFAULT_TIER_APPROVE = 3;
 }
 
 message DelegationMeta {
-  // "critical" / "high" / "medium" / "low".
-  string risk_level = 1;
-  // Default approval tier: "auto" (proceed) / "confirm" (warn then proceed) /
-  // "approve" (require human approval before execution).
-  string default_tier = 2;
-  // Whether the operation is reversible. Unset means unknown.
+  // Worst-case severity if this RPC is misused or its output exfiltrated.
+  // Aligned with NIST FIPS 199; CRITICAL is reserved for incident-grade
+  // risk (e.g. raw credential read, mass user delete).
+  Severity risk_level = 1;
+  // Default UX gating tier. AUTO / CONFIRM / APPROVE roughly correspond to
+  // "auto-execute", "ask first", and "needs human ticket".
+  DefaultTier default_tier = 2;
+  // Whether the action can be undone by a counter-operation in the same
+  // tenant (e.g. DeleteX reversible by CreateX with the same id). Unset
+  // means unknown — caller should treat as not reversible.
   bool reversible = 3;
-  // Action verb: "read" / "create" / "update" / "delete" / "admin".
-  string mutation_scope = 4;
-  // Free-form sensitivity tags consumed by downstream translators
-  // (e.g. "pii", "secrets", "financial", "production", "lifecycle").
+  // Action verb the RPC performs; see MutationScope.
+  MutationScope mutation_scope = 4;
+  // Free-form sensitivity tags consumed by downstream translators. Two
+  // categories of tag are accepted on the same list:
+  //   - Data category: "pii", "secrets", "financial", "production",
+  //     "lifecycle" (the common mcp-axiomatic vocabulary).
+  //   - Channel / side-effect markers: e.g. "outbound" (the RPC reaches
+  //     out to an external system), "untrusted_output" (the RPC returns
+  //     attacker-influenceable content that should be stamped untrusted
+  //     when ingested into agent context).
+  // The vocabulary is intentionally open; downstream consumers validate
+  // against the set they know and warn on unknown values. Standardization
+  // of channel/side-effect markers is tracked as follow-up.
   repeated string sensitivity_tags = 5;
 }
 
