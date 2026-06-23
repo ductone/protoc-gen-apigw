@@ -76,6 +76,39 @@ message Deprecation {
 
 message MethodOptions {
   repeated Operation operations = 1;
+  // delegation carries per-RPC AI-guardrail tags describing the
+  // intrinsic risk shape of the RPC, independent of the route(s) under
+  // operations[] that expose it. Consumed by the lethal-trifecta
+  // translator in c1's pkg/aigov/derive to produce per-turn capability
+  // scores.
+  DelegationMeta delegation = 2;
+}
+
+// Severity tier for AI-guardrail risk scoring. Three named levels
+// matching the lethal-trifecta cube's per-axis design (3×3×3 = 27
+// cells; see pkg/aigov/cube in ductone/c1). LOW / MEDIUM / HIGH map
+// to cube Score 0 / 1 / 2. SEVERITY_UNSPECIFIED indicates the field
+// was not set — downstream consumers should treat unset as the
+// conservative default per their policy.
+enum Severity {
+  SEVERITY_UNSPECIFIED = 0;
+  SEVERITY_LOW = 1;
+  SEVERITY_MEDIUM = 2;
+  SEVERITY_HIGH = 3;
+}
+
+message DelegationMeta {
+  // privacy_class scores the trifecta cube's Axis 1 (Private Data Access)
+  // contribution from this RPC: how sensitive is the data the RPC reads
+  // and returns. Internal-only / public reads leave UNSPECIFIED. The
+  // policy engine reads this directly as the A1 input.
+  Severity privacy_class = 1;
+  // exfil_class scores the trifecta cube's Axis 3 (Exfiltration)
+  // contribution from this RPC: how exfil-friendly is the outbound
+  // channel this RPC can reach. Internal-only RPCs leave UNSPECIFIED;
+  // anything UNSPECIFIED implies no outbound channel. The policy engine
+  // reads this directly as the A3 input.
+  Severity exfil_class = 2;
 }
 
 message ServiceOptions {

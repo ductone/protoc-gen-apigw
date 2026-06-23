@@ -77,6 +77,188 @@ func (Stability) EnumDescriptor() ([]byte, []int) {
 	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{0}
 }
 
+// Severity tier for AI-guardrail risk scoring. Aligned with NIST FIPS 199
+// (LOW / MODERATE / HIGH), with an additional CRITICAL tier used by
+// ductone/mcp-axiomatic for incident-grade risk. MEDIUM corresponds to
+// FIPS 199 "MODERATE".
+type Severity int32
+
+const (
+	Severity_SEVERITY_UNSPECIFIED Severity = 0
+	Severity_SEVERITY_LOW         Severity = 1
+	Severity_SEVERITY_MEDIUM      Severity = 2
+	Severity_SEVERITY_HIGH        Severity = 3
+	Severity_SEVERITY_CRITICAL    Severity = 4
+)
+
+// Enum value maps for Severity.
+var (
+	Severity_name = map[int32]string{
+		0: "SEVERITY_UNSPECIFIED",
+		1: "SEVERITY_LOW",
+		2: "SEVERITY_MEDIUM",
+		3: "SEVERITY_HIGH",
+		4: "SEVERITY_CRITICAL",
+	}
+	Severity_value = map[string]int32{
+		"SEVERITY_UNSPECIFIED": 0,
+		"SEVERITY_LOW":         1,
+		"SEVERITY_MEDIUM":      2,
+		"SEVERITY_HIGH":        3,
+		"SEVERITY_CRITICAL":    4,
+	}
+)
+
+func (x Severity) Enum() *Severity {
+	p := new(Severity)
+	*p = x
+	return p
+}
+
+func (x Severity) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Severity) Descriptor() protoreflect.EnumDescriptor {
+	return file_apigw_v1_apigw_proto_enumTypes[1].Descriptor()
+}
+
+func (Severity) Type() protoreflect.EnumType {
+	return &file_apigw_v1_apigw_proto_enumTypes[1]
+}
+
+func (x Severity) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Severity.Descriptor instead.
+func (Severity) EnumDescriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{1}
+}
+
+// Action verb describing what the RPC does to its target resource(s).
+// Orthogonal to apigw.Operation.method (the HTTP verb); a single gRPC
+// method can be POST + MUTATION_SCOPE_DELETE, etc.
+type MutationScope int32
+
+const (
+	MutationScope_MUTATION_SCOPE_UNSPECIFIED MutationScope = 0
+	MutationScope_MUTATION_SCOPE_READ        MutationScope = 1
+	MutationScope_MUTATION_SCOPE_CREATE      MutationScope = 2
+	MutationScope_MUTATION_SCOPE_UPDATE      MutationScope = 3
+	MutationScope_MUTATION_SCOPE_DELETE      MutationScope = 4
+	// ADMIN covers configuration / policy / governance / role / permission
+	// changes — anything that alters how the system itself behaves, as
+	// opposed to CRUD on tenant-owned data.
+	MutationScope_MUTATION_SCOPE_ADMIN MutationScope = 5
+)
+
+// Enum value maps for MutationScope.
+var (
+	MutationScope_name = map[int32]string{
+		0: "MUTATION_SCOPE_UNSPECIFIED",
+		1: "MUTATION_SCOPE_READ",
+		2: "MUTATION_SCOPE_CREATE",
+		3: "MUTATION_SCOPE_UPDATE",
+		4: "MUTATION_SCOPE_DELETE",
+		5: "MUTATION_SCOPE_ADMIN",
+	}
+	MutationScope_value = map[string]int32{
+		"MUTATION_SCOPE_UNSPECIFIED": 0,
+		"MUTATION_SCOPE_READ":        1,
+		"MUTATION_SCOPE_CREATE":      2,
+		"MUTATION_SCOPE_UPDATE":      3,
+		"MUTATION_SCOPE_DELETE":      4,
+		"MUTATION_SCOPE_ADMIN":       5,
+	}
+)
+
+func (x MutationScope) Enum() *MutationScope {
+	p := new(MutationScope)
+	*p = x
+	return p
+}
+
+func (x MutationScope) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (MutationScope) Descriptor() protoreflect.EnumDescriptor {
+	return file_apigw_v1_apigw_proto_enumTypes[2].Descriptor()
+}
+
+func (MutationScope) Type() protoreflect.EnumType {
+	return &file_apigw_v1_apigw_proto_enumTypes[2]
+}
+
+func (x MutationScope) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use MutationScope.Descriptor instead.
+func (MutationScope) EnumDescriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{2}
+}
+
+// Default user-experience gate for the AI-guardrail policy engine when a
+// call matches this RPC. Customer policy may override (e.g. promote AUTO
+// to CONFIRM for sensitive tenants) but cannot soften below the tier the
+// author declared.
+type DefaultTier int32
+
+const (
+	DefaultTier_DEFAULT_TIER_UNSPECIFIED DefaultTier = 0
+	// Proceed without user prompt.
+	DefaultTier_DEFAULT_TIER_AUTO DefaultTier = 1
+	// Surface a one-click confirmation prompt before execution.
+	DefaultTier_DEFAULT_TIER_CONFIRM DefaultTier = 2
+	// Require a human approver (ticket / approval workflow) before execution.
+	DefaultTier_DEFAULT_TIER_APPROVE DefaultTier = 3
+)
+
+// Enum value maps for DefaultTier.
+var (
+	DefaultTier_name = map[int32]string{
+		0: "DEFAULT_TIER_UNSPECIFIED",
+		1: "DEFAULT_TIER_AUTO",
+		2: "DEFAULT_TIER_CONFIRM",
+		3: "DEFAULT_TIER_APPROVE",
+	}
+	DefaultTier_value = map[string]int32{
+		"DEFAULT_TIER_UNSPECIFIED": 0,
+		"DEFAULT_TIER_AUTO":        1,
+		"DEFAULT_TIER_CONFIRM":     2,
+		"DEFAULT_TIER_APPROVE":     3,
+	}
+)
+
+func (x DefaultTier) Enum() *DefaultTier {
+	p := new(DefaultTier)
+	*p = x
+	return p
+}
+
+func (x DefaultTier) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DefaultTier) Descriptor() protoreflect.EnumDescriptor {
+	return file_apigw_v1_apigw_proto_enumTypes[3].Descriptor()
+}
+
+func (DefaultTier) Type() protoreflect.EnumType {
+	return &file_apigw_v1_apigw_proto_enumTypes[3]
+}
+
+func (x DefaultTier) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DefaultTier.Descriptor instead.
+func (DefaultTier) EnumDescriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{3}
+}
+
 type TerraformEntity_TerraformEntityMethodType int32
 
 const (
@@ -116,11 +298,11 @@ func (x TerraformEntity_TerraformEntityMethodType) String() string {
 }
 
 func (TerraformEntity_TerraformEntityMethodType) Descriptor() protoreflect.EnumDescriptor {
-	return file_apigw_v1_apigw_proto_enumTypes[1].Descriptor()
+	return file_apigw_v1_apigw_proto_enumTypes[4].Descriptor()
 }
 
 func (TerraformEntity_TerraformEntityMethodType) Type() protoreflect.EnumType {
-	return &file_apigw_v1_apigw_proto_enumTypes[1]
+	return &file_apigw_v1_apigw_proto_enumTypes[4]
 }
 
 func (x TerraformEntity_TerraformEntityMethodType) Number() protoreflect.EnumNumber {
@@ -129,7 +311,7 @@ func (x TerraformEntity_TerraformEntityMethodType) Number() protoreflect.EnumNum
 
 // Deprecated: Use TerraformEntity_TerraformEntityMethodType.Descriptor instead.
 func (TerraformEntity_TerraformEntityMethodType) EnumDescriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{8, 0}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{9, 0}
 }
 
 type TerraformEntity_OptionalExclusion int32
@@ -167,11 +349,11 @@ func (x TerraformEntity_OptionalExclusion) String() string {
 }
 
 func (TerraformEntity_OptionalExclusion) Descriptor() protoreflect.EnumDescriptor {
-	return file_apigw_v1_apigw_proto_enumTypes[2].Descriptor()
+	return file_apigw_v1_apigw_proto_enumTypes[5].Descriptor()
 }
 
 func (TerraformEntity_OptionalExclusion) Type() protoreflect.EnumType {
-	return &file_apigw_v1_apigw_proto_enumTypes[2]
+	return &file_apigw_v1_apigw_proto_enumTypes[5]
 }
 
 func (x TerraformEntity_OptionalExclusion) Number() protoreflect.EnumNumber {
@@ -180,7 +362,7 @@ func (x TerraformEntity_OptionalExclusion) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TerraformEntity_OptionalExclusion.Descriptor instead.
 func (TerraformEntity_OptionalExclusion) EnumDescriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{8, 1}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{9, 1}
 }
 
 type Pagination_TerraformEntityPaginationType int32
@@ -213,11 +395,11 @@ func (x Pagination_TerraformEntityPaginationType) String() string {
 }
 
 func (Pagination_TerraformEntityPaginationType) Descriptor() protoreflect.EnumDescriptor {
-	return file_apigw_v1_apigw_proto_enumTypes[3].Descriptor()
+	return file_apigw_v1_apigw_proto_enumTypes[6].Descriptor()
 }
 
 func (Pagination_TerraformEntityPaginationType) Type() protoreflect.EnumType {
-	return &file_apigw_v1_apigw_proto_enumTypes[3]
+	return &file_apigw_v1_apigw_proto_enumTypes[6]
 }
 
 func (x Pagination_TerraformEntityPaginationType) Number() protoreflect.EnumNumber {
@@ -226,7 +408,7 @@ func (x Pagination_TerraformEntityPaginationType) Number() protoreflect.EnumNumb
 
 // Deprecated: Use Pagination_TerraformEntityPaginationType.Descriptor instead.
 func (Pagination_TerraformEntityPaginationType) EnumDescriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{9, 0}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{10, 0}
 }
 
 type PaginationInput_TerraformEntityPaginationInputIn int32
@@ -259,11 +441,11 @@ func (x PaginationInput_TerraformEntityPaginationInputIn) String() string {
 }
 
 func (PaginationInput_TerraformEntityPaginationInputIn) Descriptor() protoreflect.EnumDescriptor {
-	return file_apigw_v1_apigw_proto_enumTypes[4].Descriptor()
+	return file_apigw_v1_apigw_proto_enumTypes[7].Descriptor()
 }
 
 func (PaginationInput_TerraformEntityPaginationInputIn) Type() protoreflect.EnumType {
-	return &file_apigw_v1_apigw_proto_enumTypes[4]
+	return &file_apigw_v1_apigw_proto_enumTypes[7]
 }
 
 func (x PaginationInput_TerraformEntityPaginationInputIn) Number() protoreflect.EnumNumber {
@@ -272,7 +454,7 @@ func (x PaginationInput_TerraformEntityPaginationInputIn) Number() protoreflect.
 
 // Deprecated: Use PaginationInput_TerraformEntityPaginationInputIn.Descriptor instead.
 func (PaginationInput_TerraformEntityPaginationInputIn) EnumDescriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{10, 0}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{11, 0}
 }
 
 type PaginationInput_TerraformEntityPaginationInputType int32
@@ -305,11 +487,11 @@ func (x PaginationInput_TerraformEntityPaginationInputType) String() string {
 }
 
 func (PaginationInput_TerraformEntityPaginationInputType) Descriptor() protoreflect.EnumDescriptor {
-	return file_apigw_v1_apigw_proto_enumTypes[5].Descriptor()
+	return file_apigw_v1_apigw_proto_enumTypes[8].Descriptor()
 }
 
 func (PaginationInput_TerraformEntityPaginationInputType) Type() protoreflect.EnumType {
-	return &file_apigw_v1_apigw_proto_enumTypes[5]
+	return &file_apigw_v1_apigw_proto_enumTypes[8]
 }
 
 func (x PaginationInput_TerraformEntityPaginationInputType) Number() protoreflect.EnumNumber {
@@ -318,7 +500,7 @@ func (x PaginationInput_TerraformEntityPaginationInputType) Number() protoreflec
 
 // Deprecated: Use PaginationInput_TerraformEntityPaginationInputType.Descriptor instead.
 func (PaginationInput_TerraformEntityPaginationInputType) EnumDescriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{10, 1}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{11, 1}
 }
 
 type MessageOptions struct {
@@ -457,19 +639,8 @@ type FieldOption struct {
 	Stability Stability `protobuf:"varint,3,opt,name=stability,proto3,enum=apigw.v1.Stability" json:"stability,omitempty"`
 	// Sets deprecation information for this field
 	Deprecation *Deprecation `protobuf:"bytes,4,opt,name=deprecation,proto3" json:"deprecation,omitempty"`
-	// Marks this field as a ConductorOne object-annotation bag (a
-	// map<string, string> following the convention in
-	// c1/.rfcs/object-annotations.md).
-	//
-	// When true, apigw emits an `x-speakeasy-terraform-plan-modifier`
-	// OpenAPI extension wiring the ConductorOne Terraform provider's
-	// shared `annotations.PlanModifier()` helper (in the
-	// `internal/annotations` package). The import path and helper
-	// expression are constants owned by apigw — the proto does not name
-	// them.
-	//
-	// Valid only on `map<string, string>` fields. The codegen logs a
-	// warning and skips the extension on any other type.
+	// Marks a map<string, string> field as a C1 object-annotation bag.
+	// Codegen emits an x-speakeasy-terraform-plan-modifier extension.
 	AnnotationBag bool `protobuf:"varint,5,opt,name=annotation_bag,json=annotationBag,proto3" json:"annotation_bag,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -629,8 +800,19 @@ func (x *Deprecation) GetSunsetDate() string {
 }
 
 type MethodOptions struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Operations    []*Operation           `protobuf:"bytes,1,rep,name=operations,proto3" json:"operations,omitempty"`
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	Operations []*Operation           `protobuf:"bytes,1,rep,name=operations,proto3" json:"operations,omitempty"`
+	// delegation carries per-RPC AI-guardrail tags. Describes the intrinsic
+	// risk shape of the RPC, independent of the route(s) under operations[]
+	// that expose it. Consumed by the lethal-trifecta translator in c1's
+	// pkg/aigov/derive to produce per-turn capability scores.
+	//
+	// Field names and numbers in DelegationMeta mirror
+	// bundle.v1.DelegationMeta in ductone/mcp-axiomatic so a single
+	// translator can consume either surface. mcp-axiomatic encodes
+	// equivalent values as strings (parsed by the translator); apigw uses
+	// typed enums directly.
+	Delegation    *DelegationMeta `protobuf:"bytes,2,opt,name=delegation,proto3" json:"delegation,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -672,6 +854,110 @@ func (x *MethodOptions) GetOperations() []*Operation {
 	return nil
 }
 
+func (x *MethodOptions) GetDelegation() *DelegationMeta {
+	if x != nil {
+		return x.Delegation
+	}
+	return nil
+}
+
+type DelegationMeta struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Worst-case severity if this RPC is misused or its output exfiltrated.
+	// Aligned with NIST FIPS 199; CRITICAL is reserved for incident-grade
+	// risk (e.g. raw credential read, mass user delete).
+	RiskLevel Severity `protobuf:"varint,1,opt,name=risk_level,json=riskLevel,proto3,enum=apigw.v1.Severity" json:"risk_level,omitempty"`
+	// Default UX gating tier. AUTO / CONFIRM / APPROVE roughly correspond to
+	// "auto-execute", "ask first", and "needs human ticket".
+	DefaultTier DefaultTier `protobuf:"varint,2,opt,name=default_tier,json=defaultTier,proto3,enum=apigw.v1.DefaultTier" json:"default_tier,omitempty"`
+	// Whether the action can be undone by a counter-operation in the same
+	// tenant (e.g. DeleteX reversible by CreateX with the same id). Unset
+	// means unknown — caller should treat as not reversible.
+	Reversible bool `protobuf:"varint,3,opt,name=reversible,proto3" json:"reversible,omitempty"`
+	// Action verb the RPC performs; see MutationScope.
+	MutationScope MutationScope `protobuf:"varint,4,opt,name=mutation_scope,json=mutationScope,proto3,enum=apigw.v1.MutationScope" json:"mutation_scope,omitempty"`
+	// Free-form sensitivity tags consumed by downstream translators. Two
+	// categories of tag are accepted on the same list:
+	//   - Data category: "pii", "secrets", "financial", "production",
+	//     "lifecycle" (the common mcp-axiomatic vocabulary).
+	//   - Channel / side-effect markers: e.g. "outbound" (the RPC reaches
+	//     out to an external system), "untrusted_output" (the RPC returns
+	//     attacker-influenceable content that should be stamped untrusted
+	//     when ingested into agent context).
+	//
+	// The vocabulary is intentionally open; downstream consumers validate
+	// against the set they know and warn on unknown values. Standardization
+	// of channel/side-effect markers is tracked as follow-up.
+	SensitivityTags []string `protobuf:"bytes,5,rep,name=sensitivity_tags,json=sensitivityTags,proto3" json:"sensitivity_tags,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *DelegationMeta) Reset() {
+	*x = DelegationMeta{}
+	mi := &file_apigw_v1_apigw_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DelegationMeta) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DelegationMeta) ProtoMessage() {}
+
+func (x *DelegationMeta) ProtoReflect() protoreflect.Message {
+	mi := &file_apigw_v1_apigw_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DelegationMeta.ProtoReflect.Descriptor instead.
+func (*DelegationMeta) Descriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DelegationMeta) GetRiskLevel() Severity {
+	if x != nil {
+		return x.RiskLevel
+	}
+	return Severity_SEVERITY_UNSPECIFIED
+}
+
+func (x *DelegationMeta) GetDefaultTier() DefaultTier {
+	if x != nil {
+		return x.DefaultTier
+	}
+	return DefaultTier_DEFAULT_TIER_UNSPECIFIED
+}
+
+func (x *DelegationMeta) GetReversible() bool {
+	if x != nil {
+		return x.Reversible
+	}
+	return false
+}
+
+func (x *DelegationMeta) GetMutationScope() MutationScope {
+	if x != nil {
+		return x.MutationScope
+	}
+	return MutationScope_MUTATION_SCOPE_UNSPECIFIED
+}
+
+func (x *DelegationMeta) GetSensitivityTags() []string {
+	if x != nil {
+		return x.SensitivityTags
+	}
+	return nil
+}
+
 type ServiceOptions struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Service       *Service               `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty"`
@@ -681,7 +967,7 @@ type ServiceOptions struct {
 
 func (x *ServiceOptions) Reset() {
 	*x = ServiceOptions{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[6]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -693,7 +979,7 @@ func (x *ServiceOptions) String() string {
 func (*ServiceOptions) ProtoMessage() {}
 
 func (x *ServiceOptions) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[6]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -706,7 +992,7 @@ func (x *ServiceOptions) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServiceOptions.ProtoReflect.Descriptor instead.
 func (*ServiceOptions) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{6}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ServiceOptions) GetService() *Service {
@@ -733,7 +1019,7 @@ type Service struct {
 
 func (x *Service) Reset() {
 	*x = Service{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[7]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -745,7 +1031,7 @@ func (x *Service) String() string {
 func (*Service) ProtoMessage() {}
 
 func (x *Service) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[7]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -758,7 +1044,7 @@ func (x *Service) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Service.ProtoReflect.Descriptor instead.
 func (*Service) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{7}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Service) GetStability() Stability {
@@ -802,7 +1088,7 @@ type TerraformEntity struct {
 
 func (x *TerraformEntity) Reset() {
 	*x = TerraformEntity{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[8]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -814,7 +1100,7 @@ func (x *TerraformEntity) String() string {
 func (*TerraformEntity) ProtoMessage() {}
 
 func (x *TerraformEntity) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[8]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -827,7 +1113,7 @@ func (x *TerraformEntity) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TerraformEntity.ProtoReflect.Descriptor instead.
 func (*TerraformEntity) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{8}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *TerraformEntity) GetType() TerraformEntity_TerraformEntityMethodType {
@@ -876,7 +1162,7 @@ type Pagination struct {
 
 func (x *Pagination) Reset() {
 	*x = Pagination{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[9]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -888,7 +1174,7 @@ func (x *Pagination) String() string {
 func (*Pagination) ProtoMessage() {}
 
 func (x *Pagination) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[9]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -901,7 +1187,7 @@ func (x *Pagination) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Pagination.ProtoReflect.Descriptor instead.
 func (*Pagination) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{9}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Pagination) GetType() Pagination_TerraformEntityPaginationType {
@@ -936,7 +1222,7 @@ type PaginationInput struct {
 
 func (x *PaginationInput) Reset() {
 	*x = PaginationInput{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[10]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -948,7 +1234,7 @@ func (x *PaginationInput) String() string {
 func (*PaginationInput) ProtoMessage() {}
 
 func (x *PaginationInput) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[10]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -961,7 +1247,7 @@ func (x *PaginationInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PaginationInput.ProtoReflect.Descriptor instead.
 func (*PaginationInput) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{10}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *PaginationInput) GetName() string {
@@ -994,7 +1280,7 @@ type PaginationOutput struct {
 
 func (x *PaginationOutput) Reset() {
 	*x = PaginationOutput{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[11]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1006,7 +1292,7 @@ func (x *PaginationOutput) String() string {
 func (*PaginationOutput) ProtoMessage() {}
 
 func (x *PaginationOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[11]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1019,7 +1305,7 @@ func (x *PaginationOutput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PaginationOutput.ProtoReflect.Descriptor instead.
 func (*PaginationOutput) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{11}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *PaginationOutput) GetNextCursor() string {
@@ -1059,7 +1345,7 @@ type Operation struct {
 
 func (x *Operation) Reset() {
 	*x = Operation{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[12]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1071,7 +1357,7 @@ func (x *Operation) String() string {
 func (*Operation) ProtoMessage() {}
 
 func (x *Operation) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[12]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1084,7 +1370,7 @@ func (x *Operation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Operation.ProtoReflect.Descriptor instead.
 func (*Operation) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{12}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Operation) GetMethod() string {
@@ -1195,7 +1481,7 @@ type RequestExample struct {
 
 func (x *RequestExample) Reset() {
 	*x = RequestExample{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[13]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1207,7 +1493,7 @@ func (x *RequestExample) String() string {
 func (*RequestExample) ProtoMessage() {}
 
 func (x *RequestExample) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[13]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1220,7 +1506,7 @@ func (x *RequestExample) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequestExample.ProtoReflect.Descriptor instead.
 func (*RequestExample) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{13}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *RequestExample) GetName() string {
@@ -1247,7 +1533,7 @@ type ResponseExample struct {
 
 func (x *ResponseExample) Reset() {
 	*x = ResponseExample{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[14]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1259,7 +1545,7 @@ func (x *ResponseExample) String() string {
 func (*ResponseExample) ProtoMessage() {}
 
 func (x *ResponseExample) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[14]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1272,7 +1558,7 @@ func (x *ResponseExample) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResponseExample.ProtoReflect.Descriptor instead.
 func (*ResponseExample) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{14}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ResponseExample) GetName() string {
@@ -1371,11 +1657,23 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\rfield_options\x18\x01 \x03(\v2\x15.apigw.v1.FieldOptionR\ffieldOptions\".\n" +
 	"\vDeprecation\x12\x1f\n" +
 	"\vsunset_date\x18\x01 \x01(\tR\n" +
-	"sunsetDate\"D\n" +
+	"sunsetDate\"~\n" +
 	"\rMethodOptions\x123\n" +
 	"\n" +
 	"operations\x18\x01 \x03(\v2\x13.apigw.v1.OperationR\n" +
-	"operations\"=\n" +
+	"operations\x128\n" +
+	"\n" +
+	"delegation\x18\x02 \x01(\v2\x18.apigw.v1.DelegationMetaR\n" +
+	"delegation\"\x88\x02\n" +
+	"\x0eDelegationMeta\x121\n" +
+	"\n" +
+	"risk_level\x18\x01 \x01(\x0e2\x12.apigw.v1.SeverityR\triskLevel\x128\n" +
+	"\fdefault_tier\x18\x02 \x01(\x0e2\x15.apigw.v1.DefaultTierR\vdefaultTier\x12\x1e\n" +
+	"\n" +
+	"reversible\x18\x03 \x01(\bR\n" +
+	"reversible\x12>\n" +
+	"\x0emutation_scope\x18\x04 \x01(\x0e2\x17.apigw.v1.MutationScopeR\rmutationScope\x12)\n" +
+	"\x10sensitivity_tags\x18\x05 \x03(\tR\x0fsensitivityTags\"=\n" +
 	"\x0eServiceOptions\x12+\n" +
 	"\aservice\x18\x01 \x01(\v2\x11.apigw.v1.ServiceR\aservice\"\xb9\x01\n" +
 	"\aService\x121\n" +
@@ -1453,7 +1751,25 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\x0fSTABILITY_DRAFT\x10\x01\x12\x13\n" +
 	"\x0fSTABILITY_ALPHA\x10\x02\x12\x12\n" +
 	"\x0eSTABILITY_BETA\x10\x03\x12\x14\n" +
-	"\x10STABILITY_STABLE\x10\x04:T\n" +
+	"\x10STABILITY_STABLE\x10\x04*u\n" +
+	"\bSeverity\x12\x18\n" +
+	"\x14SEVERITY_UNSPECIFIED\x10\x00\x12\x10\n" +
+	"\fSEVERITY_LOW\x10\x01\x12\x13\n" +
+	"\x0fSEVERITY_MEDIUM\x10\x02\x12\x11\n" +
+	"\rSEVERITY_HIGH\x10\x03\x12\x15\n" +
+	"\x11SEVERITY_CRITICAL\x10\x04*\xb3\x01\n" +
+	"\rMutationScope\x12\x1e\n" +
+	"\x1aMUTATION_SCOPE_UNSPECIFIED\x10\x00\x12\x17\n" +
+	"\x13MUTATION_SCOPE_READ\x10\x01\x12\x19\n" +
+	"\x15MUTATION_SCOPE_CREATE\x10\x02\x12\x19\n" +
+	"\x15MUTATION_SCOPE_UPDATE\x10\x03\x12\x19\n" +
+	"\x15MUTATION_SCOPE_DELETE\x10\x04\x12\x18\n" +
+	"\x14MUTATION_SCOPE_ADMIN\x10\x05*v\n" +
+	"\vDefaultTier\x12\x1c\n" +
+	"\x18DEFAULT_TIER_UNSPECIFIED\x10\x00\x12\x15\n" +
+	"\x11DEFAULT_TIER_AUTO\x10\x01\x12\x18\n" +
+	"\x14DEFAULT_TIER_CONFIRM\x10\x02\x12\x18\n" +
+	"\x14DEFAULT_TIER_APPROVE\x10\x03:T\n" +
 	"\aservice\x12\x1f.google.protobuf.ServiceOptions\x18\xe2; \x01(\v2\x18.apigw.v1.ServiceOptionsR\aservice:P\n" +
 	"\x06method\x12\x1e.google.protobuf.MethodOptions\x18\xe3; \x01(\v2\x17.apigw.v1.MethodOptionsR\x06method:L\n" +
 	"\x05field\x12\x1d.google.protobuf.FieldOptions\x18\xe4; \x01(\v2\x16.apigw.v1.FieldOptionsR\x05field:T\n" +
@@ -1473,73 +1789,81 @@ func file_apigw_v1_apigw_proto_rawDescGZIP() []byte {
 	return file_apigw_v1_apigw_proto_rawDescData
 }
 
-var file_apigw_v1_apigw_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_apigw_v1_apigw_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_apigw_v1_apigw_proto_enumTypes = make([]protoimpl.EnumInfo, 9)
+var file_apigw_v1_apigw_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_apigw_v1_apigw_proto_goTypes = []any{
-	(Stability)(0), // 0: apigw.v1.Stability
-	(TerraformEntity_TerraformEntityMethodType)(0),          // 1: apigw.v1.TerraformEntity.TerraformEntityMethodType
-	(TerraformEntity_OptionalExclusion)(0),                  // 2: apigw.v1.TerraformEntity.OptionalExclusion
-	(Pagination_TerraformEntityPaginationType)(0),           // 3: apigw.v1.Pagination.TerraformEntityPaginationType
-	(PaginationInput_TerraformEntityPaginationInputIn)(0),   // 4: apigw.v1.PaginationInput.TerraformEntityPaginationInputIn
-	(PaginationInput_TerraformEntityPaginationInputType)(0), // 5: apigw.v1.PaginationInput.TerraformEntityPaginationInputType
-	(*MessageOptions)(nil),                                  // 6: apigw.v1.MessageOptions
-	(*MessageOption)(nil),                                   // 7: apigw.v1.MessageOption
-	(*FieldOption)(nil),                                     // 8: apigw.v1.FieldOption
-	(*FieldOptions)(nil),                                    // 9: apigw.v1.FieldOptions
-	(*Deprecation)(nil),                                     // 10: apigw.v1.Deprecation
-	(*MethodOptions)(nil),                                   // 11: apigw.v1.MethodOptions
-	(*ServiceOptions)(nil),                                  // 12: apigw.v1.ServiceOptions
-	(*Service)(nil),                                         // 13: apigw.v1.Service
-	(*TerraformEntity)(nil),                                 // 14: apigw.v1.TerraformEntity
-	(*Pagination)(nil),                                      // 15: apigw.v1.Pagination
-	(*PaginationInput)(nil),                                 // 16: apigw.v1.PaginationInput
-	(*PaginationOutput)(nil),                                // 17: apigw.v1.PaginationOutput
-	(*Operation)(nil),                                       // 18: apigw.v1.Operation
-	(*RequestExample)(nil),                                  // 19: apigw.v1.RequestExample
-	(*ResponseExample)(nil),                                 // 20: apigw.v1.ResponseExample
-	nil,                                                     // 21: apigw.v1.Operation.QueryEntry
-	(*descriptorpb.ServiceOptions)(nil),                     // 22: google.protobuf.ServiceOptions
-	(*descriptorpb.MethodOptions)(nil),                      // 23: google.protobuf.MethodOptions
-	(*descriptorpb.FieldOptions)(nil),                       // 24: google.protobuf.FieldOptions
-	(*descriptorpb.MessageOptions)(nil),                     // 25: google.protobuf.MessageOptions
+	(Stability)(0),     // 0: apigw.v1.Stability
+	(Severity)(0),      // 1: apigw.v1.Severity
+	(MutationScope)(0), // 2: apigw.v1.MutationScope
+	(DefaultTier)(0),   // 3: apigw.v1.DefaultTier
+	(TerraformEntity_TerraformEntityMethodType)(0),          // 4: apigw.v1.TerraformEntity.TerraformEntityMethodType
+	(TerraformEntity_OptionalExclusion)(0),                  // 5: apigw.v1.TerraformEntity.OptionalExclusion
+	(Pagination_TerraformEntityPaginationType)(0),           // 6: apigw.v1.Pagination.TerraformEntityPaginationType
+	(PaginationInput_TerraformEntityPaginationInputIn)(0),   // 7: apigw.v1.PaginationInput.TerraformEntityPaginationInputIn
+	(PaginationInput_TerraformEntityPaginationInputType)(0), // 8: apigw.v1.PaginationInput.TerraformEntityPaginationInputType
+	(*MessageOptions)(nil),                                  // 9: apigw.v1.MessageOptions
+	(*MessageOption)(nil),                                   // 10: apigw.v1.MessageOption
+	(*FieldOption)(nil),                                     // 11: apigw.v1.FieldOption
+	(*FieldOptions)(nil),                                    // 12: apigw.v1.FieldOptions
+	(*Deprecation)(nil),                                     // 13: apigw.v1.Deprecation
+	(*MethodOptions)(nil),                                   // 14: apigw.v1.MethodOptions
+	(*DelegationMeta)(nil),                                  // 15: apigw.v1.DelegationMeta
+	(*ServiceOptions)(nil),                                  // 16: apigw.v1.ServiceOptions
+	(*Service)(nil),                                         // 17: apigw.v1.Service
+	(*TerraformEntity)(nil),                                 // 18: apigw.v1.TerraformEntity
+	(*Pagination)(nil),                                      // 19: apigw.v1.Pagination
+	(*PaginationInput)(nil),                                 // 20: apigw.v1.PaginationInput
+	(*PaginationOutput)(nil),                                // 21: apigw.v1.PaginationOutput
+	(*Operation)(nil),                                       // 22: apigw.v1.Operation
+	(*RequestExample)(nil),                                  // 23: apigw.v1.RequestExample
+	(*ResponseExample)(nil),                                 // 24: apigw.v1.ResponseExample
+	nil,                                                     // 25: apigw.v1.Operation.QueryEntry
+	(*descriptorpb.ServiceOptions)(nil),                     // 26: google.protobuf.ServiceOptions
+	(*descriptorpb.MethodOptions)(nil),                      // 27: google.protobuf.MethodOptions
+	(*descriptorpb.FieldOptions)(nil),                       // 28: google.protobuf.FieldOptions
+	(*descriptorpb.MessageOptions)(nil),                     // 29: google.protobuf.MessageOptions
 }
 var file_apigw_v1_apigw_proto_depIdxs = []int32{
-	7,  // 0: apigw.v1.MessageOptions.message_options:type_name -> apigw.v1.MessageOption
-	14, // 1: apigw.v1.MessageOption.terraform_entity:type_name -> apigw.v1.TerraformEntity
+	10, // 0: apigw.v1.MessageOptions.message_options:type_name -> apigw.v1.MessageOption
+	18, // 1: apigw.v1.MessageOption.terraform_entity:type_name -> apigw.v1.TerraformEntity
 	0,  // 2: apigw.v1.FieldOption.stability:type_name -> apigw.v1.Stability
-	10, // 3: apigw.v1.FieldOption.deprecation:type_name -> apigw.v1.Deprecation
-	8,  // 4: apigw.v1.FieldOptions.field_options:type_name -> apigw.v1.FieldOption
-	18, // 5: apigw.v1.MethodOptions.operations:type_name -> apigw.v1.Operation
-	13, // 6: apigw.v1.ServiceOptions.service:type_name -> apigw.v1.Service
-	0,  // 7: apigw.v1.Service.stability:type_name -> apigw.v1.Stability
-	10, // 8: apigw.v1.Service.deprecation:type_name -> apigw.v1.Deprecation
-	1,  // 9: apigw.v1.TerraformEntity.type:type_name -> apigw.v1.TerraformEntity.TerraformEntityMethodType
-	2,  // 10: apigw.v1.TerraformEntity.optional_exclusion:type_name -> apigw.v1.TerraformEntity.OptionalExclusion
-	3,  // 11: apigw.v1.Pagination.type:type_name -> apigw.v1.Pagination.TerraformEntityPaginationType
-	16, // 12: apigw.v1.Pagination.inputs:type_name -> apigw.v1.PaginationInput
-	17, // 13: apigw.v1.Pagination.outputs:type_name -> apigw.v1.PaginationOutput
-	4,  // 14: apigw.v1.PaginationInput.in:type_name -> apigw.v1.PaginationInput.TerraformEntityPaginationInputIn
-	5,  // 15: apigw.v1.PaginationInput.type:type_name -> apigw.v1.PaginationInput.TerraformEntityPaginationInputType
-	21, // 16: apigw.v1.Operation.query:type_name -> apigw.v1.Operation.QueryEntry
-	0,  // 17: apigw.v1.Operation.stability:type_name -> apigw.v1.Stability
-	19, // 18: apigw.v1.Operation.request_examples:type_name -> apigw.v1.RequestExample
-	20, // 19: apigw.v1.Operation.response_examples:type_name -> apigw.v1.ResponseExample
-	14, // 20: apigw.v1.Operation.terraform_entity:type_name -> apigw.v1.TerraformEntity
-	15, // 21: apigw.v1.Operation.pagination:type_name -> apigw.v1.Pagination
-	10, // 22: apigw.v1.Operation.deprecation:type_name -> apigw.v1.Deprecation
-	22, // 23: apigw.v1.service:extendee -> google.protobuf.ServiceOptions
-	23, // 24: apigw.v1.method:extendee -> google.protobuf.MethodOptions
-	24, // 25: apigw.v1.field:extendee -> google.protobuf.FieldOptions
-	25, // 26: apigw.v1.message:extendee -> google.protobuf.MessageOptions
-	12, // 27: apigw.v1.service:type_name -> apigw.v1.ServiceOptions
-	11, // 28: apigw.v1.method:type_name -> apigw.v1.MethodOptions
-	9,  // 29: apigw.v1.field:type_name -> apigw.v1.FieldOptions
-	6,  // 30: apigw.v1.message:type_name -> apigw.v1.MessageOptions
-	31, // [31:31] is the sub-list for method output_type
-	31, // [31:31] is the sub-list for method input_type
-	27, // [27:31] is the sub-list for extension type_name
-	23, // [23:27] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	13, // 3: apigw.v1.FieldOption.deprecation:type_name -> apigw.v1.Deprecation
+	11, // 4: apigw.v1.FieldOptions.field_options:type_name -> apigw.v1.FieldOption
+	22, // 5: apigw.v1.MethodOptions.operations:type_name -> apigw.v1.Operation
+	15, // 6: apigw.v1.MethodOptions.delegation:type_name -> apigw.v1.DelegationMeta
+	1,  // 7: apigw.v1.DelegationMeta.risk_level:type_name -> apigw.v1.Severity
+	3,  // 8: apigw.v1.DelegationMeta.default_tier:type_name -> apigw.v1.DefaultTier
+	2,  // 9: apigw.v1.DelegationMeta.mutation_scope:type_name -> apigw.v1.MutationScope
+	17, // 10: apigw.v1.ServiceOptions.service:type_name -> apigw.v1.Service
+	0,  // 11: apigw.v1.Service.stability:type_name -> apigw.v1.Stability
+	13, // 12: apigw.v1.Service.deprecation:type_name -> apigw.v1.Deprecation
+	4,  // 13: apigw.v1.TerraformEntity.type:type_name -> apigw.v1.TerraformEntity.TerraformEntityMethodType
+	5,  // 14: apigw.v1.TerraformEntity.optional_exclusion:type_name -> apigw.v1.TerraformEntity.OptionalExclusion
+	6,  // 15: apigw.v1.Pagination.type:type_name -> apigw.v1.Pagination.TerraformEntityPaginationType
+	20, // 16: apigw.v1.Pagination.inputs:type_name -> apigw.v1.PaginationInput
+	21, // 17: apigw.v1.Pagination.outputs:type_name -> apigw.v1.PaginationOutput
+	7,  // 18: apigw.v1.PaginationInput.in:type_name -> apigw.v1.PaginationInput.TerraformEntityPaginationInputIn
+	8,  // 19: apigw.v1.PaginationInput.type:type_name -> apigw.v1.PaginationInput.TerraformEntityPaginationInputType
+	25, // 20: apigw.v1.Operation.query:type_name -> apigw.v1.Operation.QueryEntry
+	0,  // 21: apigw.v1.Operation.stability:type_name -> apigw.v1.Stability
+	23, // 22: apigw.v1.Operation.request_examples:type_name -> apigw.v1.RequestExample
+	24, // 23: apigw.v1.Operation.response_examples:type_name -> apigw.v1.ResponseExample
+	18, // 24: apigw.v1.Operation.terraform_entity:type_name -> apigw.v1.TerraformEntity
+	19, // 25: apigw.v1.Operation.pagination:type_name -> apigw.v1.Pagination
+	13, // 26: apigw.v1.Operation.deprecation:type_name -> apigw.v1.Deprecation
+	26, // 27: apigw.v1.service:extendee -> google.protobuf.ServiceOptions
+	27, // 28: apigw.v1.method:extendee -> google.protobuf.MethodOptions
+	28, // 29: apigw.v1.field:extendee -> google.protobuf.FieldOptions
+	29, // 30: apigw.v1.message:extendee -> google.protobuf.MessageOptions
+	16, // 31: apigw.v1.service:type_name -> apigw.v1.ServiceOptions
+	14, // 32: apigw.v1.method:type_name -> apigw.v1.MethodOptions
+	12, // 33: apigw.v1.field:type_name -> apigw.v1.FieldOptions
+	9,  // 34: apigw.v1.message:type_name -> apigw.v1.MessageOptions
+	35, // [35:35] is the sub-list for method output_type
+	35, // [35:35] is the sub-list for method input_type
+	31, // [31:35] is the sub-list for extension type_name
+	27, // [27:31] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_apigw_v1_apigw_proto_init() }
@@ -1552,8 +1876,8 @@ func file_apigw_v1_apigw_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_apigw_v1_apigw_proto_rawDesc), len(file_apigw_v1_apigw_proto_rawDesc)),
-			NumEnums:      6,
-			NumMessages:   16,
+			NumEnums:      9,
+			NumMessages:   17,
 			NumExtensions: 4,
 			NumServices:   0,
 		},
