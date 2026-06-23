@@ -84,15 +84,17 @@ message MethodOptions {
   DelegationMeta delegation = 2;
 }
 
-// Severity tier for AI-guardrail risk scoring. Aligned with NIST FIPS 199
-// (LOW / MODERATE / HIGH), with an additional CRITICAL tier for
-// incident-grade risk. MEDIUM corresponds to FIPS 199 "MODERATE".
+// Severity tier for AI-guardrail risk scoring. Three named levels
+// matching the lethal-trifecta cube's per-axis design (3×3×3 = 27
+// cells; see pkg/aigov/cube in ductone/c1). LOW / MEDIUM / HIGH map
+// to cube Score 0 / 1 / 2. SEVERITY_UNSPECIFIED indicates the field
+// was not set — downstream consumers should treat unset as the
+// conservative default per their policy.
 enum Severity {
   SEVERITY_UNSPECIFIED = 0;
   SEVERITY_LOW = 1;
   SEVERITY_MEDIUM = 2;
   SEVERITY_HIGH = 3;
-  SEVERITY_CRITICAL = 4;
 }
 
 message DelegationMeta {
