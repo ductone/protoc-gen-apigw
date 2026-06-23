@@ -156,6 +156,17 @@ message DelegationMeta {
   // against the set they know and warn on unknown values. Standardization
   // of channel/side-effect markers is tracked as follow-up.
   repeated string sensitivity_tags = 5;
+  // privacy_class scores the trifecta cube's Axis 1 (Private Data Access)
+  // contribution from this RPC: how sensitive is the data the RPC reads
+  // and returns? Set independently from risk_level so the translator can
+  // score A1 directly without having to disambiguate which axis
+  // risk_level was set against.
+  Severity privacy_class = 6;
+  // exfil_class scores the trifecta cube's Axis 3 (Exfiltration) contribution
+  // from this RPC: how exfil-friendly is the outbound channel this RPC
+  // can reach? Internal-only RPCs leave this UNSPECIFIED. Set
+  // independently from risk_level so A3 can be scored directly.
+  Severity exfil_class = 7;
 }
 
 message ServiceOptions {
