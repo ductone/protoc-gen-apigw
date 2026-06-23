@@ -95,39 +95,18 @@ enum Severity {
   SEVERITY_CRITICAL = 4;
 }
 
-// Default user-experience gate for the AI-guardrail policy engine when a
-// call matches this RPC. Customer policy may override (e.g. promote AUTO
-// to CONFIRM for sensitive tenants) but cannot soften below the tier the
-// author declared.
-enum DefaultTier {
-  DEFAULT_TIER_UNSPECIFIED = 0;
-  // Proceed without user prompt.
-  DEFAULT_TIER_AUTO = 1;
-  // Surface a one-click confirmation prompt before execution.
-  DEFAULT_TIER_CONFIRM = 2;
-  // Require a human approver (ticket / approval workflow) before execution.
-  DEFAULT_TIER_APPROVE = 3;
-}
-
 message DelegationMeta {
   // privacy_class scores the trifecta cube's Axis 1 (Private Data Access)
   // contribution from this RPC: how sensitive is the data the RPC reads
-  // and returns. Internal-only / public reads leave UNSPECIFIED.
+  // and returns. Internal-only / public reads leave UNSPECIFIED. The
+  // policy engine reads this directly as the A1 input.
   Severity privacy_class = 1;
   // exfil_class scores the trifecta cube's Axis 3 (Exfiltration)
   // contribution from this RPC: how exfil-friendly is the outbound
   // channel this RPC can reach. Internal-only RPCs leave UNSPECIFIED;
-  // anything UNSPECIFIED implies no outbound channel.
+  // anything UNSPECIFIED implies no outbound channel. The policy engine
+  // reads this directly as the A3 input.
   Severity exfil_class = 2;
-  // Default UX gating tier when an AI agent invokes this RPC. AUTO /
-  // CONFIRM / APPROVE roughly correspond to "auto-execute", "ask first",
-  // and "needs human ticket".
-  DefaultTier default_tier = 3;
-  // Whether the action can be undone by a counter-operation in the same
-  // tenant (e.g. DeleteX reversible by CreateX with the same id). False
-  // means observable side effects persist (sent email, posted webhook,
-  // audit log, etc.).
-  bool reversible = 4;
 }
 
 message ServiceOptions {
