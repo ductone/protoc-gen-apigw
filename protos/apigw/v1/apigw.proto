@@ -76,44 +76,23 @@ message Deprecation {
 
 message MethodOptions {
   repeated Operation operations = 1;
-  // delegation carries per-RPC AI-guardrail tags. Describes the intrinsic
-  // risk shape of the RPC, independent of the route(s) under operations[]
-  // that expose it. Consumed by the lethal-trifecta translator in c1's
-  // pkg/aigov/derive to produce per-turn capability scores.
-  //
-  // Field names and numbers in DelegationMeta mirror
-  // bundle.v1.DelegationMeta in ductone/mcp-axiomatic so a single
-  // translator can consume either surface. mcp-axiomatic encodes
-  // equivalent values as strings (parsed by the translator); apigw uses
-  // typed enums directly.
+  // delegation carries per-RPC AI-guardrail tags describing the
+  // intrinsic risk shape of the RPC, independent of the route(s) under
+  // operations[] that expose it. Consumed by the lethal-trifecta
+  // translator in c1's pkg/aigov/derive to produce per-turn capability
+  // scores.
   DelegationMeta delegation = 2;
 }
 
 // Severity tier for AI-guardrail risk scoring. Aligned with NIST FIPS 199
-// (LOW / MODERATE / HIGH), with an additional CRITICAL tier used by
-// ductone/mcp-axiomatic for incident-grade risk. MEDIUM corresponds to
-// FIPS 199 "MODERATE".
+// (LOW / MODERATE / HIGH), with an additional CRITICAL tier for
+// incident-grade risk. MEDIUM corresponds to FIPS 199 "MODERATE".
 enum Severity {
   SEVERITY_UNSPECIFIED = 0;
   SEVERITY_LOW = 1;
   SEVERITY_MEDIUM = 2;
   SEVERITY_HIGH = 3;
   SEVERITY_CRITICAL = 4;
-}
-
-// Action verb describing what the RPC does to its target resource(s).
-// Orthogonal to apigw.Operation.method (the HTTP verb); a single gRPC
-// method can be POST + MUTATION_SCOPE_DELETE, etc.
-enum MutationScope {
-  MUTATION_SCOPE_UNSPECIFIED = 0;
-  MUTATION_SCOPE_READ = 1;
-  MUTATION_SCOPE_CREATE = 2;
-  MUTATION_SCOPE_UPDATE = 3;
-  MUTATION_SCOPE_DELETE = 4;
-  // ADMIN covers configuration / policy / governance / role / permission
-  // changes — anything that alters how the system itself behaves, as
-  // opposed to CRUD on tenant-owned data.
-  MUTATION_SCOPE_ADMIN = 5;
 }
 
 // Default user-experience gate for the AI-guardrail policy engine when a
@@ -131,42 +110,24 @@ enum DefaultTier {
 }
 
 message DelegationMeta {
-  // Worst-case severity if this RPC is misused or its output exfiltrated.
-  // Aligned with NIST FIPS 199; CRITICAL is reserved for incident-grade
-  // risk (e.g. raw credential read, mass user delete).
-  Severity risk_level = 1;
-  // Default UX gating tier. AUTO / CONFIRM / APPROVE roughly correspond to
-  // "auto-execute", "ask first", and "needs human ticket".
-  DefaultTier default_tier = 2;
-  // Whether the action can be undone by a counter-operation in the same
-  // tenant (e.g. DeleteX reversible by CreateX with the same id). Unset
-  // means unknown — caller should treat as not reversible.
-  bool reversible = 3;
-  // Action verb the RPC performs; see MutationScope.
-  MutationScope mutation_scope = 4;
-  // Free-form sensitivity tags consumed by downstream translators. Two
-  // categories of tag are accepted on the same list:
-  //   - Data category: "pii", "secrets", "financial", "production",
-  //     "lifecycle" (the common mcp-axiomatic vocabulary).
-  //   - Channel / side-effect markers: e.g. "outbound" (the RPC reaches
-  //     out to an external system), "untrusted_output" (the RPC returns
-  //     attacker-influenceable content that should be stamped untrusted
-  //     when ingested into agent context).
-  // The vocabulary is intentionally open; downstream consumers validate
-  // against the set they know and warn on unknown values. Standardization
-  // of channel/side-effect markers is tracked as follow-up.
-  repeated string sensitivity_tags = 5;
   // privacy_class scores the trifecta cube's Axis 1 (Private Data Access)
   // contribution from this RPC: how sensitive is the data the RPC reads
-  // and returns? Set independently from risk_level so the translator can
-  // score A1 directly without having to disambiguate which axis
-  // risk_level was set against.
-  Severity privacy_class = 6;
-  // exfil_class scores the trifecta cube's Axis 3 (Exfiltration) contribution
-  // from this RPC: how exfil-friendly is the outbound channel this RPC
-  // can reach? Internal-only RPCs leave this UNSPECIFIED. Set
-  // independently from risk_level so A3 can be scored directly.
-  Severity exfil_class = 7;
+  // and returns. Internal-only / public reads leave UNSPECIFIED.
+  Severity privacy_class = 1;
+  // exfil_class scores the trifecta cube's Axis 3 (Exfiltration)
+  // contribution from this RPC: how exfil-friendly is the outbound
+  // channel this RPC can reach. Internal-only RPCs leave UNSPECIFIED;
+  // anything UNSPECIFIED implies no outbound channel.
+  Severity exfil_class = 2;
+  // Default UX gating tier when an AI agent invokes this RPC. AUTO /
+  // CONFIRM / APPROVE roughly correspond to "auto-execute", "ask first",
+  // and "needs human ticket".
+  DefaultTier default_tier = 3;
+  // Whether the action can be undone by a counter-operation in the same
+  // tenant (e.g. DeleteX reversible by CreateX with the same id). False
+  // means observable side effects persist (sent email, posted webhook,
+  // audit log, etc.).
+  bool reversible = 4;
 }
 
 message ServiceOptions {
