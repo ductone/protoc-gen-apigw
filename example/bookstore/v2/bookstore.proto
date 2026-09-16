@@ -48,10 +48,17 @@ service BookstoreService {
   // service-level group_override for this one method. Rarer still; use
   // only when a single RPC needs to live in a different SDK namespace
   // from the rest of its service.
+  // A bool-only query fixture: generated code must import parse-error symbols.
   rpc GetShelf(GetShelfRequest) returns (GetShelfResponse) {
     option (apigw.v1.method).operations = {
       method: "GET"
       route: "/v2/shelves/{shelf}"
+      query: [
+        {
+          key: "include_deleted"
+          value: "include_deleted"
+        }
+      ]
       group: "Shelves V2"
       group_override: "BookstoreV2Lookup"
       stability: STABILITY_DRAFT
@@ -82,10 +89,10 @@ message CreateShelfResponse {
   string shelf_id = 1;
 }
 
-// Request message for v2 GetShelf.
 message GetShelfRequest {
   option (apigw.v1.message).message_options = {name_override: "GetShelfRequestV2"};
   string shelf = 1;
+  bool include_deleted = 2;
 }
 
 // Response message for v2 GetShelf.

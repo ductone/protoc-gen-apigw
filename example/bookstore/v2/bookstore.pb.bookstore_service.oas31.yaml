@@ -103,6 +103,7 @@ paths:
          service-level group_override for this one method. Rarer still; use
          only when a single RPC needs to live in a different SDK namespace
          from the rest of its service.
+         A bool-only query fixture: generated code must import parse-error symbols.
       operationId: bookstore.v2.BookstoreService.GetShelf
       parameters:
         - in: path
@@ -111,6 +112,11 @@ paths:
           schema:
             description: The shelf field.
             type: string
+        - in: query
+          name: include_deleted
+          schema:
+            description: The includeDeleted field.
+            type: boolean
       responses:
         "200":
           content:

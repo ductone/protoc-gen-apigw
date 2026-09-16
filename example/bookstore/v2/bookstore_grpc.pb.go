@@ -48,6 +48,7 @@ type BookstoreServiceClient interface {
 	// service-level group_override for this one method. Rarer still; use
 	// only when a single RPC needs to live in a different SDK namespace
 	// from the rest of its service.
+	// A bool-only query fixture: generated code must import parse-error symbols.
 	GetShelf(ctx context.Context, in *GetShelfRequest, opts ...grpc.CallOption) (*GetShelfResponse, error)
 }
 
@@ -113,6 +114,7 @@ type BookstoreServiceServer interface {
 	// service-level group_override for this one method. Rarer still; use
 	// only when a single RPC needs to live in a different SDK namespace
 	// from the rest of its service.
+	// A bool-only query fixture: generated code must import parse-error symbols.
 	GetShelf(context.Context, *GetShelfRequest) (*GetShelfResponse, error)
 	mustEmbedUnimplementedBookstoreServiceServer()
 }

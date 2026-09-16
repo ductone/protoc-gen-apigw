@@ -68,6 +68,10 @@ func {{ .DecoderHandlerName -}}(ctx context.Context, input apigw_v1.DecoderInput
 		}
 	{{ end }}
 
+	{{ if .QueryValuesName }}
+		{{ .QueryValuesName }} := input.Query()
+	{{ end }}
+
 	{{ range .QueryParams }}
 		{{.Converter}}
 

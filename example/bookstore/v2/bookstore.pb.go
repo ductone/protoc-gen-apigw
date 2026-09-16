@@ -194,12 +194,12 @@ func (x *CreateShelfResponse) GetShelfId() string {
 	return ""
 }
 
-// Request message for v2 GetShelf.
 type GetShelfRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Shelf         string                 `protobuf:"bytes,1,opt,name=shelf,proto3" json:"shelf,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Shelf          string                 `protobuf:"bytes,1,opt,name=shelf,proto3" json:"shelf,omitempty"`
+	IncludeDeleted bool                   `protobuf:"varint,2,opt,name=include_deleted,json=includeDeleted,proto3" json:"include_deleted,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *GetShelfRequest) Reset() {
@@ -237,6 +237,13 @@ func (x *GetShelfRequest) GetShelf() string {
 		return x.Shelf
 	}
 	return ""
+}
+
+func (x *GetShelfRequest) GetIncludeDeleted() bool {
+	if x != nil {
+		return x.IncludeDeleted
+	}
+	return false
 }
 
 // Response message for v2 GetShelf.
@@ -307,14 +314,15 @@ const file_bookstore_v2_bookstore_proto_rawDesc = "" +
 	"\x16*\x14CreateShelfRequestV2\"O\n" +
 	"\x13CreateShelfResponse\x12\x19\n" +
 	"\bshelf_id\x18\x01 \x01(\tR\ashelfId:\x1d\xaa\xde\x03\x19\n" +
-	"\x17*\x15CreateShelfResponseV2\"B\n" +
+	"\x17*\x15CreateShelfResponseV2\"k\n" +
 	"\x0fGetShelfRequest\x12\x14\n" +
-	"\x05shelf\x18\x01 \x01(\tR\x05shelf:\x19\xaa\xde\x03\x15\n" +
+	"\x05shelf\x18\x01 \x01(\tR\x05shelf\x12'\n" +
+	"\x0finclude_deleted\x18\x02 \x01(\bR\x0eincludeDeleted:\x19\xaa\xde\x03\x15\n" +
 	"\x13*\x11GetShelfRequestV2\"_\n" +
 	"\x10GetShelfResponse\x12\x19\n" +
 	"\bshelf_id\x18\x01 \x01(\tR\ashelfId\x12\x14\n" +
 	"\x05theme\x18\x02 \x01(\tR\x05theme:\x1a\xaa\xde\x03\x16\n" +
-	"\x14*\x12GetShelfResponseV22\xc4\x03\n" +
+	"\x14*\x12GetShelfResponseV22\xe8\x03\n" +
 	"\x10BookstoreService\x12z\n" +
 	"\vListShelves\x12 .bookstore.v2.ListShelvesRequest\x1a!.bookstore.v2.ListShelvesResponse\"&\x9a\xde\x03\"\n" +
 	" \n" +
@@ -323,10 +331,11 @@ const file_bookstore_v2_bookstore_proto_rawDesc = "" +
 	"\vCreateShelf\x12 .bookstore.v2.CreateShelfRequest\x1a!.bookstore.v2.CreateShelfResponse\"9\x9a\xde\x035\n" +
 	"3\n" +
 	"\x04POST\x12\v/v2/shelves \x01R\n" +
-	"Shelves V2r\x10CreateShelfDraft\x12\x8c\x01\n" +
-	"\bGetShelf\x12\x1d.bookstore.v2.GetShelfRequest\x1a\x1e.bookstore.v2.GetShelfResponse\"A\x9a\xde\x03=\n" +
-	";\n" +
-	"\x03GET\x12\x13/v2/shelves/{shelf} \x01R\n" +
+	"Shelves V2r\x10CreateShelfDraft\x12\xb0\x01\n" +
+	"\bGetShelf\x12\x1d.bookstore.v2.GetShelfRequest\x1a\x1e.bookstore.v2.GetShelfResponse\"e\x9a\xde\x03a\n" +
+	"_\n" +
+	"\x03GET\x12\x13/v2/shelves/{shelf}\x1a\"\n" +
+	"\x0finclude_deleted\x12\x0finclude_deleted \x01R\n" +
 	"Shelves V2j\x11BookstoreV2Lookup\x1a\x15\x92\xde\x03\x11\n" +
 	"\x0f\b\x01\"\vBookstoreV2B:Z8github.com/ductone/protoc-gen-apigw/example/bookstore/v2b\x06proto3"
 
