@@ -69,10 +69,7 @@ func {{ .DecoderHandlerName -}}(ctx context.Context, input apigw_v1.DecoderInput
 	{{ end }}
 
 	{{ if .QueryValuesName }}
-		{{ .QueryValuesName }}, err := input.Query()
-		if err != nil {
-			return status.Errorf(codes.InvalidArgument, "failed to parse query: %s", err)
-		}
+		{{ .QueryValuesName }} := input.Query()
 	{{ end }}
 
 	{{ range .QueryParams }}

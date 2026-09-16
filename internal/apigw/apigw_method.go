@@ -188,8 +188,6 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 	if len(paramsWithNames) > 0 {
 		queryValuesName = vn.String()
 		vn.Next()
-		ix.GRPCCodes = true
-		ix.GRPCStatus = true
 	}
 
 	qpc := make([]*paramContext, 0)

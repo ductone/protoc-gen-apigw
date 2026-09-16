@@ -163,10 +163,7 @@ func _BookstoreService_GetShelf_APIGW_Decoder(ctx context.Context, input apigw_v
 	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
 	_ = unmarshalOpts
 
-	vn2, err := input.Query()
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "failed to parse query: %s", err)
-	}
+	vn2 := input.Query()
 
 	vn3 := vn2.Get("include_deleted")
 

@@ -75,6 +75,13 @@ func TestGinRouterGetBookBooleanQuery(t *testing.T) {
 			wantAuthor: false,
 		},
 		{
+			name:       "well-formed unknown parameter is ignored",
+			path:       "/shelves/123/books/456?unknown=true",
+			statusCode: http.StatusOK,
+			wantCall:   true,
+			wantAuthor: false,
+		},
+		{
 			name:       "explicit false",
 			path:       "/shelves/123/books/456?author=false",
 			statusCode: http.StatusOK,

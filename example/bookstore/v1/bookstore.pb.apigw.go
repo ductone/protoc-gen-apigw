@@ -530,10 +530,7 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
 	_ = unmarshalOpts
 
-	vn4, err := input.Query()
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "failed to parse query: %s", err)
-	}
+	vn4 := input.Query()
 
 	vn5 := vn4.Get("author")
 

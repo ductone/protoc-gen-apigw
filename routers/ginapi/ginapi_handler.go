@@ -37,7 +37,6 @@ func Handler(srv interface{}, method *apigw_v1.MethodDesc, interceptor grpc.Unar
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 
-		input := ContextAsDecoderInput(c)
 		md := apigw_v1.MetadataForRequest(c.Request, method.Name)
 		p := apigw_v1.PeerForRequest(c.Request)
 		timeout, ok := apigw_v1.TimeoutForRequest(c.Request)
@@ -66,6 +65,12 @@ func Handler(srv interface{}, method *apigw_v1.MethodDesc, interceptor grpc.Unar
 		}
 
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(bytesBody))
+
+		input, err := newDecoderInput(c)
+		if err != nil {
+			ErrorResponse(c, status.Errorf(codes.InvalidArgument, "failed to parse query: %s", err))
+			return
+		}
 
 		resp, err := method.Handler(
 			srv,
