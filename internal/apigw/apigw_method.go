@@ -159,7 +159,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 			paramValueName := vn.String()
 			vn.Next()
 			outputName := vn.String()
-			fc, err = module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outputName)
+			fc, err = module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outputName, part.ParamName, false)
 			vn.Next()
 		} else {
 			fc, err = module.generateNestedFieldConverter(nums, ix, routeGetter, vn, part.ParamName)
@@ -204,7 +204,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		outName := vn.String()
 		vn.Next()
 
-		fc, err := module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outName)
+		fc, err := module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outName, p.param, true)
 		if err != nil {
 			panic(err)
 		}
@@ -271,6 +271,8 @@ func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber proto
 	valueGetter string,
 	inputName string,
 	outputName string,
+	paramName string,
+	isQuery bool,
 ) (*paramContext, error) {
 	switch {
 	case edgeField.Type().IsRepeated():
@@ -328,11 +330,14 @@ func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber proto
 		}, nil
 	case edgeField.Type().ProtoType() == pgs.BoolT:
 		ix.Strconv = true
+		ix.Strings = true
 		converter, err := templateExecToString("field_bool.tmpl", &boolFieldContext{
 			FieldName:  jsonName(edgeField),
 			Getter:     valueGetter,
 			InputName:  inputName,
 			OutputName: outputName,
+			ParamName:  paramName,
+			IsQuery:    isQuery,
 			Tag:        edgeNumber,
 		})
 		if err != nil {
@@ -419,6 +424,8 @@ type boolFieldContext struct {
 	Getter     string
 	OutputName string
 	InputName  string
+	ParamName  string
+	IsQuery    bool
 	Tag        protopack.Number
 }
 
