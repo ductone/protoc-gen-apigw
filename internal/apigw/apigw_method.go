@@ -23,6 +23,7 @@ type methodTemplateContext struct {
 	MethodHandlerName  string
 	DecoderHandlerName string
 	HasBody            bool
+	QueryValuesName    string
 	QueryParams        []*paramContext
 	RouteParams        []*paramContext
 	ServerName         string
@@ -159,7 +160,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 			paramValueName := vn.String()
 			vn.Next()
 			outputName := vn.String()
-			fc, err = module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outputName, part.ParamName, false)
+			fc, err = module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outputName, part.ParamName, "", false)
 			vn.Next()
 		} else {
 			fc, err = module.generateNestedFieldConverter(nums, ix, routeGetter, vn, part.ParamName)
@@ -183,6 +184,14 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		return paramsWithNames[i].param < paramsWithNames[j].param
 	})
 
+	queryValuesName := ""
+	if len(paramsWithNames) > 0 {
+		queryValuesName = vn.String()
+		vn.Next()
+		ix.GRPCCodes = true
+		ix.GRPCStatus = true
+	}
+
 	qpc := make([]*paramContext, 0)
 	for _, p := range paramsWithNames {
 		// TODO: support nested fields
@@ -195,8 +204,9 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 
 		ix.ProtobufProtoPack = true
 		routeGetter, err := templateExecToString("query_get_param.tmpl", &routeParseContext{
-			ParamName:  p.param,
-			OutputName: paramValueName,
+			ParamName:       p.param,
+			OutputName:      paramValueName,
+			QueryValuesName: queryValuesName,
 		})
 		if err != nil {
 			panic(err)
@@ -204,7 +214,7 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 		outName := vn.String()
 		vn.Next()
 
-		fc, err := module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outName, p.param, true)
+		fc, err := module.generateFieldConverter(method, nums[0], edgeField, ix, routeGetter, paramValueName, outName, p.param, queryValuesName, true)
 		if err != nil {
 			panic(err)
 		}
@@ -248,7 +258,8 @@ func (module *Module) methodContext(ctx pgsgo.Context, w io.Writer, f pgs.File, 
 			serviceShortName,
 			ctx.Name(method).String(),
 		),
-		HasBody: operation.Method != http.MethodGet,
+		HasBody:         operation.Method != http.MethodGet,
+		QueryValuesName: queryValuesName,
 
 		ServerName:  ctx.ServerName(service).String(),
 		RequestType: ctx.Name(method.Input()).String(),
@@ -272,6 +283,7 @@ func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber proto
 	inputName string,
 	outputName string,
 	paramName string,
+	queryValuesName string,
 	isQuery bool,
 ) (*paramContext, error) {
 	switch {
@@ -331,14 +343,17 @@ func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber proto
 	case edgeField.Type().ProtoType() == pgs.BoolT:
 		ix.Strconv = true
 		ix.Strings = true
+		ix.GRPCCodes = true
+		ix.GRPCStatus = true
 		converter, err := templateExecToString("field_bool.tmpl", &boolFieldContext{
-			FieldName:  jsonName(edgeField),
-			Getter:     valueGetter,
-			InputName:  inputName,
-			OutputName: outputName,
-			ParamName:  paramName,
-			IsQuery:    isQuery,
-			Tag:        edgeNumber,
+			FieldName:       jsonName(edgeField),
+			Getter:          valueGetter,
+			InputName:       inputName,
+			OutputName:      outputName,
+			ParamName:       paramName,
+			QueryValuesName: queryValuesName,
+			IsQuery:         isQuery,
+			Tag:             edgeNumber,
 		})
 		if err != nil {
 			panic(err)
@@ -420,13 +435,14 @@ type protopackMessageContext struct {
 	ParamName      string
 }
 type boolFieldContext struct {
-	FieldName  string
-	Getter     string
-	OutputName string
-	InputName  string
-	ParamName  string
-	IsQuery    bool
-	Tag        protopack.Number
+	FieldName       string
+	Getter          string
+	OutputName      string
+	InputName       string
+	ParamName       string
+	QueryValuesName string
+	IsQuery         bool
+	Tag             protopack.Number
 }
 
 type stringFieldContext struct {
@@ -454,7 +470,8 @@ type uintFieldContext struct {
 }
 
 type routeParseContext struct {
-	OutputName string
-	ParamName  string
-	ParamIndex string
+	OutputName      string
+	ParamName       string
+	ParamIndex      string
+	QueryValuesName string
 }

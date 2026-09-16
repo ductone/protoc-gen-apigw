@@ -1,7 +1,7 @@
 {{ .Getter }}
 
 {{.OutputName}} := protopack.Message{}
-if {{if .IsQuery}}_, ok := input.Query()["{{.ParamName}}"]; ok{{else}}{{.InputName}} != ""{{end}} {
+if {{if .IsQuery}}_, ok := {{.QueryValuesName}}["{{.ParamName}}"]; ok{{else}}{{.InputName}} != ""{{end}} {
     {{.OutputName}}tmp, err := strconv.ParseBool(strings.ToLower({{.InputName}}))
     if err != nil {
         return status.Errorf(codes.InvalidArgument, "{{.FieldName}} is not a valid bool: %s", err)

@@ -7,6 +7,6 @@ import (
 
 type DecoderInput interface {
 	Body() io.Reader
-	Query() url.Values
+	Query() (url.Values, error)
 	PathParam(name string) string
 }

@@ -24,8 +24,8 @@ func (d *decoderInput) PathParam(name string) string {
 	return d.ctx.Param(name)
 }
 
-func (d *decoderInput) Query() url.Values {
-	return d.ctx.Request.URL.Query()
+func (d *decoderInput) Query() (url.Values, error) {
+	return url.ParseQuery(d.ctx.Request.URL.RawQuery)
 }
 
 func (d *decoderInput) Body() io.Reader {

@@ -59,6 +59,66 @@ func TestGinRouter(t *testing.T) {
 	require.Equal(t, "{}", w.Body.String())
 }
 
+func TestGinRouterGetBookBooleanQuery(t *testing.T) {
+	tests := []struct {
+		name       string
+		path       string
+		statusCode int
+		wantCall   bool
+		wantAuthor bool
+	}{
+		{
+			name:       "absent defaults false",
+			path:       "/shelves/123/books/456",
+			statusCode: http.StatusOK,
+			wantCall:   true,
+			wantAuthor: false,
+		},
+		{
+			name:       "explicit false",
+			path:       "/shelves/123/books/456?author=false",
+			statusCode: http.StatusOK,
+			wantCall:   true,
+			wantAuthor: false,
+		},
+		{
+			name:       "empty is invalid",
+			path:       "/shelves/123/books/456?author=",
+			statusCode: http.StatusBadRequest,
+		},
+		{
+			name:       "invalid text is rejected",
+			path:       "/shelves/123/books/456?author=invalid",
+			statusCode: http.StatusBadRequest,
+		},
+		{
+			name:       "malformed encoding is rejected",
+			path:       "/shelves/123/books/456?author=%zz",
+			statusCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			engine := gin.New()
+			registry := ginapi.NewRegistry(engine, nil)
+			bs := &mockBookstore{t: t}
+			bookstore_v1.RegisterGatewayBookstoreServiceServer(registry, bs)
+
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, httptest.NewRequest(http.MethodGet, tt.path, nil))
+
+			require.Equal(t, tt.statusCode, w.Code)
+			if !tt.wantCall {
+				require.Nil(t, bs.getBook)
+				return
+			}
+			require.NotNil(t, bs.getBook)
+			require.Equal(t, tt.wantAuthor, bs.getBook.IncludeAuthor)
+		})
+	}
+}
+
 func jsonify(t *testing.T, obj map[string]interface{}) io.Reader {
 	d, err := json.Marshal(obj)
 	require.NoError(t, err)
@@ -67,7 +127,8 @@ func jsonify(t *testing.T, obj map[string]interface{}) io.Reader {
 
 type mockBookstore struct {
 	bookstore_v1.UnimplementedBookstoreServiceServer
-	t *testing.T
+	t       *testing.T
+	getBook *bookstore_v1.GetBookRequest
 }
 
 var _ bookstore_v1.BookstoreServiceServer = (*mockBookstore)(nil)
@@ -78,6 +139,11 @@ func (mb *mockBookstore) CreateShelf(ctx context.Context, req *bookstore_v1.Crea
 	return &bookstore_v1.CreateShelfResponse{
 		Shelf: &bookstore_v1.Shelf{Id: "123", Theme: "test", SearchDecoded: "sd", SearchEncoded: "se"},
 	}, nil
+}
+
+func (mb *mockBookstore) GetBook(ctx context.Context, req *bookstore_v1.GetBookRequest) (*bookstore_v1.GetBookResponse, error) {
+	mb.getBook = req
+	return &bookstore_v1.GetBookResponse{}, nil
 }
 
 func (mb *mockBookstore) DeleteShelf(ctx context.Context, req *bookstore_v1.DeleteShelfRequest) (*bookstore_v1.DeleteShelfResponse, error) {

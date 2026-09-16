@@ -530,52 +530,60 @@ func _BookstoreService_GetBook_APIGW_Decoder(ctx context.Context, input apigw_v1
 	unmarshalOpts := proto.UnmarshalOptions{AllowPartial: true, Merge: true, RecursionLimit: protowire.DefaultRecursionLimit}
 	_ = unmarshalOpts
 
-	vn4 := input.Query().Get("author")
-
-	vn5tmp, err := strconv.ParseBool(strings.ToLower(vn4))
+	vn4, err := input.Query()
 	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "includeAuthor is not a valid bool: %s", err)
+		return status.Errorf(codes.InvalidArgument, "failed to parse query: %s", err)
 	}
 
-	vn5 := protopack.Message{
-		protopack.Tag{Number: 3, Type: protopack.VarintType},
-		protopack.Bool(vn5tmp),
+	vn5 := vn4.Get("author")
+
+	vn6 := protopack.Message{}
+	if _, ok := vn4["author"]; ok {
+		vn6tmp, err := strconv.ParseBool(strings.ToLower(vn5))
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "includeAuthor is not a valid bool: %s", err)
+		}
+
+		vn6 = protopack.Message{
+			protopack.Tag{Number: 3, Type: protopack.VarintType},
+			protopack.Bool(vn6tmp),
+		}
 	}
 
-	err = unmarshalOpts.Unmarshal(vn5.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn6.Marshal(), out)
 	if err != nil {
 		return err
 	}
 
-	vn6 := input.Query().Get("page_size")
+	vn7 := vn4.Get("page_size")
 
-	if vn6 == "" {
-		vn6 = "0"
+	if vn7 == "" {
+		vn7 = "0"
 	}
 
-	vn7tmp, err := strconv.ParseInt(vn6, 10, 64)
+	vn8tmp, err := strconv.ParseInt(vn7, 10, 64)
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, "pageSize is not a valid int: %s", err)
 	}
 
-	vn7 := protopack.Message{
+	vn8 := protopack.Message{
 		protopack.Tag{Number: 4, Type: protopack.VarintType},
-		protopack.Varint(vn7tmp),
+		protopack.Varint(vn8tmp),
 	}
 
-	err = unmarshalOpts.Unmarshal(vn7.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn8.Marshal(), out)
 	if err != nil {
 		return err
 	}
 
-	vn8 := input.Query().Get("page_token")
+	vn9 := vn4.Get("page_token")
 
-	vn9 := protopack.Message{
+	vn10 := protopack.Message{
 		protopack.Tag{Number: 5, Type: protopack.BytesType},
-		protopack.String(vn8),
+		protopack.String(vn9),
 	}
 
-	err = unmarshalOpts.Unmarshal(vn9.Marshal(), out)
+	err = unmarshalOpts.Unmarshal(vn10.Marshal(), out)
 	if err != nil {
 		return err
 	}
