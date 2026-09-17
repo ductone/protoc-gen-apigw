@@ -341,6 +341,14 @@ message Author {
     GENDER_UNSPECIFIED = 0;
     GENDER_MALE = 1;
     GENDER_FEMALE = 2;
+    GENDER_NON_BINARY = 3;
+    GENDER_GENDERQUEER = 4;
+    GENDER_GENDERFLUID = 5;
+    GENDER_AGENDER = 6;
+    GENDER_BIGENDER = 7;
+    GENDER_INTERSEX = 8;
+    GENDER_OTHER = 9;
+    GENDER_PREFER_NOT_TO_SAY = 10;
   }
   Gender gender = 2;
   repeated Gender genders = 8;
