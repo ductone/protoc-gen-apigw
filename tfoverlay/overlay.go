@@ -16,6 +16,7 @@ package tfoverlay
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -72,6 +73,55 @@ type Operation struct {
 	Mode Mode `yaml:"mode"`
 	// Value is the value to set. It is nil for ModeRemove.
 	Value *yaml.Node `yaml:",omitempty"`
+	// Provenance identifies the descriptor the operation came from, for
+	// example "field c1.api.app.v1.AppEntitlement.provisioner_policy". It is
+	// advisory metadata for diagnostics and linters; it is never interpreted.
+	// It is empty for an operation that was not generated from a proto
+	// annotation.
+	Provenance string `yaml:"provenance,omitempty"`
+}
+
+// Error is a structured failure: which destination was involved, what key, and
+// which annotations contributed. Linters and pipeline steps should match it
+// with errors.As rather than parsing the message.
+type Error struct {
+	// Pointer is the destination the operation would have written to.
+	Pointer string
+	// Channel and Key identify the write.
+	Channel Channel
+	Key     string
+	// Owners names the annotations that contributed to the failure, in the
+	// order they were seen. It is empty when the failure has no known owner.
+	Owners []string
+	// Message is the human-readable detail.
+	Message string
+}
+
+func (e *Error) Error() string {
+	if e == nil {
+		return ""
+	}
+	if len(e.Owners) > 0 {
+		return fmt.Sprintf("%s (owner(s): %s)", e.Message, strings.Join(e.Owners, ", "))
+	}
+	return e.Message
+}
+
+func newError(op Operation, owners []string, format string, args ...interface{}) *Error {
+	return &Error{
+		Pointer: op.Pointer,
+		Channel: op.Channel,
+		Key:     op.Key,
+		Owners:  owners,
+		Message: fmt.Sprintf(format, args...),
+	}
+}
+
+func ownerLabel(op Operation) []string {
+	if op.Provenance == "" {
+		return nil
+	}
+	return []string{op.Provenance}
 }
 
 // Overlay is a set of Operations for one emitted document.
@@ -85,41 +135,45 @@ type Overlay struct {
 }
 
 // Add records op, deduplicating an identical operation and rejecting a
-// contradictory one.
+// contradictory or overlapping one.
 //
 // An operation is identical when the pointer, channel, key, mode and value all
-// match. It is contradictory when the same pointer, channel and key are
-// assigned a different mode or a different value: the generator has no
-// documented precedence between two explicit assignments at the same
-// destination, so it fails instead of picking one.
+// match, and is recorded once.
 //
 // Uniqueness of (pointer, channel, key) is not by itself enough for the result
-// to be order-independent: writes at nested destinations interact. Setting the
-// key "properties" on /components/schemas/X and setting "default" on
-// /components/schemas/X/properties/foo both have unique keys, yet applying the
-// first then the second keeps the second and applying them in the other order
-// discards it. Add therefore also rejects an operation whose destination path
-// (pointer tokens followed by the key) is a strict ancestor of another's, or a
-// strict descendant, because no ordering can be shown to preserve both.
+// to be order-independent: writes at nested destinations interact, and they
+// interact *across channels*. Setting the schema keyword `properties` on
+// /components/schemas/X and setting `x-test` on
+// /components/schemas/X/properties/foo both have unique keys, yet the first
+// replaces the whole `properties` object and discards the second; applied in
+// the other order the first discards the second's value instead. Add therefore
+// rejects any operation whose destination path — the pointer's reference tokens
+// followed by the key — is a strict ancestor or descendant of another's,
+// whatever channel either is on. A `remove` is a write at the same location and
+// overlaps the same way.
+//
+// Two operations that write the same key at the same destination are a
+// hard error unless they are identical: the generator has no documented
+// precedence between two explicit assignments at one destination.
 func (o *Overlay) Add(op Operation) error {
 	if err := validateOperation(op); err != nil {
 		return err
 	}
 	for i := range o.Operations {
 		existing := &o.Operations[i]
-		if existing.Pointer == op.Pointer && existing.Channel == op.Channel && existing.Key == op.Key {
-			if existing.Mode == op.Mode && nodesEqual(existing.Value, op.Value) {
+		if existing.Pointer == op.Pointer && existing.Key == op.Key {
+			if existing.Channel == op.Channel && existing.Mode == op.Mode && nodesEqual(existing.Value, op.Value) {
 				return nil
 			}
-			return fmt.Errorf(
+			return newError(op, append(ownerLabel(*existing), ownerLabel(op)...),
 				"conflicting assignments at %s for %s: mode %s value %s vs mode %s value %s",
 				pointerForDisplay(op.Pointer), op.Key,
 				existing.Mode, displayValue(existing.Value),
 				op.Mode, displayValue(op.Value),
 			)
 		}
-		if existing.Channel == op.Channel && pathsOverlap(operationPath(*existing), operationPath(op)) {
-			return fmt.Errorf(
+		if pathsOverlap(operationPath(*existing), operationPath(op)) {
+			return newError(op, append(ownerLabel(*existing), ownerLabel(op)...),
 				"overlapping destinations: %s at %s contains or is contained by %s at %s",
 				existing.Key, pointerForDisplay(existing.Pointer),
 				op.Key, pointerForDisplay(op.Pointer),
@@ -127,7 +181,6 @@ func (o *Overlay) Add(op Operation) error {
 		}
 	}
 	o.Operations = append(o.Operations, op)
-	o.Normalize()
 	return nil
 }
 
@@ -141,15 +194,13 @@ func operationPath(op Operation) []string {
 	return append(tokens, op.Key)
 }
 
-// Overlaps reports whether two operations write to overlapping destinations on
-// the same channel: the same destination and key, or one write path strictly
-// contained in the other. Two overlapping operations cannot both be applied
-// with an order-independent result, so callers that keep operations in separate
-// lists (for example per scope) use this to reject them together.
+// Overlaps reports whether two operations write to overlapping destinations:
+// the same destination and key, or one write path strictly contained in the
+// other. Channels are deliberately ignored for the containment case — a write
+// to an ancestor destroys its descendants whatever channel either is on — so
+// callers that keep operations in separate lists (for example per scope) use
+// this to reject them together.
 func Overlaps(a, b Operation) bool {
-	if a.Channel != b.Channel {
-		return false
-	}
 	if a.Pointer == b.Pointer && a.Key == b.Key {
 		return true
 	}
@@ -173,25 +224,12 @@ func pathsOverlap(a, b []string) bool {
 }
 
 // Normalize sorts operations into the canonical order and drops duplicates.
-// The order is stable and independent of proto declaration order or Go map
-// iteration, so two runs over identical input produce identical bytes.
+// Add appends in call order, so call this (or Render, which sorts a copy) to
+// get the canonical order. The order is stable and independent of proto
+// declaration order or Go map iteration, so two runs over identical input
+// produce identical bytes.
 func (o *Overlay) Normalize() {
-	sort.SliceStable(o.Operations, func(i, j int) bool {
-		a, b := o.Operations[i], o.Operations[j]
-		if a.Pointer != b.Pointer {
-			return a.Pointer < b.Pointer
-		}
-		if a.Channel != b.Channel {
-			return a.Channel < b.Channel
-		}
-		if a.Key != b.Key {
-			return a.Key < b.Key
-		}
-		if a.Mode != b.Mode {
-			return a.Mode < b.Mode
-		}
-		return displayValue(a.Value) < displayValue(b.Value)
-	})
+	sortOperations(o.Operations)
 	out := o.Operations[:0]
 	for i := range o.Operations {
 		if len(out) > 0 {
@@ -207,18 +245,41 @@ func (o *Overlay) Normalize() {
 	o.Operations = out
 }
 
+func sortOperations(ops []Operation) {
+	sort.SliceStable(ops, func(i, j int) bool {
+		a, b := ops[i], ops[j]
+		if a.Pointer != b.Pointer {
+			return a.Pointer < b.Pointer
+		}
+		if a.Channel != b.Channel {
+			return a.Channel < b.Channel
+		}
+		if a.Key != b.Key {
+			return a.Key < b.Key
+		}
+		if a.Mode != b.Mode {
+			return a.Mode < b.Mode
+		}
+		return displayValue(a.Value) < displayValue(b.Value)
+	})
+}
+
 // Empty reports whether there is nothing to emit. An overlay with no
 // operations produces no artifact, so a repository that has not adopted the
 // annotations sees no change in generated output.
 func (o *Overlay) Empty() bool { return o == nil || len(o.Operations) == 0 }
 
 // Merge combines overlays (for example the per-service overlays of a merged
-// document) into one. Identical operations deduplicate; contradictory ones
-// fail. This is the cross-document check a per-file generator cannot perform:
-// root-level annotations contributed by several services either agree or are
-// rejected, never silently ordered.
+// document) into one. Identical operations deduplicate; contradictory and
+// overlapping ones fail with both contributing sources named. This is the
+// cross-document check a per-file generator cannot perform: root-level
+// annotations contributed by several services either agree or are rejected,
+// never silently ordered.
 func Merge(ovs ...*Overlay) (*Overlay, error) {
 	merged := &Overlay{Kind: KindPackage}
+	// origin tracks which overlay contributed each recorded operation, so a
+	// failure can name both sides rather than only the incoming one.
+	origin := map[string]string{}
 	for _, ov := range ovs {
 		if ov == nil {
 			continue
@@ -228,16 +289,39 @@ func Merge(ovs ...*Overlay) (*Overlay, error) {
 			merged.Kind = ov.Kind
 		}
 		for _, op := range ov.Operations {
+			before := len(merged.Operations)
 			if err := merged.Add(op); err != nil {
-				return nil, fmt.Errorf("merging overlay from %s: %w", ov.Source, err)
+				var structured *Error
+				if errors.As(err, &structured) && len(structured.Owners) < 2 {
+					structured.Owners = append(structured.Owners, ov.Source)
+					structured.Message = fmt.Sprintf(
+						"merging %s into %s: %s", ov.Source, merged.Source, structured.Message)
+				}
+				if prev, ok := origin[opOriginKey(op)]; ok && prev != ov.Source {
+					return nil, fmt.Errorf("merging %s into %s: %w", ov.Source, prev, err)
+				}
+				return nil, err
+			}
+			if len(merged.Operations) > before {
+				origin[opOriginKey(op)] = ov.Source
 			}
 		}
 	}
 	return merged, nil
 }
 
+func opOriginKey(op Operation) string {
+	return op.Pointer + "|" + string(op.Channel) + "|" + op.Key
+}
+
 // Render serializes the overlay to the deterministic YAML artifact format.
+// Operations are sorted into canonical order for rendering; the receiver is
+// not modified, so rendering is repeatable and side-effect free.
 func (o *Overlay) Render() ([]byte, error) {
+	sorted := make([]Operation, len(o.Operations))
+	copy(sorted, o.Operations)
+	sortOperations(sorted)
+
 	root := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
 	setKV(root, "version", scalarNode("!!int", strconv.Itoa(Version)))
 	if o.Source != "" {
@@ -247,7 +331,7 @@ func (o *Overlay) Render() ([]byte, error) {
 		setKV(root, "kind", scalarNode("!!str", string(o.Kind)))
 	}
 	ops := &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
-	for _, op := range o.Operations {
+	for _, op := range sorted {
 		entry := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
 		setKV(entry, "pointer", scalarNode("!!str", op.Pointer))
 		setKV(entry, "channel", scalarNode("!!str", string(op.Channel)))
@@ -260,6 +344,9 @@ func (o *Overlay) Render() ([]byte, error) {
 			}
 			setKV(entry, "value", value)
 		}
+		if op.Provenance != "" {
+			setKV(entry, "provenance", scalarNode("!!str", op.Provenance))
+		}
 		ops.Content = append(ops.Content, entry)
 	}
 	setKV(root, "operations", ops)
@@ -267,6 +354,13 @@ func (o *Overlay) Render() ([]byte, error) {
 }
 
 // Parse reads an overlay artifact written by Render.
+//
+// It is strict on purpose: an artifact is machine-written, so a missing field,
+// an unknown field, a value of the wrong YAML type or a duplicate operation
+// means the producer and the consumer disagree, not that a default applies.
+// Parsed operations go through the same Add validation as generated ones, so a
+// duplicate, contradictory or overlapping set is rejected here rather than at
+// Apply time.
 func Parse(data []byte) (*Overlay, error) {
 	root := &yaml.Node{}
 	if err := yaml.Unmarshal(data, root); err != nil {
@@ -277,21 +371,36 @@ func Parse(data []byte) (*Overlay, error) {
 		return nil, fmt.Errorf("parsing overlay: expected a mapping at the document root")
 	}
 	ov := &Overlay{}
+	haveVersion, haveOperations := false, false
 	for i := 0; i+1 < len(doc.Content); i += 2 {
 		key, value := doc.Content[i], doc.Content[i+1]
 		switch key.Value {
 		case "version":
-			v, err := strconv.Atoi(value.Value)
+			version, err := intScalar(value, "version")
 			if err != nil {
-				return nil, fmt.Errorf("parsing overlay: invalid version %q", value.Value)
+				return nil, err
 			}
-			if v != Version {
-				return nil, fmt.Errorf("parsing overlay: unsupported version %d, expected %d", v, Version)
+			if version != Version {
+				return nil, fmt.Errorf("parsing overlay: unsupported version %d, expected %d", version, Version)
 			}
+			haveVersion = true
 		case "source":
-			ov.Source = value.Value
+			source, err := stringScalar(value, "source")
+			if err != nil {
+				return nil, err
+			}
+			ov.Source = source
 		case "kind":
-			ov.Kind = Kind(value.Value)
+			kind, err := stringScalar(value, "kind")
+			if err != nil {
+				return nil, err
+			}
+			switch Kind(kind) {
+			case KindService, KindPackage:
+				ov.Kind = Kind(kind)
+			default:
+				return nil, fmt.Errorf("parsing overlay: unknown kind %q", kind)
+			}
 		case "operations":
 			if value.Kind != yaml.SequenceNode {
 				return nil, fmt.Errorf("parsing overlay: operations must be a sequence")
@@ -301,9 +410,20 @@ func Parse(data []byte) (*Overlay, error) {
 				if err != nil {
 					return nil, err
 				}
-				ov.Operations = append(ov.Operations, op)
+				if err := ov.Add(op); err != nil {
+					return nil, fmt.Errorf("parsing overlay: %w", err)
+				}
 			}
+			haveOperations = true
+		default:
+			return nil, fmt.Errorf("parsing overlay: unknown field %q", key.Value)
 		}
+	}
+	if !haveVersion {
+		return nil, fmt.Errorf("parsing overlay: version is required")
+	}
+	if !haveOperations {
+		return nil, fmt.Errorf("parsing overlay: operations is required")
 	}
 	ov.Normalize()
 	return ov, nil
@@ -314,57 +434,156 @@ func parseOperation(entry *yaml.Node) (Operation, error) {
 		return Operation{}, fmt.Errorf("parsing overlay: each operation must be a mapping")
 	}
 	op := Operation{}
+	havePointer, haveChannel, haveKey, haveMode, haveValue := false, false, false, false, false
 	for i := 0; i+1 < len(entry.Content); i += 2 {
 		key, value := entry.Content[i], entry.Content[i+1]
 		switch key.Value {
 		case "pointer":
-			op.Pointer = value.Value
+			pointer, err := stringScalar(value, "pointer")
+			if err != nil {
+				return Operation{}, err
+			}
+			op.Pointer = pointer
+			havePointer = true
 		case "channel":
-			op.Channel = Channel(value.Value)
+			channel, err := stringScalar(value, "channel")
+			if err != nil {
+				return Operation{}, err
+			}
+			op.Channel = Channel(channel)
+			haveChannel = true
 		case "key":
-			op.Key = value.Value
+			opKey, err := stringScalar(value, "key")
+			if err != nil {
+				return Operation{}, err
+			}
+			op.Key = opKey
+			haveKey = true
 		case "mode":
-			op.Mode = Mode(value.Value)
+			mode, err := stringScalar(value, "mode")
+			if err != nil {
+				return Operation{}, err
+			}
+			op.Mode = Mode(mode)
+			haveMode = true
+		case "provenance":
+			provenance, err := stringScalar(value, "provenance")
+			if err != nil {
+				return Operation{}, err
+			}
+			op.Provenance = provenance
 		case "value":
 			op.Value = value
+			haveValue = true
+		default:
+			return Operation{}, fmt.Errorf("parsing overlay: unknown operation field %q", key.Value)
 		}
 	}
-	if op.Mode == ModeRemove {
-		op.Value = nil
+	// A missing pointer is a different artifact from an explicit empty pointer,
+	// which legitimately addresses the document root.
+	if !havePointer {
+		return Operation{}, fmt.Errorf("parsing overlay: operation is missing pointer")
+	}
+	for _, required := range []struct {
+		present bool
+		name    string
+	}{
+		{haveChannel, "channel"},
+		{haveKey, "key"},
+		{haveMode, "mode"},
+	} {
+		if !required.present {
+			return Operation{}, fmt.Errorf(
+				"parsing overlay: operation %s is missing %s", pointerForDisplay(op.Pointer), required.name)
+		}
+	}
+	switch op.Mode {
+	case ModeSet:
+		if !haveValue {
+			return Operation{}, fmt.Errorf(
+				"parsing overlay: operation %s is missing value", pointerForDisplay(op.Pointer))
+		}
+	case ModeRemove:
+		if haveValue {
+			return Operation{}, fmt.Errorf(
+				"parsing overlay: remove operation %s must not carry a value", pointerForDisplay(op.Pointer))
+		}
 	}
 	return op, validateOperation(op)
 }
 
+// stringScalar reads a required string field, rejecting a YAML value of any
+// other type so a malformed artifact cannot silently become a string.
+func stringScalar(node *yaml.Node, field string) (string, error) {
+	if node.Kind != yaml.ScalarNode || node.Tag != "!!str" {
+		return "", fmt.Errorf("parsing overlay: field %q must be a string, got %s", field, nodeKind(node))
+	}
+	return node.Value, nil
+}
+
+func intScalar(node *yaml.Node, field string) (int, error) {
+	if node.Kind != yaml.ScalarNode || node.Tag != "!!int" {
+		return 0, fmt.Errorf("parsing overlay: field %q must be an integer, got %s", field, nodeKind(node))
+	}
+	value, err := strconv.Atoi(node.Value)
+	if err != nil {
+		return 0, fmt.Errorf("parsing overlay: field %q is not an integer: %q", field, node.Value)
+	}
+	return value, nil
+}
+
+func nodeKind(node *yaml.Node) string {
+	if node == nil {
+		return "nothing"
+	}
+	if node.Tag != "" {
+		return node.Tag
+	}
+	switch node.Kind {
+	case yaml.MappingNode:
+		return "a mapping"
+	case yaml.SequenceNode:
+		return "a sequence"
+	default:
+		return "a scalar"
+	}
+}
+
 func validateOperation(op Operation) error {
 	if _, err := ParsePointer(op.Pointer); err != nil {
-		return err
+		return newError(op, ownerLabel(op), "%s", err)
 	}
 	switch op.Channel {
 	case ChannelExtension:
 		if !strings.HasPrefix(op.Key, "x-") {
-			return fmt.Errorf("channel %s requires an extension key starting with \"x-\", got %q", op.Channel, op.Key)
+			return newError(op, ownerLabel(op),
+				"channel %s requires an extension key starting with \"x-\", got %q", op.Channel, op.Key)
 		}
 	case ChannelSchema:
 		if op.Key == "" {
-			return fmt.Errorf("channel %s requires a schema keyword", op.Channel)
+			return newError(op, ownerLabel(op), "channel %s requires a schema keyword", op.Channel)
 		}
 		if strings.HasPrefix(op.Key, "x-") {
-			return fmt.Errorf("channel %s must not carry the vendor extension key %q; use channel %s", op.Channel, op.Key, ChannelExtension)
+			return newError(op, ownerLabel(op),
+				"channel %s must not carry the vendor extension key %q; use channel %s",
+				op.Channel, op.Key, ChannelExtension)
 		}
 	default:
-		return fmt.Errorf("unknown channel %q", op.Channel)
+		return newError(op, ownerLabel(op), "unknown channel %q", op.Channel)
 	}
 	switch op.Mode {
 	case ModeSet:
 		if op.Value == nil {
-			return fmt.Errorf("mode %s requires a value at %s for %s", op.Mode, pointerForDisplay(op.Pointer), op.Key)
+			return newError(op, ownerLabel(op),
+				"mode %s requires a value at %s for %s", op.Mode, pointerForDisplay(op.Pointer), op.Key)
 		}
 	case ModeRemove:
 		if op.Value != nil {
-			return fmt.Errorf("mode %s must not carry a value at %s for %s", op.Mode, pointerForDisplay(op.Pointer), op.Key)
+			return newError(op, ownerLabel(op),
+				"mode %s must not carry a value at %s for %s", op.Mode, pointerForDisplay(op.Pointer), op.Key)
 		}
 	default:
-		return fmt.Errorf("unknown mode %q", op.Mode)
+		return newError(op, ownerLabel(op), "unknown mode %q", op.Mode)
 	}
 	return nil
 }
@@ -592,13 +811,20 @@ func JoinPointer(tokens ...string) string {
 }
 
 // Apply applies ops to a rendered OpenAPI document (YAML or JSON) and returns
-// the modified document. Operations are applied in the order given, so a
-// caller that merges per-service overlays gets a deterministic result.
+// the modified document.
+//
+// The list is validated as a whole first: an operation list that contains a
+// duplicate, a contradiction or an overlapping pair is rejected, so a caller
+// cannot get a silently order-dependent result by forgetting to Merge. For
+// non-overlapping operations the result does not depend on order.
 //
 // Applying an operation whose pointer does not resolve, or removing a key that
 // is not present, is an error: an overlay that silently does nothing hides the
 // drift it was meant to catch.
 func Apply(doc []byte, ops []Operation) ([]byte, error) {
+	if err := validateOperationSet(ops); err != nil {
+		return nil, err
+	}
 	root := &yaml.Node{}
 	if err := yaml.Unmarshal(doc, root); err != nil {
 		return nil, fmt.Errorf("parsing document: %w", err)
@@ -609,19 +835,20 @@ func Apply(doc []byte, ops []Operation) ([]byte, error) {
 	return encode(root)
 }
 
-// ApplyToNode applies ops to a parsed document node in place.
+// ApplyToNode applies ops to a parsed document node in place. Like Apply it
+// validates the whole list first.
 func ApplyToNode(root *yaml.Node, ops []Operation) error {
+	if err := validateOperationSet(ops); err != nil {
+		return err
+	}
 	target := documentRoot(root)
 	if target == nil {
 		return fmt.Errorf("document has no root node")
 	}
 	for _, op := range ops {
-		if err := validateOperation(op); err != nil {
-			return err
-		}
 		node, err := resolvePointer(target, op.Pointer)
 		if err != nil {
-			return err
+			return newError(op, ownerLabel(op), "%s", err)
 		}
 		switch op.Mode {
 		case ModeSet:
@@ -637,10 +864,27 @@ func ApplyToNode(root *yaml.Node, ops []Operation) error {
 	return nil
 }
 
+// validateOperationSet runs ops through the same conflict and overlap checks
+// Add applies, so an inconsistent list fails here instead of producing an
+// order-dependent document. Identical operations are allowed and collapse.
+func validateOperationSet(ops []Operation) error {
+	check := &Overlay{}
+	for i := range ops {
+		if err := check.Add(ops[i]); err != nil {
+			return fmt.Errorf("inconsistent operation list: %w", err)
+		}
+	}
+	return nil
+}
+
 // Validate reports whether every op can be applied to doc, without modifying
-// it. Use it to fail generation on an annotation whose destination does not
-// exist in the emitted document.
+// it. It performs the same checks Apply does, including the whole-list
+// consistency check and the requirement that the destination is an object, so
+// a list that Validate accepts is a list Apply can perform.
 func Validate(doc []byte, ops []Operation) error {
+	if err := validateOperationSet(ops); err != nil {
+		return err
+	}
 	root := &yaml.Node{}
 	if err := yaml.Unmarshal(doc, root); err != nil {
 		return fmt.Errorf("parsing document: %w", err)
@@ -650,16 +894,19 @@ func Validate(doc []byte, ops []Operation) error {
 		return fmt.Errorf("document has no root node")
 	}
 	for i := range ops {
-		op := &ops[i]
-		if err := validateOperation(*op); err != nil {
-			return err
-		}
+		op := ops[i]
 		node, err := resolvePointer(target, op.Pointer)
 		if err != nil {
-			return err
+			return newError(op, ownerLabel(op), "%s", err)
+		}
+		if node.Kind != yaml.MappingNode {
+			return newError(op, ownerLabel(op),
+				"cannot write %s at %s: destination is not an object (%s)",
+				op.Key, pointerForDisplay(op.Pointer), nodeKind(node))
 		}
 		if op.Mode == ModeRemove && findKey(node, op.Key) < 0 {
-			return fmt.Errorf("cannot remove %s at %s: key is not present", op.Key, pointerForDisplay(op.Pointer))
+			return newError(op, ownerLabel(op),
+				"cannot remove %s at %s: key is not present", op.Key, pointerForDisplay(op.Pointer))
 		}
 	}
 	return nil
@@ -719,7 +966,9 @@ func findKey(node *yaml.Node, key string) int {
 
 func setKey(node *yaml.Node, op Operation) error {
 	if node.Kind != yaml.MappingNode {
-		return fmt.Errorf("cannot set %s at %s: destination is not an object", op.Key, pointerForDisplay(op.Pointer))
+		return newError(op, ownerLabel(op),
+			"cannot set %s at %s: destination is not an object (%s)",
+			op.Key, pointerForDisplay(op.Pointer), nodeKind(node))
 	}
 	if idx := findKey(node, op.Key); idx >= 0 {
 		node.Content[idx+1] = op.Value
@@ -731,11 +980,14 @@ func setKey(node *yaml.Node, op Operation) error {
 
 func removeKey(node *yaml.Node, op Operation) error {
 	if node.Kind != yaml.MappingNode {
-		return fmt.Errorf("cannot remove %s at %s: destination is not an object", op.Key, pointerForDisplay(op.Pointer))
+		return newError(op, ownerLabel(op),
+			"cannot remove %s at %s: destination is not an object (%s)",
+			op.Key, pointerForDisplay(op.Pointer), nodeKind(node))
 	}
 	idx := findKey(node, op.Key)
 	if idx < 0 {
-		return fmt.Errorf("cannot remove %s at %s: key is not present", op.Key, pointerForDisplay(op.Pointer))
+		return newError(op, ownerLabel(op),
+			"cannot remove %s at %s: key is not present", op.Key, pointerForDisplay(op.Pointer))
 	}
 	node.Content = append(node.Content[:idx], node.Content[idx+2:]...)
 	return nil

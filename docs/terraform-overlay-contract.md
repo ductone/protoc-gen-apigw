@@ -242,8 +242,12 @@ is attached as a sibling of `$ref`, which OpenAPI 3.1 permits.
    `(pointer, channel, key)` triples, yet applying the first then the second
    keeps the second and the reverse order discards it. Comparison is
    token-aware, so `/X/properties/bar` does not overlap `/X/properties/foo`,
-   and extension and schema channels never collide with each other. Removing a
-   key is a write at the same location and overlaps the same way.
+   and two different keys on one node do not overlap.
+   **Containment ignores channels.** A write to an ancestor destroys its
+   descendants whatever channel either is on, so the schema-channel write above
+   also overlaps an extension-channel write to
+   `/components/schemas/X/properties/foo` with key `x-test`. Removing a key is a
+   write at the same location and overlaps the same way.
 
 Byte-for-byte identity of the shared document when no customization is declared
 is a **test requirement of this work**, not an established property of the
@@ -331,8 +335,12 @@ operations:
 - `mode` is `set` or `remove`. `remove` operations omit `value`.
 - `value` is the parsed JSON value with its exact type; `null` serializes as
   `null`, not as an empty key.
+- `provenance` is the descriptor identity of the annotation that produced the
+  operation, and is omitted when there is none. It is advisory metadata, never
+  interpreted.
 - Operations are sorted by `(pointer, channel, key)` and deduplicated, so two
-  runs over identical input produce identical bytes.
+  runs over identical input produce identical bytes. Rendering sorts a copy, so
+  `Render` has no side effects and is repeatable.
 
 ### Consumer contract
 
@@ -342,10 +350,24 @@ implementation of these semantics — a consumer does not re-derive them:
 
 | Function | Contract |
 | --- | --- |
-| `Parse([]byte) (*Overlay, error)` | Read an emitted artifact; rejects an unknown `version`. |
-| `Merge(...*Overlay) (*Overlay, error)` | Combine the per-service overlays of a merged document. Identical operations deduplicate; contradictory ones (same `pointer + channel + key`, different `mode` or `value`) fail with both sources named, as do operations with overlapping destinations. |
-| `Apply(doc []byte, ops []Operation) ([]byte, error)` | Apply in order to a rendered OpenAPI document. A pointer that does not resolve, or a `remove` of an absent key, is an error. |
-| `Validate(doc []byte, ops []Operation) error` | Resolve every pointer against a document without modifying it. |
+| `Parse([]byte) (*Overlay, error)` | Read an emitted artifact. Strict: a missing or unknown field, a value of the wrong YAML type, a `remove` carrying a value, a missing `pointer` (as distinct from an explicit empty pointer) and a missing `version` or `operations` are all errors. Parsed operations go through the same validation as generated ones, so a duplicate, contradictory or overlapping set is rejected here. |
+| `Merge(...*Overlay) (*Overlay, error)` | Combine the per-service overlays of a merged document. Identical operations deduplicate; contradictory and overlapping ones fail with **both** contributing sources named, never only the incoming one. |
+| `Apply(doc []byte, ops []Operation) ([]byte, error)` | Validate the list as a whole, then apply it. A list that is internally contradictory or overlapping fails, so a caller cannot get an order-dependent result by forgetting `Merge`. A pointer that does not resolve, a destination that is not an object, or a `remove` of an absent key is an error. |
+| `Validate(doc []byte, ops []Operation) error` | The same checks as `Apply` without modifying the document: whole-list consistency and an object destination. A list `Validate` accepts is a list `Apply` can perform. |
+
+### Diagnostics
+
+Failures are `*tfoverlay.Error`, which carries `Pointer`, `Channel`, `Key`,
+`Owners` (the contributing annotations, by descriptor identity) and a human
+message. Match it with `errors.As`; do not parse the message. Every operation
+also carries `Provenance` — the descriptor identity of the annotation that
+produced it, for example `field c1.api.app.v1.AppEntitlement.provisioner_policy`
+— so a checker can report which proto declaration wrote a destination without
+re-deriving it.
+
+A proto **source location** (`file:line`) is not part of the artifact: it would
+change the artifact on unrelated edits. This is a known gap; the descriptor
+identity is stable and sufficient to locate the declaration.
 
 `Merge` is the cross-document check the per-file generator cannot perform:
 root-level (document root) operations contributed by several services either
@@ -387,7 +409,10 @@ document.
 | Deduplication, contradiction, overlap, channel separation | `tfoverlay.TestOverlayAddDeduplicatesAndConflicts`, `tfoverlay.TestOverlayRejectsOverlappingDestinations` |
 | Canonical ordering, render/parse round trip, version rejection | `tfoverlay.TestOverlayNormalizeIsOrderIndependent`, `tfoverlay.TestOverlayRenderParseRoundTrip` |
 | Operation validation (keys, channels, modes, pointers) | `tfoverlay.TestOverlayValidateOperation` |
-| Cross-document merge, root conflicts, schema conflicts | `tfoverlay.TestMerge` |
+| Cross-document merge, root conflicts, schema conflicts, both-source diagnostics | `tfoverlay.TestMerge`, `tfoverlay.TestMergeNamesBothSources` |
+| Artifact strictness: missing, unknown, mistyped and contradictory fields | `tfoverlay.TestParseRejectsMalformedArtifacts` |
+| Entrypoints reject inconsistent lists and non-object destinations | `tfoverlay.TestApplyAndValidateRejectInconsistentLists`, `tfoverlay.TestValidateRequiresObjectDestination` |
+| Structured errors and per-operation provenance | `tfoverlay.TestErrorsAreStructured` |
 | Apply and validate against a document, order independence | `tfoverlay.TestApply`, `tfoverlay.TestValidate` |
 | Declaration validation: keys, values, pointers, owner/target legality | `apigw.TestCustomizationDeclarationValidation`, `apigw.TestSchemaPatchDeclarationValidation` |
 | Unapplied annotations fail, with a reason | `apigw.TestUnappliedAnnotationsFailGeneration`, `apigw.TestUnappliedAnnotationReportsReason` |

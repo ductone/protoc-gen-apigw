@@ -1,6 +1,7 @@
 package tfoverlay
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -221,7 +222,17 @@ func TestOverlayAddDeduplicatesAndConflicts(t *testing.T) {
 // (pointer, channel, key) is not enough. Setting "properties" on /X and
 // "default" on /X/properties/foo have unique keys, but whichever runs first
 // changes the result, so neither ordering can be shown to be correct.
+//
+// The containment check deliberately ignores channels: a write to an ancestor
+// destroys its descendants whatever channel either is on, so a schema-channel
+// write to /X "properties" and an extension-channel write to
+// /X/properties/foo "x-test" still overlap.
 func TestOverlayRejectsOverlappingDestinations(t *testing.T) {
+	scalar := func(v string) *yaml.Node {
+		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: v}
+	}
+	mapping := func() *yaml.Node { return &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"} }
+
 	tests := []struct {
 		name  string
 		first Operation
@@ -229,18 +240,35 @@ func TestOverlayRejectsOverlappingDestinations(t *testing.T) {
 	}{
 		{
 			name:  "ancestor write then descendant write",
-			first: Operation{Pointer: "/components/schemas/X", Channel: ChannelSchema, Key: "properties", Mode: ModeSet, Value: &yaml.Node{Kind: yaml.MappingNode}},
-			next:  Operation{Pointer: "/components/schemas/X/properties/foo", Channel: ChannelSchema, Key: "default", Mode: ModeSet, Value: &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "v"}},
+			first: Operation{Pointer: "/components/schemas/X", Channel: ChannelSchema, Key: "properties", Mode: ModeSet, Value: mapping()},
+			next:  Operation{Pointer: "/components/schemas/X/properties/foo", Channel: ChannelSchema, Key: "default", Mode: ModeSet, Value: scalar("v")},
 		},
 		{
 			name:  "descendant write then ancestor write",
-			first: Operation{Pointer: "/components/schemas/X/properties/foo", Channel: ChannelSchema, Key: "default", Mode: ModeSet, Value: &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "v"}},
-			next:  Operation{Pointer: "/components/schemas/X", Channel: ChannelSchema, Key: "properties", Mode: ModeSet, Value: &yaml.Node{Kind: yaml.MappingNode}},
+			first: Operation{Pointer: "/components/schemas/X/properties/foo", Channel: ChannelSchema, Key: "default", Mode: ModeSet, Value: scalar("v")},
+			next:  Operation{Pointer: "/components/schemas/X", Channel: ChannelSchema, Key: "properties", Mode: ModeSet, Value: mapping()},
 		},
 		{
 			name:  "ancestor removal against descendant write",
 			first: Operation{Pointer: "/a/b", Channel: ChannelExtension, Key: "x-keep", Mode: ModeRemove},
-			next:  Operation{Pointer: "/a/b/x-keep/deep", Channel: ChannelExtension, Key: "x-two", Mode: ModeSet, Value: &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "v"}},
+			next:  Operation{Pointer: "/a/b/x-keep/deep", Channel: ChannelExtension, Key: "x-two", Mode: ModeSet, Value: scalar("v")},
+		},
+		{
+			// The schema channel writes the container the extension channel
+			// writes into.
+			name:  "schema ancestor against extension descendant",
+			first: Operation{Pointer: "/components/schemas/X", Channel: ChannelSchema, Key: "properties", Mode: ModeSet, Value: mapping()},
+			next:  Operation{Pointer: "/components/schemas/X/properties/foo", Channel: ChannelExtension, Key: "x-test", Mode: ModeSet, Value: scalar("v")},
+		},
+		{
+			name:  "extension descendant against schema ancestor",
+			first: Operation{Pointer: "/components/schemas/X/properties/foo", Channel: ChannelExtension, Key: "x-test", Mode: ModeSet, Value: scalar("v")},
+			next:  Operation{Pointer: "/components/schemas/X", Channel: ChannelSchema, Key: "properties", Mode: ModeSet, Value: mapping()},
+		},
+		{
+			name:  "extension ancestor against schema descendant",
+			first: Operation{Pointer: "/components/schemas/X", Channel: ChannelExtension, Key: "x-entity", Mode: ModeSet, Value: scalar("X")},
+			next:  Operation{Pointer: "/components/schemas/X/x-entity/deep", Channel: ChannelSchema, Key: "default", Mode: ModeSet, Value: scalar("v")},
 		},
 	}
 	for _, tt := range tests {
@@ -256,22 +284,52 @@ func TestOverlayRejectsOverlappingDestinations(t *testing.T) {
 			if !strings.Contains(err.Error(), "overlapping destinations") {
 				t.Fatalf("unexpected error: %v", err)
 			}
+			var structured *Error
+			if !errors.As(err, &structured) {
+				t.Fatalf("error %T is not a structured *Error", err)
+			}
+			if structured.Pointer != tt.next.Pointer || structured.Key != tt.next.Key {
+				t.Fatalf("structured error points at %q/%q, want %q/%q",
+					structured.Pointer, structured.Key, tt.next.Pointer, tt.next.Key)
+			}
 		})
 	}
+
+	t.Run("the same overlap is rejected through Merge", func(t *testing.T) {
+		schema := &Overlay{Source: "svc.a"}
+		extension := &Overlay{Source: "svc.b"}
+		if err := schema.Add(Operation{Pointer: "/components/schemas/X", Channel: ChannelSchema, Key: "properties", Mode: ModeSet, Value: mapping()}); err != nil {
+			t.Fatalf("Add: %v", err)
+		}
+		if err := extension.Add(Operation{Pointer: "/components/schemas/X/properties/foo", Channel: ChannelExtension, Key: "x-test", Mode: ModeSet, Value: scalar("v")}); err != nil {
+			t.Fatalf("Add: %v", err)
+		}
+		_, err := Merge(schema, extension)
+		if err == nil {
+			t.Fatal("Merge = nil error, want failure")
+		}
+		if !strings.Contains(err.Error(), "overlapping destinations") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
 
 	t.Run("Overlaps reports the same pairs", func(t *testing.T) {
 		ancestor := Operation{Pointer: "/x", Channel: ChannelSchema, Key: "properties"}
 		descendant := Operation{Pointer: "/x/properties/foo", Channel: ChannelSchema, Key: "default"}
 		sibling := Operation{Pointer: "/x/properties/bar", Channel: ChannelSchema, Key: "default"}
-		otherChannel := Operation{Pointer: "/x/properties/foo", Channel: ChannelExtension, Key: "default"}
+		crossChannel := Operation{Pointer: "/x/properties/foo", Channel: ChannelExtension, Key: "x-test"}
+		sameNodeOtherKey := Operation{Pointer: "/x", Channel: ChannelSchema, Key: "title"}
 		if !Overlaps(ancestor, descendant) || !Overlaps(descendant, ancestor) {
 			t.Fatal("Overlaps(ancestor, descendant) = false, want true")
+		}
+		if !Overlaps(ancestor, crossChannel) || !Overlaps(crossChannel, ancestor) {
+			t.Fatal("Overlaps across channels = false, want true for a containment")
 		}
 		if Overlaps(sibling, descendant) {
 			t.Fatal("Overlaps(sibling, descendant) = true, want false")
 		}
-		if Overlaps(otherChannel, descendant) {
-			t.Fatal("Overlaps across channels = true, want false")
+		if Overlaps(sameNodeOtherKey, ancestor) {
+			t.Fatal("Overlaps(same node, different key) = true, want false")
 		}
 	})
 }
@@ -603,4 +661,285 @@ func TestValidate(t *testing.T) {
 	if err := Validate([]byte(testDocument), nil); err != nil {
 		t.Fatalf("Validate(no operations) unexpected error: %v", err)
 	}
+}
+
+// TestParseRejectsMalformedArtifacts keeps the artifact contract strict: an
+// artifact is machine-written, so a missing, unknown or mistyped field means
+// producer and consumer disagree rather than that a default applies.
+func TestParseRejectsMalformedArtifacts(t *testing.T) {
+	const valid = "version: 1\n" +
+		"source: svc\n" +
+		"kind: service\n" +
+		"operations:\n" +
+		"  - pointer: /a\n" +
+		"    channel: extension\n" +
+		"    key: x-one\n" +
+		"    mode: set\n" +
+		"    value: 1\n"
+	if _, err := Parse([]byte(valid)); err != nil {
+		t.Fatalf("Parse(valid) unexpected error: %v", err)
+	}
+
+	tests := []struct {
+		name    string
+		input   string
+		wantErr string
+	}{
+		{name: "missing version", input: "operations: []\n", wantErr: "version is required"},
+		{name: "version is a string", input: "version: \"1\"\noperations: []\n", wantErr: `field "version" must be an integer`},
+		{name: "unsupported version", input: "version: 2\noperations: []\n", wantErr: "unsupported version"},
+		{name: "missing operations", input: "version: 1\n", wantErr: "operations is required"},
+		{name: "operations is not a sequence", input: "version: 1\noperations: {}\n", wantErr: "operations must be a sequence"},
+		{name: "unknown top-level field", input: "version: 1\noperations: []\nextra: 1\n", wantErr: `unknown field "extra"`},
+		{name: "source is not a string", input: "version: 1\nsource: 7\noperations: []\n", wantErr: `field "source" must be a string`},
+		{name: "unknown kind", input: "version: 1\nkind: other\noperations: []\n", wantErr: "unknown kind"},
+		{
+			name: "missing pointer",
+			input: "version: 1\noperations:\n" +
+				"  - channel: extension\n    key: x-one\n    mode: set\n    value: 1\n",
+			wantErr: "missing pointer",
+		},
+		{
+			name: "missing mode",
+			input: "version: 1\noperations:\n" +
+				"  - pointer: /a\n    channel: extension\n    key: x-one\n    value: 1\n",
+			wantErr: "is missing mode",
+		},
+		{
+			name: "missing value for set",
+			input: "version: 1\noperations:\n" +
+				"  - pointer: /a\n    channel: extension\n    key: x-one\n    mode: set\n",
+			wantErr: "is missing value",
+		},
+		{
+			name: "value on remove",
+			input: "version: 1\noperations:\n" +
+				"  - pointer: /a\n    channel: extension\n    key: x-one\n    mode: remove\n    value: 1\n",
+			wantErr: "must not carry a value",
+		},
+		{
+			name: "unknown operation field",
+			input: "version: 1\noperations:\n" +
+				"  - pointer: /a\n    channel: extension\n    key: x-one\n    mode: set\n    value: 1\n    extra: 1\n",
+			wantErr: `unknown operation field "extra"`,
+		},
+		{
+			name: "pointer is not a string",
+			input: "version: 1\noperations:\n" +
+				"  - pointer: 5\n    channel: extension\n    key: x-one\n    mode: set\n    value: 1\n",
+			wantErr: `field "pointer" must be a string`,
+		},
+		{
+			name: "contradictory operations",
+			input: valid +
+				"  - pointer: /a\n    channel: extension\n    key: x-one\n    mode: set\n    value: 2\n",
+			wantErr: "conflicting assignments",
+		},
+		{
+			name: "overlapping operations",
+			input: "version: 1\noperations:\n" +
+				"  - pointer: /a\n    channel: schema\n    key: properties\n    mode: set\n    value: {}\n" +
+				"  - pointer: /a/properties/b\n    channel: extension\n    key: x-two\n    mode: set\n    value: 1\n",
+			wantErr: "overlapping destinations",
+		},
+		{name: "document root is not a mapping", input: "- 1\n", wantErr: "expected a mapping"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := Parse([]byte(tt.input))
+			if err == nil {
+				t.Fatalf("Parse(%q) = nil error, want %q", tt.input, tt.wantErr)
+			}
+			if !strings.Contains(err.Error(), tt.wantErr) {
+				t.Fatalf("Parse error = %v, want it to contain %q", err, tt.wantErr)
+			}
+		})
+	}
+
+	t.Run("identical operations deduplicate", func(t *testing.T) {
+		input := valid + "  - pointer: /a\n    channel: extension\n    key: x-one\n    mode: set\n    value: 1\n"
+		ov, err := Parse([]byte(input))
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		if len(ov.Operations) != 1 {
+			t.Fatalf("got %d operations, want 1", len(ov.Operations))
+		}
+	})
+
+	t.Run("an empty operation list is valid", func(t *testing.T) {
+		ov, err := Parse([]byte("version: 1\noperations: []\n"))
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		if !ov.Empty() {
+			t.Fatalf("got %d operations, want none", len(ov.Operations))
+		}
+	})
+
+	t.Run("provenance round trips", func(t *testing.T) {
+		input := valid + "    provenance: " + testFieldProvenance + "\n"
+		ov, err := Parse([]byte(input))
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		if ov.Operations[0].Provenance != testFieldProvenance {
+			t.Fatalf("provenance = %q", ov.Operations[0].Provenance)
+		}
+	})
+}
+
+// TestApplyAndValidateRejectInconsistentLists pins that the public entrypoints
+// do not depend on the caller remembering to Merge: an order-dependent list is
+// rejected wherever it enters.
+func TestApplyAndValidateRejectInconsistentLists(t *testing.T) {
+	lists := map[string][]Operation{
+		"contradictory": {
+			op(t, "/components/schemas/Thing", "x-one", ModeSet, "1"),
+			op(t, "/components/schemas/Thing", "x-one", ModeSet, "2"),
+		},
+		"overlapping across channels": {
+			schemaOp(t, "/components/schemas/Thing", "properties", ModeSet, "{}"),
+			op(t, "/components/schemas/Thing/properties/id", "x-test", ModeSet, "1"),
+		},
+	}
+	for name, ops := range lists {
+		t.Run(name, func(t *testing.T) {
+			if _, err := Apply([]byte(testDocument), ops); err == nil {
+				t.Fatal("Apply = nil error, want failure")
+			} else if !strings.Contains(err.Error(), "inconsistent operation list") {
+				t.Fatalf("Apply error = %v, want an inconsistent-list failure", err)
+			}
+			if err := Validate([]byte(testDocument), ops); err == nil {
+				t.Fatal("Validate = nil error, want failure")
+			} else if !strings.Contains(err.Error(), "inconsistent operation list") {
+				t.Fatalf("Validate error = %v, want an inconsistent-list failure", err)
+			}
+		})
+	}
+}
+
+// TestValidateRequiresObjectDestination keeps Validate and Apply agreeing: a
+// destination that is a scalar or a sequence cannot take a key, so Validate
+// rejects it rather than accepting a list Apply would then fail on.
+func TestValidateRequiresObjectDestination(t *testing.T) {
+	scalarTarget := op(t, "/components/schemas/Thing/type", "x-test", ModeSet, "1")
+	err := Validate([]byte(testDocument), []Operation{scalarTarget})
+	if err == nil {
+		t.Fatal("Validate(scalar destination) = nil error, want failure")
+	}
+	if !strings.Contains(err.Error(), "destination is not an object") {
+		t.Fatalf("Validate error = %v, want an object-destination failure", err)
+	}
+	if _, err := Apply([]byte(testDocument), []Operation{scalarTarget}); err == nil {
+		t.Fatal("Apply(scalar destination) = nil error, want failure")
+	}
+}
+
+// TestMergeNamesBothSources requires the diagnostic to identify both
+// contributions, not only the incoming one.
+func TestMergeNamesBothSources(t *testing.T) {
+	first := &Overlay{Source: "svc.alpha"}
+	second := &Overlay{Source: "svc.beta"}
+	if err := first.Add(op(t, "", "x-speakeasy-globals", ModeSet, `{"parameters":[]}`)); err != nil {
+		t.Fatalf("Add: %v", err)
+	}
+	if err := second.Add(op(t, "", "x-speakeasy-globals", ModeSet, `{"parameters":[{"name":"t"}]}`)); err != nil {
+		t.Fatalf("Add: %v", err)
+	}
+	_, err := Merge(first, second)
+	if err == nil {
+		t.Fatal("Merge = nil error, want failure")
+	}
+	assertNamesBoth(t, err, "svc.alpha", "svc.beta")
+
+	t.Run("overlap across sources names both", func(t *testing.T) {
+		a := &Overlay{Source: "svc.alpha"}
+		b := &Overlay{Source: "svc.beta"}
+		if err := a.Add(schemaOp(t, "/components/schemas/Thing", "properties", ModeSet, "{}")); err != nil {
+			t.Fatalf("Add: %v", err)
+		}
+		if err := b.Add(op(t, "/components/schemas/Thing/properties/id", "x-test", ModeSet, "1")); err != nil {
+			t.Fatalf("Add: %v", err)
+		}
+		_, err := Merge(a, b)
+		if err == nil {
+			t.Fatal("Merge = nil error, want failure")
+		}
+		assertNamesBoth(t, err, "svc.alpha", "svc.beta")
+	})
+}
+
+func assertNamesBoth(t *testing.T, err error, names ...string) {
+	t.Helper()
+	for _, name := range names {
+		if !strings.Contains(err.Error(), name) {
+			t.Fatalf("error %q does not name %q", err, name)
+		}
+	}
+}
+
+// TestErrorsAreStructured requires failures to be machine-readable: a linter
+// needs the destination and the contributing annotations, not a message to
+// parse.
+const testFieldProvenance = "field test.Thing.id"
+
+func TestErrorsAreStructured(t *testing.T) {
+	withOwner := op(t, "/a", "x-one", ModeSet, "1")
+	withOwner.Provenance = testFieldProvenance
+	conflicting := op(t, "/a", "x-one", ModeSet, "2")
+	ov := &Overlay{}
+	if err := ov.Add(withOwner); err != nil {
+		t.Fatalf("Add: %v", err)
+	}
+	err := ov.Add(conflicting)
+	var structured *Error
+	if !errors.As(err, &structured) {
+		t.Fatalf("error %T is not a structured *Error", err)
+	}
+	if structured.Pointer != "/a" || structured.Channel != ChannelExtension || structured.Key != "x-one" {
+		t.Fatalf("structured error = %+v", structured)
+	}
+	if len(structured.Owners) != 1 || structured.Owners[0] != testFieldProvenance {
+		t.Fatalf("structured owners = %v, want the contributing annotation", structured.Owners)
+	}
+
+	t.Run("provenance is carried into Apply and Validate failures", func(t *testing.T) {
+		missing := op(t, "/components/schemas/Missing", "x-one", ModeSet, "1")
+		missing.Provenance = testFieldProvenance
+		applyErr := Validate([]byte(testDocument), []Operation{missing})
+		var applyStructured *Error
+		if !errors.As(applyErr, &applyStructured) {
+			t.Fatalf("Validate error %T is not a structured *Error", applyErr)
+		}
+		if applyStructured.Pointer != "/components/schemas/Missing" {
+			t.Fatalf("structured pointer = %q", applyStructured.Pointer)
+		}
+		if len(applyStructured.Owners) != 1 || applyStructured.Owners[0] != testFieldProvenance {
+			t.Fatalf("structured owners = %v", applyStructured.Owners)
+		}
+	})
+
+	t.Run("provenance survives render and parse", func(t *testing.T) {
+		ov := &Overlay{Source: "svc"}
+		annotated := op(t, "/a", "x-one", ModeSet, "1")
+		annotated.Provenance = "message test.Thing"
+		if err := ov.Add(annotated); err != nil {
+			t.Fatalf("Add: %v", err)
+		}
+		data, err := ov.Render()
+		if err != nil {
+			t.Fatalf("Render: %v", err)
+		}
+		if !strings.Contains(string(data), "provenance: message test.Thing") {
+			t.Fatalf("rendered artifact lost provenance:\n%s", data)
+		}
+		parsed, err := Parse(data)
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		if parsed.Operations[0].Provenance != "message test.Thing" {
+			t.Fatalf("parsed provenance = %q", parsed.Operations[0].Provenance)
+		}
+	})
 }

@@ -66,10 +66,10 @@ func TestRegenerateDescriptorFixture(t *testing.T) {
 	if err != nil {
 		t.Fatalf("marshaling fixture: %v", err)
 	}
-	if err := os.MkdirAll(descriptorFixtureDir, 0o755); err != nil {
+	if err := os.MkdirAll(descriptorFixtureDir, 0o750); err != nil {
 		t.Fatalf("creating %s: %v", descriptorFixtureDir, err)
 	}
-	if err := os.WriteFile(descriptorFixturePath, data, 0o644); err != nil {
+	if err := os.WriteFile(descriptorFixturePath, data, 0o600); err != nil {
 		t.Fatalf("writing %s: %v", descriptorFixturePath, err)
 	}
 	t.Logf("wrote %s (%d bytes, %d files)", descriptorFixturePath, len(data), len(set.GetFile()))

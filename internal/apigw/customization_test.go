@@ -13,7 +13,7 @@ import (
 	pgs "github.com/lyft/protoc-gen-star"
 	"github.com/pb33f/libopenapi"
 	validator "github.com/pb33f/libopenapi-validator"
-	"github.com/pb33f/libopenapi/datamodel/high/v3"
+	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -76,17 +76,43 @@ func renderProtoFile(t *testing.T, target string) map[string]string {
 	return artifacts
 }
 
-func tryRenderProtoFile(t *testing.T, target string) (artifacts map[string]string, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			if failure, ok := r.(generatorFailure); ok {
-				artifacts, err = nil, failure
+func tryRenderProtoFile(t *testing.T, target string) (map[string]string, error) {
+	artifacts, err := renderOrPanic(t, target)
+	if err != nil {
+		return nil, err
+	}
+	return artifacts, nil
+}
+
+// renderOrPanic runs the generator and turns a generatorFailure panic (the
+// module reports a bad annotation with ModuleBase.Fail, which exits the process
+// in production) into an error.
+func renderOrPanic(t *testing.T, target string) (map[string]string, error) {
+	var (
+		artifacts map[string]string
+		err       error
+	)
+	func() {
+		defer func() {
+			r := recover()
+			if r == nil {
 				return
 			}
-			panic(r)
-		}
+			failure, ok := r.(generatorFailure)
+			if !ok {
+				panic(r)
+			}
+			artifacts, err = nil, failure
+		}()
+		artifacts, err = renderArtifacts(t, target)
 	}()
+	if err != nil {
+		return nil, err
+	}
+	return artifacts, nil
+}
 
+func renderArtifacts(t *testing.T, target string) (map[string]string, error) {
 	fixtures := loadDescriptorFixture(t)
 	req := &pluginpb.CodeGeneratorRequest{
 		FileToGenerate: []string{target},
@@ -142,7 +168,7 @@ func tryRenderProtoFile(t *testing.T, target string) (artifacts map[string]strin
 	if e := resp.GetError(); e != "" {
 		return nil, fmt.Errorf("generator reported: %s", e)
 	}
-	artifacts = map[string]string{}
+	artifacts := map[string]string{}
 	for _, f := range resp.GetFile() {
 		artifacts[f.GetName()] = f.GetContent()
 	}
@@ -358,13 +384,14 @@ func TestSchemaPatchDeclarationValidation(t *testing.T) {
 func TestUnappliedAnnotationsFailGeneration(t *testing.T) {
 	collector := newTFCollector()
 	collector.declare(&tfDecl{
-		id:        "field:test.Field.f#0",
-		owner:     "field test.Field.f annotation \"x-a\"",
-		ownerKind: tfOwnerField,
-		target:    apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_SCHEMA,
-		scope:     apigw_v1.OpenAPICustomizationScope_OPEN_API_CUSTOMIZATION_SCOPE_TERRAFORM,
-		key:       "x-a",
-		value:     &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: "1"},
+		id:         "field:test.Field.f#0",
+		descriptor: "field test.Field.f",
+		describe:   "field test.Field.f annotation \"x-a\"",
+		ownerKind:  tfOwnerField,
+		target:     apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_SCHEMA,
+		scope:      apigw_v1.OpenAPICustomizationScope_OPEN_API_CUSTOMIZATION_SCOPE_TERRAFORM,
+		key:        "x-a",
+		value:      &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: "1"},
 	})
 	err := collector.verify()
 	if err == nil {
@@ -383,13 +410,14 @@ func TestUnappliedAnnotationsFailGeneration(t *testing.T) {
 func TestUnappliedAnnotationReportsReason(t *testing.T) {
 	collector := newTFCollector()
 	field := &tfDecl{
-		id:        "field:test.Field.f#0",
-		owner:     "field test.Field.f annotation \"x-a\"",
-		ownerKind: tfOwnerField,
-		target:    apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_MAP_VALUES,
-		scope:     apigw_v1.OpenAPICustomizationScope_OPEN_API_CUSTOMIZATION_SCOPE_TERRAFORM,
-		key:       "x-a",
-		value:     &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: "1"},
+		id:         "field:test.Field.f#0",
+		descriptor: "field test.Field.f",
+		describe:   "field test.Field.f annotation \"x-a\"",
+		ownerKind:  tfOwnerField,
+		target:     apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_MAP_VALUES,
+		scope:      apigw_v1.OpenAPICustomizationScope_OPEN_API_CUSTOMIZATION_SCOPE_TERRAFORM,
+		key:        "x-a",
+		value:      &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: "1"},
 	}
 	collector.declare(field)
 	collector.blockReason(field.id, "field is not a map")
@@ -454,7 +482,17 @@ var expectedFixtureOperations = map[string]string{
 
 func renderOpValue(n *yaml.Node) string {
 	switch n.Kind {
-	case yaml.ScalarNode, yaml.AliasNode:
+	case yaml.DocumentNode:
+		if len(n.Content) == 0 {
+			return ""
+		}
+		return renderOpValue(n.Content[0])
+	case yaml.AliasNode:
+		if n.Alias != nil {
+			return renderOpValue(n.Alias)
+		}
+		return n.Value
+	case yaml.ScalarNode:
 		return n.Value
 	case yaml.SequenceNode:
 		parts := make([]string, 0, len(n.Content))

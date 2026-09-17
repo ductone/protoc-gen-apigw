@@ -62,43 +62,52 @@ func (k tfOwnerKind) defaultValue() apigw_v1.OpenAPICustomizationTarget {
 	}
 }
 
-// legalTarget reports whether an owner kind may address a target. A
-// combination outside this set is a generation error: the annotation could
-// never be applied, and silently dropping it is the failure mode this contract
-// exists to prevent.
+// legalTargets maps a target to the owner kinds that may use it. A combination
+// outside this table is a generation error: the annotation could never be
+// applied, and silently dropping it is the failure mode this contract exists to
+// prevent. A table rather than a switch keeps the check exhaustive as new
+// targets are added.
+var legalTargets = map[apigw_v1.OpenAPICustomizationTarget]map[tfOwnerKind]bool{
+	apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_SCHEMA: {
+		tfOwnerField:   true,
+		tfOwnerMessage: true,
+	},
+	apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_PARAMETER: {
+		tfOwnerField: true,
+	},
+	apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_ARRAY_ITEMS: {
+		tfOwnerField: true,
+	},
+	apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_MAP_VALUES: {
+		tfOwnerField: true,
+	},
+	apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_OPERATION: {
+		tfOwnerOperation: true,
+	},
+	apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_REQUEST_SCHEMA: {
+		tfOwnerOperation: true,
+	},
+	apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_RESPONSE_SCHEMA: {
+		tfOwnerOperation: true,
+	},
+	apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_DOCUMENT_ROOT: {
+		tfOwnerService: true,
+		tfOwnerFile:    true,
+	},
+	// The escape hatch is legal everywhere, so a future placement never needs a
+	// new target value or a new apigw release.
+	apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER: {
+		tfOwnerField:     true,
+		tfOwnerMessage:   true,
+		tfOwnerOperation: true,
+		tfOwnerService:   true,
+		tfOwnerFile:      true,
+	},
+}
+
+// legalTarget reports whether an owner kind may address a target.
 func (k tfOwnerKind) legalTarget(t apigw_v1.OpenAPICustomizationTarget) bool {
-	switch k {
-	case tfOwnerField:
-		switch t {
-		case apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_SCHEMA,
-			apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_PARAMETER,
-			apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_ARRAY_ITEMS,
-			apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_MAP_VALUES,
-			apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER:
-			return true
-		}
-	case tfOwnerMessage:
-		switch t {
-		case apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_SCHEMA,
-			apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER:
-			return true
-		}
-	case tfOwnerOperation:
-		switch t {
-		case apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_OPERATION,
-			apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_REQUEST_SCHEMA,
-			apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_RESPONSE_SCHEMA,
-			apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER:
-			return true
-		}
-	case tfOwnerService, tfOwnerFile:
-		switch t {
-		case apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_DOCUMENT_ROOT,
-			apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER:
-			return true
-		}
-	}
-	return false
+	return legalTargets[t][k]
 }
 
 // patchField is one keyword set by a schema patch.
@@ -112,8 +121,14 @@ type patchField struct {
 // keyword assignments plus removals); a patch expands to one operation per
 // keyword.
 type tfDecl struct {
-	id          string
-	owner       string
+	id string
+	// descriptor is the annotated descriptor's identity, e.g.
+	// "field c1.api.app.v1.AppEntitlement.provisioner_policy". It travels with
+	// every operation the declaration produces, so a consumer or linter can
+	// report which annotation wrote a destination without re-deriving it.
+	descriptor string
+	// describe is the human-readable label used in diagnostics.
+	describe    string
 	ownerKind   tfOwnerKind
 	target      apigw_v1.OpenAPICustomizationTarget
 	scope       apigw_v1.OpenAPICustomizationScope
@@ -128,35 +143,39 @@ type tfDecl struct {
 	applied bool
 }
 
-// opsFor expands a declaration into overlay operations at pointer.
+// opsFor expands a declaration into overlay operations at pointer. Every
+// operation carries the declaration's descriptor identity as provenance.
 func (d *tfDecl) opsFor(pointer string) []tfoverlay.Operation {
 	if d.patchSet != nil || d.patchRemove != nil {
 		ops := make([]tfoverlay.Operation, 0, len(d.patchSet)+len(d.patchRemove))
 		for _, f := range d.patchSet {
 			ops = append(ops, tfoverlay.Operation{
-				Pointer: pointer,
-				Channel: tfoverlay.ChannelSchema,
-				Key:     f.key,
-				Mode:    tfoverlay.ModeSet,
-				Value:   f.value,
+				Pointer:    pointer,
+				Channel:    tfoverlay.ChannelSchema,
+				Key:        f.key,
+				Mode:       tfoverlay.ModeSet,
+				Value:      f.value,
+				Provenance: d.descriptor,
 			})
 		}
 		for _, key := range d.patchRemove {
 			ops = append(ops, tfoverlay.Operation{
-				Pointer: pointer,
-				Channel: tfoverlay.ChannelSchema,
-				Key:     key,
-				Mode:    tfoverlay.ModeRemove,
+				Pointer:    pointer,
+				Channel:    tfoverlay.ChannelSchema,
+				Key:        key,
+				Mode:       tfoverlay.ModeRemove,
+				Provenance: d.descriptor,
 			})
 		}
 		return ops
 	}
 	op := tfoverlay.Operation{
-		Pointer: pointer,
-		Channel: tfoverlay.ChannelExtension,
-		Key:     d.key,
-		Mode:    tfoverlay.ModeSet,
-		Value:   d.value,
+		Pointer:    pointer,
+		Channel:    tfoverlay.ChannelExtension,
+		Key:        d.key,
+		Mode:       tfoverlay.ModeSet,
+		Value:      d.value,
+		Provenance: d.descriptor,
 	}
 	if d.mode == apigw_v1.OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_REMOVE {
 		op.Mode = tfoverlay.ModeRemove
@@ -256,7 +275,7 @@ func (c *tfCollector) declare(d *tfDecl) {
 	c.decls[d.id] = d
 }
 
-func (c *tfCollector) fail(format string, args ...interface{}) {
+func (c *tfCollector) failf(format string, args ...interface{}) {
 	panic(tfError{fmt.Sprintf(format, args...)})
 }
 
@@ -290,7 +309,7 @@ func (c *tfCollector) emit(decls []*tfDecl, places map[apigw_v1.OpenAPICustomiza
 		}
 		for _, op := range registered.opsFor(pointer) {
 			if err := c.active.add(op, registered.scope); err != nil {
-				c.fail("%s: %v", registered.owner, err)
+				c.failf("%s: %v", registered.describe, err)
 			}
 		}
 		registered.applied = true
@@ -324,7 +343,7 @@ func (c *tfCollector) verify() error {
 		if reason == "" {
 			reason = "no emitted document contains the annotated entity"
 		}
-		unapplied = append(unapplied, fmt.Sprintf("%s (%s)", d.owner, reason))
+		unapplied = append(unapplied, fmt.Sprintf("%s (%s)", d.describe, reason))
 	}
 	if len(unapplied) == 0 {
 		return nil
@@ -341,11 +360,12 @@ func declID(prefix, owner string, index int) string {
 	return fmt.Sprintf("%s:%s#%d", prefix, owner, index)
 }
 
-func (c *tfCollector) parseCustomization(owner string, k tfOwnerKind, base string, index int, cust *apigw_v1.OpenAPICustomization) *tfDecl {
-	id := declID(base, owner, index)
+func (c *tfCollector) parseCustomization(descriptor string, k tfOwnerKind, base string, index int, cust *apigw_v1.OpenAPICustomization) *tfDecl {
+	id := declID(base, descriptor, index)
 	d := &tfDecl{
 		id:          id,
-		owner:       fmt.Sprintf("%s %s annotation %q", k, owner, cust.GetKey()),
+		descriptor:  descriptor,
+		describe:    fmt.Sprintf("%s annotation %q", descriptor, cust.GetKey()),
 		ownerKind:   k,
 		scope:       cust.GetScope(),
 		mode:        cust.GetMode(),
@@ -357,43 +377,44 @@ func (c *tfCollector) parseCustomization(owner string, k tfOwnerKind, base strin
 		d.target = k.defaultValue()
 	}
 	if !k.legalTarget(d.target) {
-		c.fail("%s: target %s is not valid on a %s", d.owner, d.target, k)
+		c.failf("%s: target %s is not valid on a %s", d.describe, d.target, k)
 	}
 	if d.jsonPointer != "" && d.target != apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER {
-		c.fail("%s: json_pointer is only valid with target JSON_POINTER", d.owner)
+		c.failf("%s: json_pointer is only valid with target JSON_POINTER", d.describe)
 	}
 	if !strings.HasPrefix(d.key, "x-") {
-		c.fail("%s: extension key %q must start with \"x-\"", d.owner, d.key)
+		c.failf("%s: extension key %q must start with \"x-\"", d.describe, d.key)
 	}
 	switch d.mode {
 	case apigw_v1.OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_UNSPECIFIED,
 		apigw_v1.OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_SET:
 		if cust.GetValueJson() == "" {
-			c.fail("%s: value_json is required when mode is SET", d.owner)
+			c.failf("%s: value_json is required when mode is SET", d.describe)
 		}
 		value, err := tfoverlay.ParseJSONValue(cust.GetValueJson())
 		if err != nil {
-			c.fail("%s: %v", d.owner, err)
+			c.failf("%s: %v", d.describe, err)
 		}
 		d.value = value
 	case apigw_v1.OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_REMOVE:
 		if cust.GetValueJson() != "" {
-			c.fail("%s: value_json must be empty when mode is REMOVE", d.owner)
+			c.failf("%s: value_json must be empty when mode is REMOVE", d.describe)
 		}
 	default:
-		c.fail("%s: unknown mode %v", d.owner, d.mode)
+		c.failf("%s: unknown mode %v", d.describe, d.mode)
 	}
 	if _, err := tfoverlay.ParsePointer(d.jsonPointer); err != nil {
-		c.fail("%s: %v", d.owner, err)
+		c.failf("%s: %v", d.describe, err)
 	}
 	return d
 }
 
-func (c *tfCollector) parsePatch(owner string, k tfOwnerKind, base string, index int, patch *apigw_v1.OpenAPISchemaPatch) *tfDecl {
-	id := declID(base, owner, index)
+func (c *tfCollector) parsePatch(descriptor string, k tfOwnerKind, base string, index int, patch *apigw_v1.OpenAPISchemaPatch) *tfDecl {
+	id := declID(base, descriptor, index)
 	d := &tfDecl{
 		id:          id,
-		owner:       fmt.Sprintf("%s %s schema patch", k, owner),
+		descriptor:  descriptor,
+		describe:    descriptor + " schema patch",
 		ownerKind:   k,
 		scope:       patch.GetScope(),
 		target:      patch.GetTarget(),
@@ -403,49 +424,49 @@ func (c *tfCollector) parsePatch(owner string, k tfOwnerKind, base string, index
 		d.target = k.defaultValue()
 	}
 	if !k.legalTarget(d.target) {
-		c.fail("%s: target %s is not valid on a %s", d.owner, d.target, k)
+		c.failf("%s: target %s is not valid on a %s", d.describe, d.target, k)
 	}
 	// A schema patch replaces a schema object; the operation target is the
 	// schema's object, not an operation or a parameter.
 	if d.target == apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_PARAMETER {
-		c.fail("%s: target PARAMETER is not valid for a schema patch", d.owner)
+		c.failf("%s: target PARAMETER is not valid for a schema patch", d.describe)
 	}
 	if d.jsonPointer != "" && d.target != apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER {
-		c.fail("%s: json_pointer is only valid with target JSON_POINTER", d.owner)
+		c.failf("%s: json_pointer is only valid with target JSON_POINTER", d.describe)
 	}
 	if _, err := tfoverlay.ParsePointer(d.jsonPointer); err != nil {
-		c.fail("%s: %v", d.owner, err)
+		c.failf("%s: %v", d.describe, err)
 	}
 	if patch.GetPatchJson() != "" {
 		value, err := tfoverlay.ParseJSONValue(patch.GetPatchJson())
 		if err != nil {
-			c.fail("%s: %v", d.owner, err)
+			c.failf("%s: %v", d.describe, err)
 		}
 		if value.Kind != yaml.MappingNode {
-			c.fail("%s: patch_json must be a JSON object", d.owner)
+			c.failf("%s: patch_json must be a JSON object", d.describe)
 		}
 		for i := 0; i+1 < len(value.Content); i += 2 {
 			key := value.Content[i].Value
 			if key == "" {
-				c.fail("%s: patch_json contains an empty keyword", d.owner)
+				c.failf("%s: patch_json contains an empty keyword", d.describe)
 			}
 			if strings.HasPrefix(key, "x-") {
-				c.fail("%s: patch_json keyword %q is a vendor extension; use customizations instead", d.owner, key)
+				c.failf("%s: patch_json keyword %q is a vendor extension; use customizations instead", d.describe, key)
 			}
 			d.patchSet = append(d.patchSet, patchField{key: key, value: value.Content[i+1]})
 		}
 	}
 	for _, key := range patch.GetRemoveKeys() {
 		if key == "" {
-			c.fail("%s: remove_keys contains an empty keyword", d.owner)
+			c.failf("%s: remove_keys contains an empty keyword", d.describe)
 		}
 		if strings.HasPrefix(key, "x-") {
-			c.fail("%s: remove_keys keyword %q is a vendor extension; use customizations with mode REMOVE instead", d.owner, key)
+			c.failf("%s: remove_keys keyword %q is a vendor extension; use customizations with mode REMOVE instead", d.describe, key)
 		}
 		d.patchRemove = append(d.patchRemove, key)
 	}
 	if len(d.patchSet) == 0 && len(d.patchRemove) == 0 {
-		c.fail("%s: a schema patch needs patch_json or remove_keys", d.owner)
+		c.failf("%s: a schema patch needs patch_json or remove_keys", d.describe)
 	}
 	return d
 }
@@ -487,7 +508,7 @@ func (c *tfCollector) declareOperation(method pgs.Method, operation *apigw_v1.Op
 	owner := "operation " + nicerFQN(method)
 	if opIndex > 0 {
 		if len(operation.GetCustomizations()) > 0 || len(operation.GetSchemaPatches()) > 0 {
-			c.fail("%s: operations[%d] carries annotations but apigw emits only operations[0]", owner, opIndex)
+			c.failf("%s: operations[%d] carries annotations but apigw emits only operations[0]", owner, opIndex)
 		}
 		return
 	}
