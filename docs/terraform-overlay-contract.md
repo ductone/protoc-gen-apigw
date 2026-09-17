@@ -350,10 +350,13 @@ implementation of these semantics — a consumer does not re-derive them:
 
 | Function | Contract |
 | --- | --- |
-| `Parse([]byte) (*Overlay, error)` | Read an emitted artifact. Strict: a missing or unknown field, a value of the wrong YAML type, a `remove` carrying a value, a missing `pointer` (as distinct from an explicit empty pointer) and a missing `version` or `operations` are all errors. Parsed operations go through the same validation as generated ones, so a duplicate, contradictory or overlapping set is rejected here. |
+| `Parse([]byte) (*Overlay, error)` | Read an emitted artifact. Strict: a missing or unknown field, a **duplicate** mapping key (YAML node decoding does not reject one, so the metadata and operation fields are checked explicitly), a value of the wrong YAML type, a `remove` carrying a value, a missing `pointer` (as distinct from an explicit empty pointer) and a missing `version` or `operations` are all errors, as is a trailing second YAML document. Parsed operations go through the same validation as generated ones, so a duplicate, contradictory or overlapping set is rejected here. |
 | `Merge(...*Overlay) (*Overlay, error)` | Combine the per-service overlays of a merged document. Identical operations deduplicate; contradictory and overlapping ones fail with **both** contributing sources named, never only the incoming one. |
-| `Apply(doc []byte, ops []Operation) ([]byte, error)` | Validate the list as a whole, then apply it. A list that is internally contradictory or overlapping fails, so a caller cannot get an order-dependent result by forgetting `Merge`. A pointer that does not resolve, a destination that is not an object, or a `remove` of an absent key is an error. |
-| `Validate(doc []byte, ops []Operation) error` | The same checks as `Apply` without modifying the document: whole-list consistency and an object destination. A list `Validate` accepts is a list `Apply` can perform. |
+| `Apply(doc []byte, ops []Operation) ([]byte, error)` | Validate the list as a whole, then apply **its canonical deduplicated form**. Both entrypoints operate on that same list, so two identical `remove` operations are accepted by both and remove the key once. A list that is internally contradictory or overlapping fails, so a caller cannot get an order-dependent result by forgetting `Merge`. A pointer that does not resolve, a destination that is not an object, or a `remove` of an absent key is an error. |
+| `Validate(doc []byte, ops []Operation) error` | The same checks on the same canonical list, without modifying the document: whole-list consistency and an object destination. A list `Validate` accepts is a list `Apply` can perform. |
+
+Validating one list and applying another is the bug class this rules out:
+deduplication happens once, and the result is what every entrypoint uses.
 
 ### Diagnostics
 
@@ -413,6 +416,8 @@ document.
 | Artifact strictness: missing, unknown, mistyped and contradictory fields | `tfoverlay.TestParseRejectsMalformedArtifacts` |
 | Entrypoints reject inconsistent lists and non-object destinations | `tfoverlay.TestApplyAndValidateRejectInconsistentLists`, `tfoverlay.TestValidateRequiresObjectDestination` |
 | Structured errors and per-operation provenance | `tfoverlay.TestErrorsAreStructured` |
+| Duplicate operations behave identically through every entrypoint | `tfoverlay.TestDuplicateOperationsHaveEntrypointParity` |
+| Duplicate YAML keys and trailing documents are rejected | `tfoverlay.TestParseRejectsDuplicateMetadataAndTrailingDocuments` |
 | Apply and validate against a document, order independence | `tfoverlay.TestApply`, `tfoverlay.TestValidate` |
 | Declaration validation: keys, values, pointers, owner/target legality | `apigw.TestCustomizationDeclarationValidation`, `apigw.TestSchemaPatchDeclarationValidation` |
 | Unapplied annotations fail, with a reason | `apigw.TestUnappliedAnnotationsFailGeneration`, `apigw.TestUnappliedAnnotationReportsReason` |

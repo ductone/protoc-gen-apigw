@@ -362,9 +362,16 @@ func (o *Overlay) Render() ([]byte, error) {
 // duplicate, contradictory or overlapping set is rejected here rather than at
 // Apply time.
 func Parse(data []byte) (*Overlay, error) {
+	dec := yaml.NewDecoder(bytes.NewReader(data))
 	root := &yaml.Node{}
-	if err := yaml.Unmarshal(data, root); err != nil {
+	if err := dec.Decode(root); err != nil {
 		return nil, fmt.Errorf("parsing overlay: %w", err)
+	}
+	// Decoding into a yaml.Node does not reject a second document, and a
+	// silently-ignored one is a producer/consumer disagreement.
+	var trailing yaml.Node
+	if err := dec.Decode(&trailing); !errors.Is(err, io.EOF) {
+		return nil, fmt.Errorf("parsing overlay: unexpected trailing YAML document")
 	}
 	doc := documentRoot(root)
 	if doc == nil || doc.Kind != yaml.MappingNode {
@@ -372,8 +379,16 @@ func Parse(data []byte) (*Overlay, error) {
 	}
 	ov := &Overlay{}
 	haveVersion, haveOperations := false, false
+	// yaml.Unmarshal into a Node does not detect a duplicate mapping key, so
+	// the metadata fields need an explicit check: a duplicate must not silently
+	// take the last value.
+	seenMetadata := map[string]bool{}
 	for i := 0; i+1 < len(doc.Content); i += 2 {
 		key, value := doc.Content[i], doc.Content[i+1]
+		if seenMetadata[key.Value] {
+			return nil, fmt.Errorf("parsing overlay: duplicate field %q", key.Value)
+		}
+		seenMetadata[key.Value] = true
 		switch key.Value {
 		case "version":
 			version, err := intScalar(value, "version")
@@ -435,8 +450,13 @@ func parseOperation(entry *yaml.Node) (Operation, error) {
 	}
 	op := Operation{}
 	havePointer, haveChannel, haveKey, haveMode, haveValue := false, false, false, false, false
+	seen := map[string]bool{}
 	for i := 0; i+1 < len(entry.Content); i += 2 {
 		key, value := entry.Content[i], entry.Content[i+1]
+		if seen[key.Value] {
+			return Operation{}, fmt.Errorf("parsing overlay: duplicate operation field %q", key.Value)
+		}
+		seen[key.Value] = true
 		switch key.Value {
 		case "pointer":
 			pointer, err := stringScalar(value, "pointer")
@@ -822,9 +842,6 @@ func JoinPointer(tokens ...string) string {
 // is not present, is an error: an overlay that silently does nothing hides the
 // drift it was meant to catch.
 func Apply(doc []byte, ops []Operation) ([]byte, error) {
-	if err := validateOperationSet(ops); err != nil {
-		return nil, err
-	}
 	root := &yaml.Node{}
 	if err := yaml.Unmarshal(doc, root); err != nil {
 		return nil, fmt.Errorf("parsing document: %w", err)
@@ -836,16 +853,17 @@ func Apply(doc []byte, ops []Operation) ([]byte, error) {
 }
 
 // ApplyToNode applies ops to a parsed document node in place. Like Apply it
-// validates the whole list first.
+// validates the whole list and applies its canonical form.
 func ApplyToNode(root *yaml.Node, ops []Operation) error {
-	if err := validateOperationSet(ops); err != nil {
+	normalized, err := normalizeOperationSet(ops)
+	if err != nil {
 		return err
 	}
 	target := documentRoot(root)
 	if target == nil {
 		return fmt.Errorf("document has no root node")
 	}
-	for _, op := range ops {
+	for _, op := range normalized {
 		node, err := resolvePointer(target, op.Pointer)
 		if err != nil {
 			return newError(op, ownerLabel(op), "%s", err)
@@ -864,17 +882,23 @@ func ApplyToNode(root *yaml.Node, ops []Operation) error {
 	return nil
 }
 
-// validateOperationSet runs ops through the same conflict and overlap checks
-// Add applies, so an inconsistent list fails here instead of producing an
-// order-dependent document. Identical operations are allowed and collapse.
-func validateOperationSet(ops []Operation) error {
+// normalizeOperationSet runs ops through the same conflict and overlap checks
+// Add applies, then returns the list every exported entrypoint actually
+// operates on: deduplicated and in canonical order.
+//
+// Return-and-apply is the point. Validating a list and then applying a
+// *different* one would let two identical remove operations pass validation and
+// then fail — the first removes the key, the second finds it gone — even though
+// the contract says identical operations deduplicate.
+func normalizeOperationSet(ops []Operation) ([]Operation, error) {
 	check := &Overlay{}
 	for i := range ops {
 		if err := check.Add(ops[i]); err != nil {
-			return fmt.Errorf("inconsistent operation list: %w", err)
+			return nil, fmt.Errorf("inconsistent operation list: %w", err)
 		}
 	}
-	return nil
+	check.Normalize()
+	return check.Operations, nil
 }
 
 // Validate reports whether every op can be applied to doc, without modifying
@@ -882,7 +906,8 @@ func validateOperationSet(ops []Operation) error {
 // consistency check and the requirement that the destination is an object, so
 // a list that Validate accepts is a list Apply can perform.
 func Validate(doc []byte, ops []Operation) error {
-	if err := validateOperationSet(ops); err != nil {
+	normalized, err := normalizeOperationSet(ops)
+	if err != nil {
 		return err
 	}
 	root := &yaml.Node{}
@@ -893,8 +918,8 @@ func Validate(doc []byte, ops []Operation) error {
 	if target == nil {
 		return fmt.Errorf("document has no root node")
 	}
-	for i := range ops {
-		op := ops[i]
+	for i := range normalized {
+		op := normalized[i]
 		node, err := resolvePointer(target, op.Pointer)
 		if err != nil {
 			return newError(op, ownerLabel(op), "%s", err)

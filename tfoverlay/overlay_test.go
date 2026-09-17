@@ -1,6 +1,7 @@
 package tfoverlay
 
 import (
+	"bytes"
 	"errors"
 	"strings"
 	"testing"
@@ -940,6 +941,147 @@ func TestErrorsAreStructured(t *testing.T) {
 		}
 		if parsed.Operations[0].Provenance != "message test.Thing" {
 			t.Fatalf("parsed provenance = %q", parsed.Operations[0].Provenance)
+		}
+	})
+}
+
+func byteIdentical(t *testing.T, want, got []byte, context string) {
+	t.Helper()
+	if !bytes.Equal(want, got) {
+		t.Fatalf("%s differs:\n--- want\n%s\n--- got\n%s", context, want, got)
+	}
+}
+
+// TestDuplicateOperationsHaveEntrypointParity pins the bug the review caught:
+// validation used to build a deduplicated list and throw it away while Apply
+// iterated the original, so two identical remove operations passed validation
+// and then failed — the first removed the key, the second did not find it.
+// Every exported entrypoint must agree, and must operate on the canonical list.
+func TestDuplicateOperationsHaveEntrypointParity(t *testing.T) {
+	duplicateRemove := []Operation{
+		{Pointer: "/components/schemas/Thing", Channel: ChannelSchema, Key: "title", Mode: ModeRemove},
+		{Pointer: "/components/schemas/Thing", Channel: ChannelSchema, Key: "title", Mode: ModeRemove},
+	}
+	duplicateSet := []Operation{
+		op(t, "/components/schemas/Thing", "x-one", ModeSet, `"v"`),
+		op(t, "/components/schemas/Thing", "x-one", ModeSet, `"v"`),
+	}
+
+	t.Run("duplicate removes are accepted and remove once", func(t *testing.T) {
+		if err := Validate([]byte(testDocument), duplicateRemove); err != nil {
+			t.Fatalf("Validate(duplicate removes) = %v, want nil", err)
+		}
+		out, err := Apply([]byte(testDocument), duplicateRemove)
+		if err != nil {
+			t.Fatalf("Apply(duplicate removes) = %v, want nil", err)
+		}
+		if strings.Contains(string(out), "A Thing") {
+			t.Fatalf("value survived removal:\n%s", out)
+		}
+	})
+
+	t.Run("duplicate sets are accepted and applied once", func(t *testing.T) {
+		single, err := Apply([]byte(testDocument), duplicateSet[:1])
+		if err != nil {
+			t.Fatalf("Apply(single) = %v", err)
+		}
+		duplicated, err := Apply([]byte(testDocument), duplicateSet)
+		if err != nil {
+			t.Fatalf("Apply(duplicate sets) = %v, want nil", err)
+		}
+		byteIdentical(t, single, duplicated, "duplicate-set application")
+		if err := Validate([]byte(testDocument), duplicateSet); err != nil {
+			t.Fatalf("Validate(duplicate sets) = %v, want nil", err)
+		}
+	})
+
+	t.Run("ApplyToNode agrees with Apply", func(t *testing.T) {
+		root := &yaml.Node{}
+		if err := yaml.Unmarshal([]byte(testDocument), root); err != nil {
+			t.Fatalf("unmarshal: %v", err)
+		}
+		if err := ApplyToNode(root, duplicateRemove); err != nil {
+			t.Fatalf("ApplyToNode(duplicate removes) = %v, want nil", err)
+		}
+	})
+
+	t.Run("order still does not matter after deduplication", func(t *testing.T) {
+		reordered := []Operation{duplicateSet[1], duplicateSet[0]}
+		first, err := Apply([]byte(testDocument), duplicateSet)
+		if err != nil {
+			t.Fatalf("Apply: %v", err)
+		}
+		second, err := Apply([]byte(testDocument), reordered)
+		if err != nil {
+			t.Fatalf("Apply: %v", err)
+		}
+		byteIdentical(t, first, second, "duplicate-set ordering")
+	})
+}
+
+// TestParseRejectsDuplicateMetadataAndTrailingDocuments closes the other half
+// of the same gap: decoding YAML into a Node does not detect a duplicate
+// mapping key, so a duplicate pointer, mode or version could silently take the
+// last value.
+func TestParseRejectsDuplicateMetadataAndTrailingDocuments(t *testing.T) {
+	const operation = "  - pointer: /a\n    channel: extension\n    key: x-one\n    mode: set\n    value: 1\n"
+
+	tests := []struct {
+		name    string
+		input   string
+		wantErr string
+	}{
+		{
+			name:    "duplicate version",
+			input:   "version: 1\nversion: 1\noperations: []\n",
+			wantErr: `duplicate field "version"`,
+		},
+		{
+			name:    "duplicate operations",
+			input:   "version: 1\noperations: []\noperations: []\n",
+			wantErr: `duplicate field "operations"`,
+		},
+		{
+			name:    "duplicate source",
+			input:   "version: 1\nsource: a\nsource: b\noperations: []\n",
+			wantErr: `duplicate field "source"`,
+		},
+		{
+			name:    "duplicate pointer",
+			input:   "version: 1\noperations:\n  - pointer: /a\n    pointer: /b\n    channel: extension\n    key: x-one\n    mode: set\n    value: 1\n",
+			wantErr: `duplicate operation field "pointer"`,
+		},
+		{
+			name:    "duplicate mode",
+			input:   "version: 1\noperations:\n  - pointer: /a\n    channel: extension\n    key: x-one\n    mode: remove\n    mode: set\n    value: 1\n",
+			wantErr: `duplicate operation field "mode"`,
+		},
+		{
+			name:    "duplicate value",
+			input:   "version: 1\noperations:\n  - pointer: /a\n    channel: extension\n    key: x-one\n    mode: set\n    value: 1\n    value: 2\n",
+			wantErr: `duplicate operation field "value"`,
+		},
+		{
+			name:    "trailing document",
+			input:   "version: 1\noperations:\n" + operation + "---\nversion: 1\noperations: []\n",
+			wantErr: "unexpected trailing YAML document",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := Parse([]byte(tt.input))
+			if err == nil {
+				t.Fatalf("Parse(%q) = nil error, want %q", tt.input, tt.wantErr)
+			}
+			if !strings.Contains(err.Error(), tt.wantErr) {
+				t.Fatalf("Parse error = %v, want it to contain %q", err, tt.wantErr)
+			}
+		})
+	}
+
+	t.Run("a single trailing comment is still one document", func(t *testing.T) {
+		if _, err := Parse([]byte("version: 1\noperations: []\n# trailing comment\n")); err != nil {
+			t.Fatalf("Parse = %v, want nil", err)
 		}
 	})
 }
