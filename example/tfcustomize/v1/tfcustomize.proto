@@ -1,0 +1,319 @@
+syntax = "proto3";
+
+package tfcustomize.v1;
+
+import "apigw/v1/apigw.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ductone/protoc-gen-apigw/example/tfcustomize/v1";
+
+// File-level annotations apply to every document generated from this file.
+// This one is Terraform-scoped, which is the default.
+option (apigw.v1.file).customizations = {
+  key: "x-speakeasy-model-namespace"
+  value_json: "\"tfcustomize\""
+};
+
+// CustomizeService exercises every documented annotation destination the
+// transport supports: field schemas (scalar, enum, repeated, map, singular
+// message, well-known type, oneof member), parameter objects as distinct from
+// parameter schemas, array items, map values, message schemas, operations,
+// request and response schemas, the document root and the JSON Pointer escape
+// hatch.
+//
+// It is a fixture: the values are chosen to exercise transport, not to
+// describe a real API, and nothing here is asserted to be honored by any
+// particular Speakeasy release.
+service CustomizeService {
+  option (apigw.v1.service).service = {
+    stability: STABILITY_STABLE
+    customizations: {
+      key: "x-speakeasy-globals"
+      value_json: "{\"parameters\":[{\"name\":\"tenant\",\"in\":\"query\"}]}"
+    }
+    customizations: {
+      key: "x-speakeasy-max-method-params"
+      value_json: "7"
+    }
+  };
+
+  // A read operation that also carries the value-shape matrix.
+  rpc GetThing(GetThingRequest) returns (GetThingResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/things/{thing_id}"
+      query: [
+        {
+          key: "flavor"
+          value: "flavor"
+        }
+      ]
+      terraform_entity: {
+        type: TERRAFORM_ENTITY_METHOD_TYPE_READ
+        name: "Thing"
+      }
+      // Replaces the x-speakeasy-entity-missing-codes value the generator
+      // derives from terraform_entity above.
+      customizations: {
+        key: "x-speakeasy-entity-missing-codes"
+        value_json: "[403,410]"
+      }
+      customizations: {
+        key: "x-speakeasy-entity-operation"
+        value_json: "{\"terraform-datasource\":null,\"terraform-resource\":\"Thing#read\"}"
+      }
+    };
+  }
+
+  rpc ListThings(ListThingsRequest) returns (ListThingsResponse) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/things"
+      terraform_entity: {
+        type: TERRAFORM_ENTITY_METHOD_TYPE_READ
+        name: "Things"
+        optional_exclusion: OPTIONAL_EXCLUSION_DATA_SOURCE_ONLY
+      }
+      customizations: {
+        key: "x-speakeasy-pagination"
+        value_json: "{\"type\":\"cursor\",\"inputs\":[],\"outputs\":{}}"
+      }
+    };
+  }
+
+  rpc CreateThing(CreateThingRequest) returns (CreateThingResponse) {
+    option (apigw.v1.method).operations = {
+      method: "POST"
+      route: "/things"
+      terraform_entity: {
+        type: TERRAFORM_ENTITY_METHOD_TYPE_CREATE
+        name: "Thing"
+      }
+      customizations: {
+        key: "x-speakeasy-polling"
+        value_json: "[{\"name\":\"wait\",\"intervalSeconds\":10,\"limitCount\":5}]"
+      }
+      customizations: {
+        key: "x-speakeasy-ignore"
+        value_json: "false"
+      }
+    };
+  }
+}
+
+message GetThingRequest {
+  string thing_id = 1 [(apigw.v1.field).field_options = {
+    required_spec: true
+    // The parameter object and that parameter's schema are different
+    // destinations for the same field.
+    customizations: {
+      key: "x-speakeasy-match"
+      value_json: "\"id\""
+      target: OPEN_API_CUSTOMIZATION_TARGET_PARAMETER
+    }
+    customizations: {
+      key: "x-speakeasy-param-readonly"
+      value_json: "false"
+    }
+  }];
+
+  string flavor = 2 [(apigw.v1.field).field_options = {
+    customizations: {
+      key: "x-speakeasy-match"
+      value_json: "\"flavor\""
+      target: OPEN_API_CUSTOMIZATION_TARGET_PARAMETER
+    }
+  }];
+}
+
+message GetThingResponse {
+  Thing thing = 1;
+}
+
+message ListThingsRequest {}
+
+message ListThingsResponse {
+  repeated Thing things = 1;
+}
+
+message CreateThingRequest {
+  Thing thing = 1;
+}
+
+message CreateThingResponse {
+  Thing thing = 1;
+}
+
+// A thing resource.
+message Thing {
+  option (apigw.v1.message).message_options = {
+    terraform_entity: {
+      name: "Thing"
+    }
+    customizations: {
+      key: "x-speakeasy-entity-description"
+      value_json: "\"A **thing** resource.\""
+    }
+    // A key that does not exist in any catalog: the transport must carry it
+    // without an apigw release.
+    customizations: {
+      key: "x-future-thing"
+      value_json: "{\"nested\":{\"list\":[1,2.50,null,false,\"x\"]}}"
+    }
+    // Value shapes that must survive transport exactly.
+    customizations: {
+      key: "x-future-int"
+      value_json: "9007199254740993"
+    }
+    customizations: {
+      key: "x-future-decimal"
+      value_json: "1.50"
+    }
+    customizations: {
+      key: "x-future-empty-string"
+      value_json: "\"\""
+    }
+    customizations: {
+      key: "x-future-empty-array"
+      value_json: "[]"
+    }
+    customizations: {
+      key: "x-future-empty-object"
+      value_json: "{}"
+    }
+    customizations: {
+      key: "x-future-false"
+      value_json: "false"
+    }
+    customizations: {
+      key: "x-future-null"
+      value_json: "null"
+    }
+    customizations: {
+      key: "x-future-multiline"
+      value_json: "\"line one\\nline two\""
+    }
+    // Standard schema keywords travel through the patch channel.
+    schema_patches: {
+      patch_json: "{\"required\":[\"id\"]}"
+    }
+    schema_patches: {
+      remove_keys: ["title"]
+    }
+  };
+
+  string id = 1 [(apigw.v1.field).field_options = {
+    stability: STABILITY_STABLE
+    customizations: {
+      key: "x-speakeasy-param-readonly"
+      value_json: "true"
+    }
+    customizations: {
+      key: "x-speakeasy-name-override"
+      value_json: "\"thing_identifier\""
+    }
+    schema_patches: {
+      patch_json: "{\"default\":\"unknown\",\"minLength\":1}"
+    }
+  }];
+
+  repeated string tags = 2 [(apigw.v1.field).field_options = {
+    customizations: {
+      key: "x-speakeasy-response-filter"
+      value_json: "true"
+      target: OPEN_API_CUSTOMIZATION_TARGET_ARRAY_ITEMS
+    }
+    customizations: {
+      key: "x-speakeasy-terraform-ignore"
+      value_json: "false"
+    }
+    schema_patches: {
+      patch_json: "{\"default\":[]}"
+    }
+  }];
+
+  map<string, string> labels = 3 [(apigw.v1.field).field_options = {
+    customizations: {
+      key: "x-speakeasy-type-override"
+      value_json: "\"any\""
+      target: OPEN_API_CUSTOMIZATION_TARGET_MAP_VALUES
+    }
+  }];
+
+  // A singular message field: the override belongs to this property, not to
+  // the shared Thing component. The typed stability annotation exercises the
+  // nullable-$ref wrapper path, which used to drop a field's extension bag.
+  Thing child = 4 [(apigw.v1.field).field_options = {
+    stability: STABILITY_STABLE
+    customizations: {
+      key: "x-speakeasy-name-override"
+      value_json: "\"child_thing\""
+    }
+  }];
+
+  google.protobuf.Timestamp created_at = 5 [(apigw.v1.field).field_options = {
+    stability: STABILITY_STABLE
+    customizations: {
+      key: "x-speakeasy-param-computed"
+      value_json: "false"
+    }
+    // Targeted removal of a keyword the generator emitted on its own.
+    schema_patches: {
+      remove_keys: ["format"]
+    }
+  }];
+
+  Status status = 6 [(apigw.v1.field).field_options = {
+    customizations: {
+      key: "x-speakeasy-unknown-values"
+      value_json: "\"disallow\""
+    }
+    // Shared scope: applies to the published document instead of the overlay.
+    customizations: {
+      key: "x-speakeasy-enum-format"
+      value_json: "\"union\""
+      scope: OPEN_API_CUSTOMIZATION_SCOPE_SHARED
+    }
+  }];
+
+  // The property name contains a "/" so the emitted pointer has to escape the
+  // reference token.
+  string odd_name = 7 [json_name = "odd/name", (apigw.v1.field).field_options = {
+    customizations: {
+      key: "x-speakeasy-deprecation-message"
+      value_json: "\"use id\""
+    }
+  }];
+
+  // The JSON Pointer escape hatch, on a field: the destination node need not
+  // be reachable by any enumerated target.
+  string escaped = 8 [json_name = "escaped", (apigw.v1.field).field_options = {
+    customizations: {
+      key: "x-speakeasy-docs"
+      value_json: "{\"go\":\"Escaped pointer target.\"}"
+      target: OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER
+      json_pointer: "/components/schemas/tfcustomize.v1.Thing/properties/escaped"
+    }
+    customizations: {
+      key: "x-speakeasy-param-source"
+      value_json: "{\"kind\":\"config\",\"path\":[\"a/b\",\"c~d\"]}"
+      target: OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER
+      json_pointer: "/components/schemas/tfcustomize.v1.Thing/properties/escaped"
+    }
+  }];
+
+  oneof policy {
+    string manual_policy = 9 [(apigw.v1.field).field_options = {
+      customizations: {
+        key: "x-speakeasy-param-force-new"
+        value_json: "false"
+      }
+    }];
+    string multi_step_policy = 10;
+  }
+}
+
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_ACTIVE = 1;
+}

@@ -1,0 +1,264 @@
+version: 1
+source: tfcustomize.v1.CustomizeService
+kind: service
+operations:
+  - pointer: ""
+    channel: extension
+    key: x-speakeasy-globals
+    mode: set
+    value:
+      parameters:
+        - in: query
+          name: tenant
+    provenance: service tfcustomize.v1.CustomizeService
+  - pointer: ""
+    channel: extension
+    key: x-speakeasy-max-method-params
+    mode: set
+    value: 7
+    provenance: service tfcustomize.v1.CustomizeService
+  - pointer: ""
+    channel: extension
+    key: x-speakeasy-model-namespace
+    mode: set
+    value: tfcustomize
+    provenance: file tfcustomize.v1
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-decimal
+    mode: set
+    value: 1.50
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-empty-array
+    mode: set
+    value: []
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-empty-object
+    mode: set
+    value: {}
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-empty-string
+    mode: set
+    value: ""
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-false
+    mode: set
+    value: false
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-int
+    mode: set
+    value: 9007199254740993
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-multiline
+    mode: set
+    value: |-
+      line one
+      line two
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-null
+    mode: set
+    value: null
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-thing
+    mode: set
+    value:
+      nested:
+        list:
+          - 1
+          - 2.50
+          - null
+          - false
+          - x
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-speakeasy-entity-description
+    mode: set
+    value: A **thing** resource.
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: schema
+    key: required
+    mode: set
+    value:
+      - id
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: schema
+    key: title
+    mode: remove
+    provenance: message tfcustomize.v1.Thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/child
+    channel: extension
+    key: x-speakeasy-name-override
+    mode: set
+    value: child_thing
+    provenance: field tfcustomize.v1.Thing.child
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/createdAt
+    channel: extension
+    key: x-speakeasy-param-computed
+    mode: set
+    value: false
+    provenance: field tfcustomize.v1.Thing.created_at
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/createdAt
+    channel: schema
+    key: format
+    mode: remove
+    provenance: field tfcustomize.v1.Thing.created_at
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/escaped
+    channel: extension
+    key: x-speakeasy-docs
+    mode: set
+    value:
+      go: Escaped pointer target.
+    provenance: field tfcustomize.v1.Thing.escaped
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/escaped
+    channel: extension
+    key: x-speakeasy-param-source
+    mode: set
+    value:
+      kind: config
+      path:
+        - a/b
+        - c~d
+    provenance: field tfcustomize.v1.Thing.escaped
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/id
+    channel: extension
+    key: x-speakeasy-name-override
+    mode: set
+    value: thing_identifier
+    provenance: field tfcustomize.v1.Thing.id
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/id
+    channel: extension
+    key: x-speakeasy-param-readonly
+    mode: set
+    value: true
+    provenance: field tfcustomize.v1.Thing.id
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/id
+    channel: schema
+    key: default
+    mode: set
+    value: unknown
+    provenance: field tfcustomize.v1.Thing.id
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/id
+    channel: schema
+    key: minLength
+    mode: set
+    value: 1
+    provenance: field tfcustomize.v1.Thing.id
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/labels/additionalProperties
+    channel: extension
+    key: x-speakeasy-type-override
+    mode: set
+    value: any
+    provenance: field tfcustomize.v1.Thing.labels
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/manualPolicy
+    channel: extension
+    key: x-speakeasy-param-force-new
+    mode: set
+    value: false
+    provenance: field tfcustomize.v1.Thing.manual_policy
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/odd~1name
+    channel: extension
+    key: x-speakeasy-deprecation-message
+    mode: set
+    value: use id
+    provenance: field tfcustomize.v1.Thing.odd_name
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/status
+    channel: extension
+    key: x-speakeasy-unknown-values
+    mode: set
+    value: disallow
+    provenance: field tfcustomize.v1.Thing.status
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/tags
+    channel: extension
+    key: x-speakeasy-terraform-ignore
+    mode: set
+    value: false
+    provenance: field tfcustomize.v1.Thing.tags
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/tags
+    channel: schema
+    key: default
+    mode: set
+    value: []
+    provenance: field tfcustomize.v1.Thing.tags
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/tags/items
+    channel: extension
+    key: x-speakeasy-response-filter
+    mode: set
+    value: true
+    provenance: field tfcustomize.v1.Thing.tags
+  - pointer: /paths/~1things/get
+    channel: extension
+    key: x-speakeasy-pagination
+    mode: set
+    value:
+      inputs: []
+      outputs: {}
+      type: cursor
+    provenance: operation tfcustomize.v1.CustomizeService.ListThings
+  - pointer: /paths/~1things/post
+    channel: extension
+    key: x-speakeasy-ignore
+    mode: set
+    value: false
+    provenance: operation tfcustomize.v1.CustomizeService.CreateThing
+  - pointer: /paths/~1things/post
+    channel: extension
+    key: x-speakeasy-polling
+    mode: set
+    value:
+      - intervalSeconds: 10
+        limitCount: 5
+        name: wait
+    provenance: operation tfcustomize.v1.CustomizeService.CreateThing
+  - pointer: /paths/~1things~1{thing_id}/get
+    channel: extension
+    key: x-speakeasy-entity-missing-codes
+    mode: set
+    value:
+      - 403
+      - 410
+    provenance: operation tfcustomize.v1.CustomizeService.GetThing
+  - pointer: /paths/~1things~1{thing_id}/get
+    channel: extension
+    key: x-speakeasy-entity-operation
+    mode: set
+    value:
+      terraform-datasource: null
+      terraform-resource: Thing#read
+    provenance: operation tfcustomize.v1.CustomizeService.GetThing
+  - pointer: /paths/~1things~1{thing_id}/get/parameters/0
+    channel: extension
+    key: x-speakeasy-match
+    mode: set
+    value: id
+    provenance: field tfcustomize.v1.GetThingRequest.thing_id
+  - pointer: /paths/~1things~1{thing_id}/get/parameters/0/schema
+    channel: extension
+    key: x-speakeasy-param-readonly
+    mode: set
+    value: false
+    provenance: field tfcustomize.v1.GetThingRequest.thing_id
+  - pointer: /paths/~1things~1{thing_id}/get/parameters/1
+    channel: extension
+    key: x-speakeasy-match
+    mode: set
+    value: flavor
+    provenance: field tfcustomize.v1.GetThingRequest.flavor

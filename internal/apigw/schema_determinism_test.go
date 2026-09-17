@@ -213,7 +213,7 @@ func TestProto3OptionalNullable(t *testing.T) {
 
 	t.Run("plain_field_not_nullable", func(t *testing.T) {
 		field := newStringField("plainField", parent)
-		proxy := sc.Field(field)
+		proxy := sc.Field(field, schemaLoc{})
 		schema := proxy.Schema()
 		if schemaIsNullable(schema) {
 			t.Errorf("plain field should not be nullable, got type %v", schema.Type)
@@ -226,7 +226,7 @@ func TestProto3OptionalNullable(t *testing.T) {
 		field.oneOf = realOneOf
 		realOneOf.fields = []pgs.Field{field}
 
-		proxy := sc.Field(field)
+		proxy := sc.Field(field, schemaLoc{})
 		schema := proxy.Schema()
 		if !schemaIsNullable(schema) {
 			t.Error("real oneof field should be nullable")
@@ -243,7 +243,7 @@ func TestProto3OptionalNullable(t *testing.T) {
 	t.Run("proto3_optional_nullable_no_oneof_docs", func(t *testing.T) {
 		field := newProto3OptionalStringField("optionalField", parent)
 
-		proxy := sc.Field(field)
+		proxy := sc.Field(field, schemaLoc{})
 		schema := proxy.Schema()
 		if !schemaIsNullable(schema) {
 			t.Error("proto3 optional field should be nullable")
@@ -285,7 +285,7 @@ func TestWellKnownSingularFieldNullable(t *testing.T) {
 			wkt := &mockWKTMessage{wkt: tc.wkt}
 			field := newEmbedField("wktField", parent, wkt, nil)
 
-			schema := sc.Field(field).Schema()
+			schema := sc.Field(field, schemaLoc{}).Schema()
 			if !schemaIsNullable(schema) {
 				t.Errorf("singular %s field should be nullable, got type %v", tc.name, schema.Type)
 			}

@@ -31,6 +31,11 @@ type Module struct {
 	// that way overlapping routes can be detected if the param names are different
 	// ex key = /v1/thing/{0}/other_static_path/{1}
 	canonicalRouteMapper map[string]*canonicalRoute
+
+	// tf collects the customization annotations declared in the file currently
+	// being processed. Execute processes targets sequentially, and the
+	// collector is replaced at the start of every file.
+	tf *tfCollector
 }
 
 type canonicalRoute struct {
@@ -57,11 +62,37 @@ func (m *Module) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Packag
 }
 
 func (m *Module) processFile(ctx pgsgo.Context, f pgs.File) {
+	m.tf = newTFCollector()
+	m.tf.declareFileEntities(f)
+
+	// The emitter has no error return on every path a customization can be
+	// reached from, so it reports a bad annotation by panicking with a
+	// tfError. Convert that into a normal generator failure here, so a bad
+	// annotation produces a clean diagnostic rather than a Go stack trace.
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+		if te, ok := r.(tfError); ok {
+			m.Fail(te.msg)
+			return
+		}
+		panic(r)
+	}()
+
 	out := bytes.Buffer{}
 	rendered, err := m.applyTemplate(ctx, &out, f)
 	if err != nil {
 		m.Logf("couldn't apply template: %s", err)
 		m.Fail("code generation failed")
+		return
+	}
+	// Verify after every document has been built: an annotation that no emitted
+	// document applied is a bug in the annotation, and failing the build is the
+	// only way to keep it from silently changing nothing.
+	if err := m.tf.verify(); err != nil {
+		m.Fail(err.Error())
 		return
 	}
 	// We didn't find anything to render so skip writing the file
@@ -94,11 +125,19 @@ func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) (
 			return false, err
 		}
 		oasBuf := &bytes.Buffer{}
-		err = m.renderOpenAPI(ctx, oasBuf, service)
+		overlay, err := m.renderOpenAPI(ctx, oasBuf, service)
 		if err != nil {
 			return false, err
 		}
 		m.AddGeneratorFile(oasName, oasBuf.String())
+		if !overlay.Empty() {
+			overlayName := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.%s", service.Name().LowerSnakeCase(), tfOverlayArtifactSuffix)).String()
+			data, err := overlay.Render()
+			if err != nil {
+				return false, err
+			}
+			m.AddGeneratorFile(overlayName, string(data))
+		}
 	}
 
 	err := m.renderForcedMessages(ctx, f)
@@ -135,7 +174,7 @@ func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) (
 func (m *Module) renderForcedMessages(ctx pgsgo.Context, f pgs.File) error {
 	forcedMessageOpenAPIFilename := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.oas31.yaml", f.Package().ProtoName().LowerSnakeCase())).String()
 	oasBuf := &bytes.Buffer{}
-	rendered, err := m.renderOpenAPIWithoutService(ctx, oasBuf, f)
+	overlay, rendered, err := m.renderOpenAPIWithoutService(ctx, oasBuf, f)
 	if err != nil {
 		return err
 	}
@@ -143,5 +182,13 @@ func (m *Module) renderForcedMessages(ctx pgsgo.Context, f pgs.File) error {
 		return nil
 	}
 	m.AddGeneratorFile(forcedMessageOpenAPIFilename, oasBuf.String())
+	if !overlay.Empty() {
+		overlayName := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.%s", f.Package().ProtoName().LowerSnakeCase(), tfOverlayArtifactSuffix)).String()
+		data, err := overlay.Render()
+		if err != nil {
+			return err
+		}
+		m.AddGeneratorFile(overlayName, string(data))
+	}
 	return nil
 }

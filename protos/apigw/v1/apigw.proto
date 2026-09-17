@@ -24,8 +24,17 @@ extend google.protobuf.MessageOptions {
   MessageOptions message = 7653;
 }
 
+extend google.protobuf.FileOptions {
+  FileOptions file = 7654;
+}
+
 message MessageOptions {
   repeated MessageOption message_options = 1;
+}
+
+message FileOptions {
+  repeated OpenAPICustomization customizations = 1;
+  repeated OpenAPISchemaPatch schema_patches = 2;
 }
 
 message MessageOption {
@@ -42,6 +51,13 @@ message MessageOption {
   // generated OpenAPI spec. Use this to resolve name collisions when two
   // messages in different packages share the same short name (e.g., "Field").
   string name_override = 5;
+
+  // Generic OpenAPI vendor-extension overrides transported to the
+  // Terraform-scoped companion artifact. See OpenAPICustomization.
+  repeated OpenAPICustomization customizations = 6;
+  // Generic standard OpenAPI/JSON Schema keyword patches for this message
+  // schema. See OpenAPISchemaPatch.
+  repeated OpenAPISchemaPatch schema_patches = 7;
 }
 
 message FieldOption {
@@ -56,6 +72,13 @@ message FieldOption {
   // Marks a map<string, string> field as a C1 object-annotation bag.
   // Codegen emits an x-speakeasy-terraform-plan-modifier extension.
   bool annotation_bag = 5;
+
+  // Generic OpenAPI vendor-extension overrides transported to the
+  // Terraform-scoped companion artifact. See OpenAPICustomization.
+  repeated OpenAPICustomization customizations = 6;
+  // Generic standard OpenAPI/JSON Schema keyword patches for this field's
+  // schema. See OpenAPISchemaPatch.
+  repeated OpenAPISchemaPatch schema_patches = 7;
 }
 
 message FieldOptions {
@@ -126,6 +149,13 @@ message Service {
   // otherwise produce colliding SDK method receivers. Individual methods can
   // still override via Operation.group_override.
   string group_override = 4;
+
+  // Generic OpenAPI vendor-extension overrides transported to the
+  // Terraform-scoped companion artifact. See OpenAPICustomization.
+  repeated OpenAPICustomization customizations = 5;
+  // Generic standard OpenAPI/JSON Schema keyword patches applied to this
+  // service document's root. See OpenAPISchemaPatch.
+  repeated OpenAPISchemaPatch schema_patches = 6;
 }
 
 message TerraformEntity {
@@ -208,6 +238,13 @@ message Operation {
   // Use this to resolve collisions when two operations in the same group
   // resolve to the same method name.
   string name_override = 14;
+
+  // Generic OpenAPI vendor-extension overrides transported to the
+  // Terraform-scoped companion artifact. See OpenAPICustomization.
+  repeated OpenAPICustomization customizations = 15;
+  // Generic standard OpenAPI/JSON Schema keyword patches. See
+  // OpenAPISchemaPatch.
+  repeated OpenAPISchemaPatch schema_patches = 16;
 }
 
 message RequestExample {
@@ -218,4 +255,124 @@ message RequestExample {
 message ResponseExample {
   string name = 1;
   string path = 2;
+}
+
+// OpenAPICustomization is a transport-only, future-extensible OpenAPI vendor
+// extension override. apigw resolves where the override lands and copies the
+// JSON value verbatim; it never interprets the key, so a new
+// `x-speakeasy-*` (or any `x-*`) key needs no change to or release of apigw.
+//
+// The value is JSON-encoded so that strings, booleans, numbers, null, arrays
+// and nested objects all survive with their exact types, including explicit
+// false, 0, "" and empty arrays/objects. apigw parses the value strictly:
+// malformed JSON, duplicate object keys and a missing value are generation
+// errors, not silent skips.
+message OpenAPICustomization {
+  // Vendor extension key. Must start with "x-", the OpenAPI spelling for
+  // vendor extensions. There is no allowlist: any key is transported.
+  string key = 1;
+
+  // JSON-encoded value. Required when mode is SET; must be empty when mode is
+  // REMOVE. `null` is a value, not a deletion instruction.
+  string value_json = 2;
+
+  // Where the override lands, relative to the annotated entity. Defaults per
+  // owner kind; see the contract document.
+  OpenAPICustomizationTarget target = 3;
+
+  // Absolute JSON Pointer (RFC 6901) into the emitted document. Used when
+  // target is OPENAPI_CUSTOMIZATION_TARGET_JSON_POINTER, and rejected
+  // otherwise. An annotation whose pointer does not resolve in the emitted
+  // document is a generation error.
+  string json_pointer = 4;
+
+  // Which output the override is written to. Defaults to Terraform-only.
+  OpenAPICustomizationScope scope = 5;
+
+  // Whether the key is set/replaced or removed at the destination.
+  OpenAPICustomizationMode mode = 6;
+}
+
+// OpenAPISchemaPatch applies standard OpenAPI / JSON Schema keywords (for
+// example `default`, `example`, `required`, `deprecated`, composition
+// keywords) at a destination. It is a separate channel from
+// OpenAPICustomization so that standard schema overrides are never disguised
+// as vendor extensions.
+//
+// Each entry in patch_json replaces the complete value at that keyword of the
+// destination node; there is no recursive array or object merge. Removal is
+// explicit through remove_keys.
+message OpenAPISchemaPatch {
+  // Schema-relative destination for the patch. Defaults per owner kind.
+  OpenAPICustomizationTarget target = 1;
+
+  // Absolute JSON Pointer (RFC 6901) into the emitted document. Used when
+  // target is OPENAPI_CUSTOMIZATION_TARGET_JSON_POINTER.
+  string json_pointer = 2;
+
+  // JSON object whose top-level keys are set on the destination node. Required
+  // unless remove_keys is non-empty.
+  string patch_json = 3;
+
+  // Keyword names to remove from the destination node.
+  repeated string remove_keys = 4;
+
+  // Which output the patch is written to. Defaults to Terraform-only.
+  OpenAPICustomizationScope scope = 5;
+}
+
+// Where an OpenAPICustomization or OpenAPISchemaPatch lands. The annotated
+// entity supplies the base; the target selects the node beneath it. Which
+// targets are legal depends on the owner kind, and an illegal combination is a
+// generation error rather than a silent drop.
+enum OpenAPICustomizationTarget {
+  // Owner default: the schema for a field/message, the operation object for an
+  // operation, the document root for a service or file.
+  OPEN_API_CUSTOMIZATION_TARGET_UNSPECIFIED = 0;
+  // The schema node emitted for the annotated field, in every place that
+  // schema is emitted. For a singular message-typed field this is the wrapper
+  // that admits null, so the override survives the embedded-message reference.
+  OPEN_API_CUSTOMIZATION_TARGET_SCHEMA = 1;
+  // The HTTP parameter object for an annotated field that is emitted as a path
+  // or query parameter (as opposed to that parameter's schema).
+  OPEN_API_CUSTOMIZATION_TARGET_PARAMETER = 2;
+  // The array items subschema of an annotated repeated field.
+  OPEN_API_CUSTOMIZATION_TARGET_ARRAY_ITEMS = 3;
+  // The map values subschema (additionalProperties) of an annotated map field.
+  OPEN_API_CUSTOMIZATION_TARGET_MAP_VALUES = 4;
+  // The HTTP operation object for the annotated operation.
+  OPEN_API_CUSTOMIZATION_TARGET_OPERATION = 5;
+  // The request body schema of the annotated operation.
+  OPEN_API_CUSTOMIZATION_TARGET_REQUEST_SCHEMA = 6;
+  // The successful (200) response schema of the annotated operation.
+  OPEN_API_CUSTOMIZATION_TARGET_RESPONSE_SCHEMA = 7;
+  // The document root of the annotated service or file.
+  OPEN_API_CUSTOMIZATION_TARGET_DOCUMENT_ROOT = 8;
+  // Use the accompanying json_pointer verbatim.
+  OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER = 9;
+}
+
+// Which generated output a customization is written to.
+enum OpenAPICustomizationScope {
+  // Default, equivalent to TERRAFORM below: write to the Terraform-scoped
+  // companion overlay artifact only. The shared OpenAPI document, and
+  // therefore every other SDK generated from it, is byte-for-byte unchanged.
+  OPEN_API_CUSTOMIZATION_SCOPE_UNSPECIFIED = 0;
+  // Write to the Terraform-scoped companion overlay artifact only.
+  OPEN_API_CUSTOMIZATION_SCOPE_TERRAFORM = 1;
+  // Also apply to the shared OpenAPI document. Explicit opt-in: this can
+  // rename public SDK symbols, so the shared document is re-validated when any
+  // shared-scoped customization is present, and generation fails if the
+  // result does not parse.
+  OPEN_API_CUSTOMIZATION_SCOPE_SHARED = 2;
+}
+
+// How a customization is applied at its destination.
+enum OpenAPICustomizationMode {
+  // Default, equivalent to SET below.
+  OPEN_API_CUSTOMIZATION_MODE_UNSPECIFIED = 0;
+  // Set the key, replacing any existing complete value.
+  OPEN_API_CUSTOMIZATION_MODE_SET = 1;
+  // Remove the key. Removing a key that is not present is a generation error.
+  OPEN_API_CUSTOMIZATION_MODE_REMOVE = 2;
 }
