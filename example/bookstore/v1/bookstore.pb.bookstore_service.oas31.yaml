@@ -25,6 +25,7 @@ components:
           type:
             - string
             - "null"
+          x-stability-level: stable
         firstName:
           description: The firstName field.
           type: string
@@ -34,6 +35,14 @@ components:
             - GENDER_UNSPECIFIED
             - GENDER_MALE
             - GENDER_FEMALE
+            - GENDER_NON_BINARY
+            - GENDER_GENDERQUEER
+            - GENDER_GENDERFLUID
+            - GENDER_AGENDER
+            - GENDER_BIGENDER
+            - GENDER_INTERSEX
+            - GENDER_OTHER
+            - GENDER_PREFER_NOT_TO_SAY
           type: string
           x-speakeasy-unknown-values: allow
         genders:
@@ -43,6 +52,14 @@ components:
               - GENDER_UNSPECIFIED
               - GENDER_MALE
               - GENDER_FEMALE
+              - GENDER_NON_BINARY
+              - GENDER_GENDERQUEER
+              - GENDER_GENDERFLUID
+              - GENDER_AGENDER
+              - GENDER_BIGENDER
+              - GENDER_INTERSEX
+              - GENDER_OTHER
+              - GENDER_PREFER_NOT_TO_SAY
             type: string
             x-speakeasy-unknown-values: allow
           type:

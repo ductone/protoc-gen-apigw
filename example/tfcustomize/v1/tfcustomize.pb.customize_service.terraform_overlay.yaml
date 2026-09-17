@@ -1,0 +1,225 @@
+version: 1
+source: tfcustomize.v1.CustomizeService
+kind: service
+operations:
+  - pointer: ""
+    channel: extension
+    key: x-speakeasy-globals
+    mode: set
+    value:
+      parameters:
+        - in: query
+          name: tenant
+  - pointer: ""
+    channel: extension
+    key: x-speakeasy-max-method-params
+    mode: set
+    value: 7
+  - pointer: ""
+    channel: extension
+    key: x-speakeasy-model-namespace
+    mode: set
+    value: tfcustomize
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-decimal
+    mode: set
+    value: 1.50
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-empty-array
+    mode: set
+    value: []
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-empty-object
+    mode: set
+    value: {}
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-empty-string
+    mode: set
+    value: ""
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-false
+    mode: set
+    value: false
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-int
+    mode: set
+    value: 9007199254740993
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-multiline
+    mode: set
+    value: |-
+      line one
+      line two
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-null
+    mode: set
+    value: null
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-future-thing
+    mode: set
+    value:
+      nested:
+        list:
+          - 1
+          - 2.50
+          - null
+          - false
+          - x
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: extension
+    key: x-speakeasy-entity-description
+    mode: set
+    value: A **thing** resource.
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: schema
+    key: required
+    mode: set
+    value:
+      - id
+  - pointer: /components/schemas/tfcustomize.v1.Thing
+    channel: schema
+    key: title
+    mode: remove
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/child
+    channel: extension
+    key: x-speakeasy-name-override
+    mode: set
+    value: child_thing
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/createdAt
+    channel: extension
+    key: x-speakeasy-param-computed
+    mode: set
+    value: false
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/createdAt
+    channel: schema
+    key: format
+    mode: remove
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/escaped
+    channel: extension
+    key: x-speakeasy-docs
+    mode: set
+    value:
+      go: Escaped pointer target.
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/escaped
+    channel: extension
+    key: x-speakeasy-param-source
+    mode: set
+    value:
+      kind: config
+      path:
+        - a/b
+        - c~d
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/id
+    channel: extension
+    key: x-speakeasy-name-override
+    mode: set
+    value: thing_identifier
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/id
+    channel: extension
+    key: x-speakeasy-param-readonly
+    mode: set
+    value: true
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/id
+    channel: schema
+    key: default
+    mode: set
+    value: unknown
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/id
+    channel: schema
+    key: minLength
+    mode: set
+    value: 1
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/labels/additionalProperties
+    channel: extension
+    key: x-speakeasy-type-override
+    mode: set
+    value: any
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/manualPolicy
+    channel: extension
+    key: x-speakeasy-param-force-new
+    mode: set
+    value: false
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/odd~1name
+    channel: extension
+    key: x-speakeasy-deprecation-message
+    mode: set
+    value: use id
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/status
+    channel: extension
+    key: x-speakeasy-unknown-values
+    mode: set
+    value: disallow
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/tags
+    channel: extension
+    key: x-speakeasy-terraform-ignore
+    mode: set
+    value: false
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/tags
+    channel: schema
+    key: default
+    mode: set
+    value: []
+  - pointer: /components/schemas/tfcustomize.v1.Thing/properties/tags/items
+    channel: extension
+    key: x-speakeasy-response-filter
+    mode: set
+    value: true
+  - pointer: /paths/~1things/get
+    channel: extension
+    key: x-speakeasy-pagination
+    mode: set
+    value:
+      inputs: []
+      outputs: {}
+      type: cursor
+  - pointer: /paths/~1things/post
+    channel: extension
+    key: x-speakeasy-ignore
+    mode: set
+    value: false
+  - pointer: /paths/~1things/post
+    channel: extension
+    key: x-speakeasy-polling
+    mode: set
+    value:
+      - intervalSeconds: 10
+        limitCount: 5
+        name: wait
+  - pointer: /paths/~1things~1{thing_id}/get
+    channel: extension
+    key: x-speakeasy-entity-missing-codes
+    mode: set
+    value:
+      - 403
+      - 410
+  - pointer: /paths/~1things~1{thing_id}/get
+    channel: extension
+    key: x-speakeasy-entity-operation
+    mode: set
+    value:
+      terraform-datasource: null
+      terraform-resource: Thing#read
+  - pointer: /paths/~1things~1{thing_id}/get/parameters/0
+    channel: extension
+    key: x-speakeasy-match
+    mode: set
+    value: id
+  - pointer: /paths/~1things~1{thing_id}/get/parameters/0/schema
+    channel: extension
+    key: x-speakeasy-param-readonly
+    mode: set
+    value: false
+  - pointer: /paths/~1things~1{thing_id}/get/parameters/1
+    channel: extension
+    key: x-speakeasy-match
+    mode: set
+    value: flavor
