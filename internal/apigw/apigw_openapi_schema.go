@@ -17,6 +17,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
+	"github.com/ductone/protoc-gen-apigw/tfoverlay"
 )
 
 var (
@@ -32,8 +33,13 @@ func newSchemaContainer() *schemaContainer {
 	}
 }
 
+// schemaContainer emits the components of one OpenAPI document. tf is the
+// customization collector for the file being generated; it is nil when the
+// container is used outside a generation run, in which case annotations are
+// not collected.
 type schemaContainer struct {
 	schemas *orderedmap.Map[string, *dm_base.SchemaProxy]
+	tf      *tfCollector
 }
 
 func IsWellKnown(m pgs.Message) bool {
@@ -198,7 +204,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, readOnly bool
 			required = append(required, jn)
 		}
 
-		obj.Properties.Set(jn, sc.Field(f))
+		obj.Properties.Set(jn, sc.Field(f, fieldPropertyLoc(fqn, jn)))
 	}
 	// SyntheticOneOfFields returns proto3 optional fields, which live in
 	// compiler-generated synthetic oneofs.  NonOneOfFields() skips them
@@ -219,7 +225,7 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, readOnly bool
 			required = append(required, jn)
 		}
 
-		obj.Properties.Set(jn, sc.Field(f))
+		obj.Properties.Set(jn, sc.Field(f, fieldPropertyLoc(fqn, jn)))
 	}
 	if len(required) > 0 {
 		obj.Required = required
@@ -237,23 +243,33 @@ func (sc *schemaContainer) Message(m pgs.Message, filter []string, readOnly bool
 
 		for _, f := range of.Fields() {
 			jn := jsonName(f)
-			obj.Properties.Set(jn, sc.Field(f))
+			obj.Properties.Set(jn, sc.Field(f, fieldPropertyLoc(fqn, jn)))
 			_, _ = fmt.Fprintf(description, "  - %s\n", jn)
 		}
 	}
 	obj.Description = description.String()
+	if sc.tf != nil {
+		sc.tf.emit(messageDeclsFor(sc.tf, m), map[apigw_v1.OpenAPICustomizationTarget]string{
+			apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_SCHEMA:       tfoverlay.JoinPointer("components", "schemas", fqn),
+			apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER: "",
+		}, nil)
+	}
 	rv := dm_base.CreateSchemaProxy(obj)
 	sc.schemas.Set(fqn, rv)
 	return dm_base.CreateSchemaProxyRef(SchemaProxyRefPrefix + fqn)
 }
 
-func (sc *schemaContainer) OneOf(of pgs.OneOf) []*dm_base.SchemaProxy {
-	fields := of.Fields()
-	rv := make([]*dm_base.SchemaProxy, 0, len(fields))
-	for _, f := range fields {
-		rv = append(rv, sc.Field(f))
+// Field emits the schema for one field and records any field-level
+// customization at the location the schema is being emitted at. loc is the
+// zero value at sites that do not collect annotations (unit tests, and any
+// future caller that emits a schema outside a document).
+func (sc *schemaContainer) Field(f pgs.Field, loc schemaLoc) *dm_base.SchemaProxy {
+	proxy := sc.fieldSchema(f)
+	if sc.tf != nil && loc.ok {
+		places, unavailable := fieldSchemaPlaces(f, loc)
+		sc.tf.emit(fieldDeclsFor(sc.tf, f), places, unavailable)
 	}
-	return rv
+	return proxy
 }
 
 func (sc *schemaContainer) Enum(e pgs.Enum) *dm_base.Schema {
@@ -284,7 +300,7 @@ func (sc *schemaContainer) FieldTypeElem(fte pgs.FieldTypeElem, readOnly bool) *
 	}
 }
 
-func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
+func (sc *schemaContainer) fieldSchema(f pgs.Field) *dm_base.SchemaProxy {
 	deprecated := oasBool(f.Descriptor().GetOptions().GetDeprecated())
 	description := strings.TrimSpace(f.SourceCodeInfo().LeadingComments())
 	readOnly := getReadOnlySpec(f)
@@ -399,12 +415,26 @@ func (sc *schemaContainer) Field(f pgs.Field) *dm_base.SchemaProxy {
 			if !slices.Contains(s.Type, "null") {
 				s.Type = append(s.Type, "null")
 			}
+			// The inline schema is this field's schema, so the field's
+			// extensions belong on it. Dropping them here silently removed
+			// field-level metadata from every well-known-typed field.
+			if extensions.Len() > 0 {
+				if s.Extensions == nil {
+					s.Extensions = orderedmap.New[string, *yaml.Node]()
+				}
+				for pair := extensions.Oldest(); pair != nil; pair = pair.Next() {
+					s.Extensions.Set(pair.Key, pair.Value)
+				}
+			}
 			return dm_base.CreateSchemaProxy(s)
 		}
 		// Other message fields are emitted as a $ref, wrapped so the schema
 		// admits null the 3.1 way (oneOf: [ <ref>, { type: "null" } ]).
+		// The wrapper is this field's schema; the field's extensions attach to
+		// it rather than to the shared component, so one field's metadata does
+		// not leak onto every other use of the referenced message.
 		ref := sc.Message(embed, nil, readOnly, false)
-		return nullableRef(ref)
+		return nullableRef(ref, extensions)
 	default:
 		sv := sc.schemaForScalar(f.Type().ProtoType())
 		sv.ReadOnly = oasReadOnly(readOnly)
@@ -507,9 +537,18 @@ func applyNullable(s *dm_base.Schema, nullable *bool) {
 // definition `nullable: true` is both invalid in 3.1 and leaks nullability onto
 // every other use of that definition. Wrapping at the use site keeps the shared
 // definition clean.
-func nullableRef(ref *dm_base.SchemaProxy) *dm_base.SchemaProxy {
+//
+// extensions are attached to the wrapper, which is the field's own schema node.
+// A bare `$ref` may carry sibling keys in 3.1, but attaching them here keeps
+// field metadata off the shared component for the same reason nullability is
+// wrapped rather than annotated onto it.
+func nullableRef(ref *dm_base.SchemaProxy, extensions *orderedmap.Map[string, *yaml.Node]) *dm_base.SchemaProxy {
 	null := dm_base.CreateSchemaProxy(&dm_base.Schema{Type: []string{"null"}})
-	return dm_base.CreateSchemaProxy(&dm_base.Schema{
+	wrapper := &dm_base.Schema{
 		OneOf: []*dm_base.SchemaProxy{ref, null},
-	})
+	}
+	if extensions != nil && extensions.Len() > 0 {
+		wrapper.Extensions = extensions
+	}
+	return dm_base.CreateSchemaProxy(wrapper)
 }

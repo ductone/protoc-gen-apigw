@@ -8,11 +8,13 @@ import (
 	"reflect"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/camelcase"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+	"github.com/pb33f/libopenapi"
 	dm_base "github.com/pb33f/libopenapi/datamodel/high/base"
 	dm_v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
@@ -20,6 +22,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	apigw_v1 "github.com/ductone/protoc-gen-apigw/apigw/v1"
+	"github.com/ductone/protoc-gen-apigw/tfoverlay"
 )
 
 const (
@@ -28,6 +31,11 @@ const (
 	seqTag          = "!!seq"
 	tfDatasourceVal = "terraform-datasource"
 	tfResourceVal   = "terraform-resource"
+
+	// tfOverlayArtifactSuffix names the Terraform-scoped companion artifact
+	// emitted beside each OpenAPI document. See
+	// docs/terraform-overlay-contract.md.
+	tfOverlayArtifactSuffix = "terraform_overlay.yaml"
 )
 
 type route struct {
@@ -37,13 +45,19 @@ type route struct {
 
 const SchemaProxyRefPrefix = "#/components/schemas/"
 
-func (module *Module) buildOpenAPIService(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Document, error) {
+func (module *Module) buildOpenAPIService(ctx pgsgo.Context, in pgs.Service) (*dm_v3.Document, *docOverlay, error) {
 	// Extract service options
 	sext := &apigw_v1.ServiceOptions{}
 	_, err := in.Extension(apigw_v1.E_Service, sext)
 	if err != nil {
-		return nil, fmt.Errorf("apigw: failed to extract Service extension from '%s': %w", in.FullyQualifiedName(), err)
+		return nil, nil, fmt.Errorf("apigw: failed to extract Service extension from '%s': %w", in.FullyQualifiedName(), err)
 	}
+
+	module.tf.beginDoc(nicerFQN(in), tfoverlay.KindService)
+	// Service- and file-level annotations address the document root, so they
+	// are resolved once per document this file produces.
+	module.tf.emit(serviceDeclsFor(module.tf, in, sext.GetService()), documentRootPlaces(), nil)
+	module.tf.emit(fileDeclsFor(module.tf, in.File()), documentRootPlaces(), nil)
 
 	// Create service-level extensions
 	serviceExtensions := orderedmap.New[string, *yaml.Node]()
@@ -57,7 +71,7 @@ func (module *Module) buildOpenAPIService(ctx pgsgo.Context, in pgs.Service) (*d
 		if sext.Service.Deprecation != nil {
 			// Validate service deprecation info
 			if err := ValidateDeprecationInfo(sext.Service.Deprecation); err != nil {
-				return nil, fmt.Errorf("service deprecation validation failed for '%s': %w", in.FullyQualifiedName(), err)
+				return nil, nil, fmt.Errorf("service deprecation validation failed for '%s': %w", in.FullyQualifiedName(), err)
 			}
 
 			// If deprecation info is provided, the service is considered deprecated
@@ -101,17 +115,20 @@ func (module *Module) buildOpenAPIService(ctx pgsgo.Context, in pgs.Service) (*d
 	for _, m := range in.Methods() {
 		route, op, components, err := module.buildOperation(ctx, m, mt, sext)
 		if err != nil {
-			return nil, fmt.Errorf("opeapi.buildOperation failed for '%s': %w", m.FullyQualifiedName(), err)
+			return nil, nil, fmt.Errorf("opeapi.buildOperation failed for '%s': %w", m.FullyQualifiedName(), err)
 		}
 		if route == nil {
 			continue
 		}
 		addOperation(doc, route, op, components)
 	}
-	return doc, nil
+	return doc, module.tf.endDoc(), nil
 }
 
-func (module *Module) buildOpenAPIWithoutService(ctx pgsgo.Context, in pgs.File) (*dm_v3.Document, error) {
+func (module *Module) buildOpenAPIWithoutService(ctx pgsgo.Context, in pgs.File) (*dm_v3.Document, *docOverlay, error) {
+	module.tf.beginDoc(nicerFQN(in), tfoverlay.KindPackage)
+	module.tf.emit(fileDeclsFor(module.tf, in), documentRootPlaces(), nil)
+
 	doc := &dm_v3.Document{
 		Version: "3.1.0",
 		// NOTE: Info is required to be a valid OAS,
@@ -163,14 +180,14 @@ func (module *Module) buildOpenAPIWithoutService(ctx pgsgo.Context, in pgs.File)
 		}
 	}
 	if !found {
-		return nil, nil
+		return nil, nil, nil
 	}
 	components := &dm_v3.Components{
 		Schemas: sc.schemas,
 	}
 
 	addOperation(doc, nil, nil, components)
-	return doc, nil
+	return doc, module.tf.endDoc(), nil
 }
 
 func (module *Module) storeCanonicalRoute(route string, tokens []apigw_v1.RouteToken) *canonicalRoute {
@@ -356,6 +373,7 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 	inputFilter := []string{}
 
 	sc := newSchemaContainer()
+	sc.tf = module.tf
 	for _, p := range routeParts {
 		if !p.IsParam {
 			continue
@@ -363,11 +381,12 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 
 		paramName := canonicalRouteData.params[p.ParamIndex]
 		_, edgeField := module.path2fieldNumbers(strings.Split(p.ParamName, "."), method.Input())
+		paramPointer := tfoverlay.JoinPointer("paths", r.Route, strings.ToLower(r.Method), "parameters", strconv.Itoa(len(op.Parameters)))
 		pp := &dm_v3.Parameter{
 			Name:     paramName,
 			In:       "path",
 			Required: oasTrue(),
-			Schema:   sc.Field(edgeField),
+			Schema:   sc.Field(edgeField, fieldParamLoc(paramPointer)),
 		}
 
 		// TODO(pquerna): get docs from the field on the input object
@@ -388,11 +407,12 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 
 	for _, paramWithName := range paramsWithFieldNames {
 		_, edgeField := module.path2fieldNumbers(strings.Split(paramWithName.field, "."), method.Input())
+		paramPointer := tfoverlay.JoinPointer("paths", r.Route, strings.ToLower(r.Method), "parameters", strconv.Itoa(len(op.Parameters)))
 		// TODO(pquerna): get docs, types, and schema from the field on the input object
 		op.Parameters = append(op.Parameters, &dm_v3.Parameter{
 			Name:   paramWithName.param,
 			In:     "query",
-			Schema: sc.Field(edgeField),
+			Schema: sc.Field(edgeField, fieldParamLoc(paramPointer)),
 		})
 		inputFilter = append(inputFilter, paramWithName.field)
 	}
@@ -411,6 +431,21 @@ func (module *Module) buildOperation(ctx pgsgo.Context, method pgs.Method, mt *m
 		sd := mt.messages[k]
 		_ = sc.Message(sd.msg, sd.filter, false, false)
 	}
+
+	operationPointer := tfoverlay.JoinPointer("paths", r.Route, strings.ToLower(r.Method))
+	places := map[apigw_v1.OpenAPICustomizationTarget]string{
+		apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_OPERATION:       operationPointer,
+		apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_RESPONSE_SCHEMA: operationPointer + "/responses/200/content/" + tfoverlay.EscapeToken("application/json") + "/schema",
+		apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER:    "",
+	}
+	unavailable := map[apigw_v1.OpenAPICustomizationTarget]string{}
+	if operation.Method != http.MethodGet && operation.Method != http.MethodHead {
+		places[apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_REQUEST_SCHEMA] = operationPointer + "/requestBody/content/" + tfoverlay.EscapeToken("application/json") + "/schema"
+	} else {
+		unavailable[apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_REQUEST_SCHEMA] = "the operation has no request body"
+	}
+	module.tf.emit(operationDeclsFor(module.tf, method, operation), places, unavailable)
+
 	components := &dm_v3.Components{
 		Schemas: sc.schemas,
 	}
@@ -682,48 +717,96 @@ type openAPIContext struct {
 	Spec string
 }
 
-func (module *Module) renderOpenAPI(ctx pgsgo.Context, w io.Writer, in pgs.Service) error {
-	doc, err := module.buildOpenAPIService(ctx, in)
+// documentRootPlaces is the destination set for a service- or file-owned
+// annotation. An empty JSON Pointer addresses the document root, which is
+// exactly what DOCUMENT_ROOT means, so both targets are always available.
+func documentRootPlaces() map[apigw_v1.OpenAPICustomizationTarget]string {
+	return map[apigw_v1.OpenAPICustomizationTarget]string{
+		apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_DOCUMENT_ROOT: "",
+		apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER:  "",
+	}
+}
+
+// finishDocument applies shared-scoped operations to a rendered document and
+// proves every Terraform-scoped destination resolves in it.
+//
+// A Terraform-scoped operation is never applied here: the consumer applies it
+// to the merged document with tfoverlay.Apply, so the document this function
+// returns for a Terraform-scoped annotation is the one the consumer will apply
+// the overlay to.
+func (module *Module) finishDocument(spec []byte, ov *docOverlay) ([]byte, error) {
+	if ov == nil {
+		return spec, nil
+	}
+	if err := tfoverlay.Validate(spec, ov.terraform.Operations); err != nil {
+		return nil, fmt.Errorf("apigw: terraform customization does not resolve: %w", err)
+	}
+	if ov.shared.Empty() {
+		return spec, nil
+	}
+	shared, err := tfoverlay.Apply(spec, ov.shared.Operations)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("apigw: applying shared-scoped customization: %w", err)
+	}
+	// Shared scope can rename public SDK symbols, so the result has to still be
+	// a valid OpenAPI document before it is allowed out of the generator.
+	if _, err := libopenapi.NewDocument(shared); err != nil {
+		return nil, fmt.Errorf("apigw: shared-scoped customization produced an invalid OpenAPI document: %w", err)
+	}
+	return shared, nil
+}
+
+func (module *Module) renderOpenAPI(ctx pgsgo.Context, w io.Writer, in pgs.Service) (*tfoverlay.Overlay, error) {
+	doc, overlay, err := module.buildOpenAPIService(ctx, in)
+	if err != nil {
+		return nil, err
 	}
 	yamlData, err := doc.Render()
 	if err != nil {
-		return err
+		return nil, err
+	}
+	yamlData, err = module.finishDocument(yamlData, overlay)
+	if err != nil {
+		return nil, err
 	}
 	c := openAPIContext{
 		Name: ctx.ServerName(in).String(),
 	}
 	yamlData, err = yamlfmt.Format(bytes.NewReader(yamlData), true)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	c.Spec = string(yamlData)
-	return templates["openapi.tmpl"].Execute(w, c)
+	return overlay.terraform, templates["openapi.tmpl"].Execute(w, c)
 }
-func (module *Module) renderOpenAPIWithoutService(ctx pgsgo.Context, w io.Writer, in pgs.File) (bool, error) {
-	doc, err := module.buildOpenAPIWithoutService(ctx, in)
+
+func (module *Module) renderOpenAPIWithoutService(ctx pgsgo.Context, w io.Writer, in pgs.File) (*tfoverlay.Overlay, bool, error) {
+	doc, overlay, err := module.buildOpenAPIWithoutService(ctx, in)
 	if err != nil {
-		return false, err
+		return nil, false, err
 	}
 	if doc == nil {
-		return false, nil
+		return nil, false, nil
 	}
 	yamlData, err := doc.Render()
 	if err != nil {
-		return false, err
+		return nil, false, err
+	}
+	yamlData, err = module.finishDocument(yamlData, overlay)
+	if err != nil {
+		return nil, false, err
 	}
 	c := openAPIContext{
 		Name: ctx.PackageName(in).String(),
 	}
 	yamlData, err = yamlfmt.Format(bytes.NewReader(yamlData), true)
 	if err != nil {
-		return false, err
+		return nil, false, err
 	}
 
 	c.Spec = string(yamlData)
-	return true, templates["openapi.tmpl"].Execute(w, c)
+	return overlay.terraform, true, templates["openapi.tmpl"].Execute(w, c)
 }
 
 type schemaData struct {
