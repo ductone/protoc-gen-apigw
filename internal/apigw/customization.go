@@ -141,6 +141,11 @@ type tfDecl struct {
 	// entities restricts the declaration to the Terraform projection of each
 	// named entity. Empty means every consumer of the destination.
 	entities []*tfoverlay.EntityScope
+	// selector is set for a document-wide selector declaration, which is
+	// recorded in the overlay's selector list rather than at a pointer.
+	selector *tfoverlay.SelectorOperation
+	// property is set for a property patch.
+	property *propertyPatch
 	// applied records the first pointer the declaration was applied at, which
 	// is only needed for the unconsumed-annotation diagnostic.
 	applied bool
@@ -164,7 +169,28 @@ func (d *tfDecl) opsFor(pointer string) []tfoverlay.Operation {
 	return scoped
 }
 
+// propertyPatch adds or removes one property of a schema.
+type propertyPatch struct {
+	name   string
+	schema *yaml.Node
+	remove bool
+}
+
 func (d *tfDecl) baseOpsFor(pointer string) []tfoverlay.Operation {
+	if d.property != nil {
+		op := tfoverlay.Operation{
+			Pointer:    pointer + "/properties",
+			Channel:    tfoverlay.ChannelProperty,
+			Key:        d.property.name,
+			Mode:       tfoverlay.ModeSet,
+			Value:      d.property.schema,
+			Provenance: d.descriptor,
+		}
+		if d.property.remove {
+			op.Mode, op.Value = tfoverlay.ModeRemove, nil
+		}
+		return []tfoverlay.Operation{op}
+	}
 	if d.patchSet != nil || d.patchRemove != nil {
 		ops := make([]tfoverlay.Operation, 0, len(d.patchSet)+len(d.patchRemove))
 		for _, f := range d.patchSet {
@@ -316,6 +342,14 @@ func (c *tfCollector) emit(decls []*tfDecl, places map[apigw_v1.OpenAPICustomiza
 		if !ok {
 			continue
 		}
+		if registered.selector != nil {
+			sel := *registered.selector
+			if err := c.active.terraform.AddSelector(sel); err != nil {
+				c.failf("%s: %v", registered.describe, err)
+			}
+			registered.applied = true
+			continue
+		}
 		pointer, available := places[registered.target]
 		if !available {
 			if reason, known := unavailable[registered.target]; known {
@@ -340,6 +374,115 @@ func (c *tfCollector) emit(decls []*tfDecl, places map[apigw_v1.OpenAPICustomiza
 		}
 		registered.applied = true
 	}
+}
+
+// parseSelector validates a document-wide selector declaration. A selector is
+// Terraform-only; the consumer resolves it against the shared spec.
+func (c *tfCollector) parseSelector(descriptor string, k tfOwnerKind, base string, index int, sc *apigw_v1.OpenAPISelectorCustomization) *tfDecl {
+	id := declID(base, descriptor, index)
+	d := &tfDecl{
+		id:         id,
+		descriptor: descriptor,
+		describe:   descriptor + " selector customization",
+		ownerKind:  k,
+		scope:      sc.GetScope(),
+		target:     apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_DOCUMENT_ROOT,
+	}
+	if d.scope == apigw_v1.OpenAPICustomizationScope_OPEN_API_CUSTOMIZATION_SCOPE_SHARED {
+		c.failf("%s: a selector is Terraform-only and cannot use the shared scope", d.describe)
+	}
+	sel := tfoverlay.SelectorOperation{Provenance: descriptor, Key: sc.GetKey()}
+	sel.Selector.Path = sc.GetSelector().GetJsonPath()
+	switch sc.GetMode() {
+	case apigw_v1.OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_UNSPECIFIED,
+		apigw_v1.OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_SET:
+		sel.Mode = tfoverlay.ModeSet
+		if sc.GetValueJson() == "" {
+			c.failf("%s: value_json is required when mode is SET", d.describe)
+		}
+		value, err := tfoverlay.ParseJSONValue(sc.GetValueJson())
+		if err != nil {
+			c.failf("%s: %v", d.describe, err)
+		}
+		sel.Value = value
+		sel.Channel = tfoverlay.ChannelSchema
+		if strings.HasPrefix(sel.Key, "x-") {
+			sel.Channel = tfoverlay.ChannelExtension
+		}
+	case apigw_v1.OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_REMOVE:
+		sel.Mode = tfoverlay.ModeRemove
+		if sc.GetValueJson() != "" || sc.GetKey() != "" {
+			c.failf("%s: key and value_json must be empty when mode is REMOVE", d.describe)
+		}
+	default:
+		c.failf("%s: unknown mode %v", d.describe, sc.GetMode())
+	}
+	if err := sel.Validate(); err != nil {
+		c.failf("%s: %v", d.describe, err)
+	}
+	d.selector = &sel
+	return d
+}
+
+// parsePropertyPatch validates a property patch on a message.
+func (c *tfCollector) parsePropertyPatch(descriptor string, k tfOwnerKind, base string, index int, pp *apigw_v1.OpenAPIPropertyPatch) *tfDecl {
+	id := declID(base, descriptor, index)
+	d := &tfDecl{
+		id:          id,
+		descriptor:  descriptor,
+		describe:    fmt.Sprintf("%s property patch %q", descriptor, pp.GetName()),
+		ownerKind:   k,
+		scope:       pp.GetScope(),
+		target:      pp.GetTarget(),
+		jsonPointer: pp.GetJsonPointer(),
+	}
+	if d.scope == apigw_v1.OpenAPICustomizationScope_OPEN_API_CUSTOMIZATION_SCOPE_SHARED {
+		c.failf("%s: a property patch is Terraform-only and cannot use the shared scope", d.describe)
+	}
+	if d.target == apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_UNSPECIFIED {
+		d.target = apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_SCHEMA
+	}
+	switch d.target {
+	case apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_SCHEMA:
+		if d.jsonPointer != "" {
+			c.failf("%s: json_pointer is only valid with target JSON_POINTER", d.describe)
+		}
+	case apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER:
+		if !inComponentSchemas(d.jsonPointer) {
+			c.failf("%s: json_pointer must address a schema under /components/schemas/<name>", d.describe)
+		}
+	default:
+		c.failf("%s: target %s is not valid for a property patch", d.describe, d.target)
+	}
+	if pp.GetName() == "" {
+		c.failf("%s: a property patch needs a name", d.describe)
+	}
+	patch := &propertyPatch{name: pp.GetName()}
+	switch pp.GetMode() {
+	case apigw_v1.OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_UNSPECIFIED,
+		apigw_v1.OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_SET:
+		if pp.GetSchemaJson() == "" {
+			c.failf("%s: schema_json is required when mode is SET", d.describe)
+		}
+		value, err := tfoverlay.ParseJSONValue(pp.GetSchemaJson())
+		if err != nil {
+			c.failf("%s: schema_json: %v", d.describe, err)
+		}
+		if value.Kind != yaml.MappingNode {
+			c.failf("%s: schema_json must be a JSON object", d.describe)
+		}
+		patch.schema = value
+	case apigw_v1.OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_REMOVE:
+		if pp.GetSchemaJson() != "" {
+			c.failf("%s: schema_json must be empty when mode is REMOVE", d.describe)
+		}
+		patch.remove = true
+	default:
+		c.failf("%s: unknown mode %v", d.describe, pp.GetMode())
+	}
+	d.property = patch
+	d.entities = c.parseEntities(d, pp.GetEntities())
+	return d
 }
 
 // inComponentSchemas reports whether pointer addresses a node inside a
@@ -585,6 +728,10 @@ func (c *tfCollector) declareMessage(m pgs.Message) {
 			c.declare(c.parsePatch(owner, tfOwnerMessage, "messagep", index, patch))
 			index++
 		}
+		for _, pp := range opt.GetPropertyPatches() {
+			c.declare(c.parsePropertyPatch(owner, tfOwnerMessage, "messagepp", index, pp))
+			index++
+		}
 	}
 }
 
@@ -623,6 +770,10 @@ func (c *tfCollector) declareService(svc pgs.Service, s *apigw_v1.Service) {
 		c.declare(c.parsePatch(owner, tfOwnerService, "servicep", index, patch))
 		index++
 	}
+	for _, sc := range s.GetSelectorCustomizations() {
+		c.declare(c.parseSelector(owner, tfOwnerService, "services", index, sc))
+		index++
+	}
 }
 
 // declareFile registers the file-level annotations, which apply to every
@@ -640,6 +791,10 @@ func (c *tfCollector) declareFile(f pgs.File) {
 	}
 	for _, patch := range opts.GetSchemaPatches() {
 		c.declare(c.parsePatch(owner, tfOwnerFile, "filep", index, patch))
+		index++
+	}
+	for _, sc := range opts.GetSelectorCustomizations() {
+		c.declare(c.parseSelector(owner, tfOwnerFile, "files", index, sc))
 		index++
 	}
 }
@@ -725,6 +880,12 @@ func messageDeclsFor(c *tfCollector, m pgs.Message) []*tfDecl {
 			}
 			index++
 		}
+		for range opt.GetPropertyPatches() {
+			if d, ok := c.decls[declID("messagepp", owner, index)]; ok {
+				rv = append(rv, d)
+			}
+			index++
+		}
 	}
 	return rv
 }
@@ -770,6 +931,12 @@ func serviceDeclsFor(c *tfCollector, svc pgs.Service, s *apigw_v1.Service) []*tf
 		}
 		index++
 	}
+	for range s.GetSelectorCustomizations() {
+		if d, ok := c.decls[declID("services", owner, index)]; ok {
+			rv = append(rv, d)
+		}
+		index++
+	}
 	return rv
 }
 
@@ -792,6 +959,12 @@ func fileDeclsFor(c *tfCollector, f pgs.File) []*tfDecl {
 	}
 	for range opts.GetSchemaPatches() {
 		if d, ok := c.decls[declID("filep", owner, index)]; ok {
+			rv = append(rv, d)
+		}
+		index++
+	}
+	for range opts.GetSelectorCustomizations() {
+		if d, ok := c.decls[declID("files", owner, index)]; ok {
 			rv = append(rv, d)
 		}
 		index++

@@ -40,6 +40,8 @@ const (
 	extensionMetadata   = "x-apigw-terraform"
 	extensionProvenance = "x-apigw-provenance"
 	extensionEntity     = "x-apigw-entity"
+	extensionSelector   = "x-apigw-selector"
+	extensionProperty   = "x-apigw-property"
 	extensionReplace    = "x-apigw-replace"
 )
 
@@ -47,7 +49,7 @@ const (
 type Part string
 
 const (
-	// PartGlobal holds global operations. It is a standard
+	// PartGlobal holds selectors and global operations. It is a standard
 	// Overlay any tool can apply.
 	PartGlobal Part = "global"
 	// PartEntities holds entity-scoped operations, for ApplyTerraform only.
@@ -66,7 +68,9 @@ type Rendered struct {
 // absent or holds a scalar of the same type, otherwise a remove followed by an
 // update. Rendering does not modify the receiver or doc.
 //
-// Use VerifyStandard on the document the overlay is finally applied to.
+// Selectors may match nothing in doc: a per-service document is a fragment of
+// the merged document the selectors are meant for. Use VerifyStandard on the
+// document the overlay is finally applied to.
 func (o *Overlay) Render(doc []byte) (*Rendered, error) {
 	root := &yaml.Node{}
 	if err := yaml.Unmarshal(doc, root); err != nil {
@@ -83,8 +87,14 @@ func (o *Overlay) Render(doc []byte) (*Rendered, error) {
 
 	out := &Rendered{}
 	var global, scoped []overlay.Action
+	for _, sel := range o.Selectors {
+		global = append(global, selectorAction(sel))
+	}
 	// Simulate the global part so each set is spelled against the value its
 	// destination holds when the action runs.
+	if _, _, err := applySelectorsLenient(target, o.Selectors); err != nil {
+		return nil, err
+	}
 	for _, op := range ops {
 		if op.Entity != nil {
 			continue
@@ -152,6 +162,19 @@ func (o *Overlay) encodeStandard(part Part, actions []overlay.Action) ([]byte, e
 	return []byte(text), nil
 }
 
+func selectorAction(sel SelectorOperation) overlay.Action {
+	a := overlay.Action{Target: sel.Selector.Path, Extensions: overlay.Extensions{extensionSelector: true}}
+	if sel.Provenance != "" {
+		a.Extensions[extensionProvenance] = sel.Provenance
+	}
+	if sel.Mode == ModeRemove {
+		a.Remove = true
+		return a
+	}
+	a.Update = mapping(sel.Key, sel.Value)
+	return a
+}
+
 // operationActions spells one exact operation against the current state of
 // target.
 func operationActions(target *yaml.Node, op Operation) ([]overlay.Action, error) {
@@ -173,6 +196,9 @@ func operationActions(target *yaml.Node, op Operation) ([]overlay.Action, error)
 			entity["kind"] = string(op.Entity.Kind)
 		}
 		ext[extensionEntity] = entity
+	}
+	if op.Channel == ChannelProperty {
+		ext[extensionProperty] = true
 	}
 	keyPath := path + "[" + quoteMember(op.Key) + "]"
 	if op.Mode == ModeRemove {
@@ -403,7 +429,7 @@ func parseAction(ov *Overlay, part Part, a overlay.Action) error {
 	}
 	var provenance string
 	var entity *EntityScope
-	replace := false
+	selector, property, replace := false, false, false
 	for key, value := range a.Extensions {
 		switch key {
 		case extensionProvenance:
@@ -412,12 +438,19 @@ func parseAction(ov *Overlay, part Part, a overlay.Action) error {
 				return fmt.Errorf("%s must be a string", key)
 			}
 			provenance = text
-		case extensionReplace:
+		case extensionSelector, extensionProperty, extensionReplace:
 			flag, ok := value.(bool)
 			if !ok || !flag {
 				return fmt.Errorf("%s must be true when present", key)
 			}
-			replace = true
+			switch key {
+			case extensionSelector:
+				selector = true
+			case extensionProperty:
+				property = true
+			default:
+				replace = true
+			}
 		case extensionEntity:
 			e, err := parseEntityExtension(value)
 			if err != nil {
@@ -431,9 +464,25 @@ func parseAction(ov *Overlay, part Part, a overlay.Action) error {
 	if (entity != nil) != (part == PartEntities) {
 		return fmt.Errorf("entity-scoped actions belong in the %s part, and only there", PartEntities)
 	}
+	if selector {
+		if part != PartGlobal || property || replace || entity != nil {
+			return fmt.Errorf("a selector is a global action without other markers")
+		}
+		sel := SelectorOperation{Selector: Selector{Path: a.Target}, Provenance: provenance}
+		if a.Remove {
+			sel.Mode = ModeRemove
+		} else {
+			key, value, err := singleEntry(&a.Update)
+			if err != nil {
+				return err
+			}
+			sel.Mode, sel.Key, sel.Value, sel.Channel = ModeSet, key, value, channelOf(key)
+		}
+		return ov.AddSelector(sel)
+	}
 	if replace {
 		// The remove half of a set; the update that follows carries the set.
-		if !a.Remove || provenance != "" {
+		if !a.Remove || provenance != "" || property {
 			return fmt.Errorf("%s marks only the remove half of a set", extensionReplace)
 		}
 		_, err := pathTokens(a.Target)
@@ -457,6 +506,9 @@ func parseAction(ov *Overlay, part Part, a overlay.Action) error {
 		op.Pointer, op.Key, op.Value, op.Mode = JoinPointer(tokens...), key, value, ModeSet
 	}
 	op.Channel = channelOf(op.Key)
+	if property {
+		op.Channel = ChannelProperty
+	}
 	return ov.Add(op)
 }
 
@@ -527,7 +579,7 @@ func rejectDuplicateKeys(node *yaml.Node) error {
 
 // VerifyStandard applies the rendered global part to doc with the Speakeasy
 // Overlay implementation in strict mode and checks that the result equals
-// Apply's. It proves that a consumer applying the artifact with standard
+// ApplyOverlay's. It proves that a consumer applying the artifact with standard
 // tooling gets the document this package computes. The overlay must not hold
 // entity-scoped operations.
 func VerifyStandard(doc []byte, ov *Overlay) error {
@@ -536,7 +588,7 @@ func VerifyStandard(doc []byte, ov *Overlay) error {
 			return fmt.Errorf("verify: entity-scoped operations have no standard form")
 		}
 	}
-	want, err := Apply(doc, ov.Operations)
+	want, _, err := ApplyOverlay(doc, ov)
 	if err != nil {
 		return err
 	}
@@ -589,7 +641,7 @@ func applyOne(target *yaml.Node, op Operation) error {
 // Global returns a copy of the overlay without its entity-scoped operations:
 // the part standard tooling can apply.
 func (o *Overlay) Global() *Overlay {
-	out := &Overlay{Source: o.Source, Kind: o.Kind}
+	out := &Overlay{Source: o.Source, Kind: o.Kind, Selectors: append([]SelectorOperation(nil), o.Selectors...)}
 	for _, op := range o.Operations {
 		if op.Entity == nil {
 			out.Operations = append(out.Operations, op)

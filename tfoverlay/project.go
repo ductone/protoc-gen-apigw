@@ -43,6 +43,9 @@ var operationMethods = map[string]bool{
 type ProjectionReport struct {
 	// Entities has one entry per projected entity, in name order.
 	Entities []EntityProjection
+	// Selectors has one entry per selector operation, in canonical order. It is
+	// filled by ApplyOverlay.
+	Selectors []SelectorReport
 }
 
 // EntityProjection is the projection of one entity.

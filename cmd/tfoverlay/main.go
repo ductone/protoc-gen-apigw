@@ -166,9 +166,9 @@ func runValidate(args []string) error {
 	if err := tfoverlay.VerifyStandard(doc, merged.Global()); err != nil {
 		return err
 	}
-	// A projection that fails is a failure of the overlay, so validation runs it
-	// and discards the result.
-	_, _, err = tfoverlay.ApplyTerraform(doc, merged.Operations)
+	// A selector that matches nothing or a projection that fails is a failure of
+	// the overlay, so validation runs the whole application and discards it.
+	_, _, err = tfoverlay.ApplyOverlay(doc, merged)
 	return err
 }
 
@@ -185,7 +185,7 @@ func runApply(args []string, stdout io.Writer) error {
 	if err != nil {
 		return err
 	}
-	result, projectionReport, err := tfoverlay.ApplyTerraform(doc, merged.Operations)
+	result, projectionReport, err := tfoverlay.ApplyOverlay(doc, merged)
 	if err != nil {
 		return err
 	}

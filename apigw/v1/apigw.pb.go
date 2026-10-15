@@ -679,8 +679,10 @@ type FileOptions struct {
 	state          protoimpl.MessageState  `protogen:"open.v1"`
 	Customizations []*OpenAPICustomization `protobuf:"bytes,1,rep,name=customizations,proto3" json:"customizations,omitempty"`
 	SchemaPatches  []*OpenAPISchemaPatch   `protobuf:"bytes,2,rep,name=schema_patches,json=schemaPatches,proto3" json:"schema_patches,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Document-wide selector customizations. See OpenAPISelectorCustomization.
+	SelectorCustomizations []*OpenAPISelectorCustomization `protobuf:"bytes,3,rep,name=selector_customizations,json=selectorCustomizations,proto3" json:"selector_customizations,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *FileOptions) Reset() {
@@ -727,6 +729,13 @@ func (x *FileOptions) GetSchemaPatches() []*OpenAPISchemaPatch {
 	return nil
 }
 
+func (x *FileOptions) GetSelectorCustomizations() []*OpenAPISelectorCustomization {
+	if x != nil {
+		return x.SelectorCustomizations
+	}
+	return nil
+}
+
 type MessageOption struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	TerraformEntity *TerraformEntity       `protobuf:"bytes,1,opt,name=terraform_entity,json=terraformEntity,proto3" json:"terraform_entity,omitempty"`
@@ -746,8 +755,11 @@ type MessageOption struct {
 	// Generic standard OpenAPI/JSON Schema keyword patches for this message
 	// schema. See OpenAPISchemaPatch.
 	SchemaPatches []*OpenAPISchemaPatch `protobuf:"bytes,7,rep,name=schema_patches,json=schemaPatches,proto3" json:"schema_patches,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// Adds or removes properties of this message's schema. See
+	// OpenAPIPropertyPatch.
+	PropertyPatches []*OpenAPIPropertyPatch `protobuf:"bytes,8,rep,name=property_patches,json=propertyPatches,proto3" json:"property_patches,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *MessageOption) Reset() {
@@ -825,6 +837,13 @@ func (x *MessageOption) GetCustomizations() []*OpenAPICustomization {
 func (x *MessageOption) GetSchemaPatches() []*OpenAPISchemaPatch {
 	if x != nil {
 		return x.SchemaPatches
+	}
+	return nil
+}
+
+func (x *MessageOption) GetPropertyPatches() []*OpenAPIPropertyPatch {
+	if x != nil {
+		return x.PropertyPatches
 	}
 	return nil
 }
@@ -1198,8 +1217,10 @@ type Service struct {
 	// Generic standard OpenAPI/JSON Schema keyword patches applied to this
 	// service document's root. See OpenAPISchemaPatch.
 	SchemaPatches []*OpenAPISchemaPatch `protobuf:"bytes,6,rep,name=schema_patches,json=schemaPatches,proto3" json:"schema_patches,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// Document-wide selector customizations. See OpenAPISelectorCustomization.
+	SelectorCustomizations []*OpenAPISelectorCustomization `protobuf:"bytes,7,rep,name=selector_customizations,json=selectorCustomizations,proto3" json:"selector_customizations,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *Service) Reset() {
@@ -1270,6 +1291,13 @@ func (x *Service) GetCustomizations() []*OpenAPICustomization {
 func (x *Service) GetSchemaPatches() []*OpenAPISchemaPatch {
 	if x != nil {
 		return x.SchemaPatches
+	}
+	return nil
+}
+
+func (x *Service) GetSelectorCustomizations() []*OpenAPISelectorCustomization {
+	if x != nil {
+		return x.SelectorCustomizations
 	}
 	return nil
 }
@@ -2014,6 +2042,254 @@ func (x *OpenAPISchemaPatch) GetEntities() []*OpenAPICustomizationEntity {
 	return nil
 }
 
+// OpenAPISelectorCustomization applies one override to every node of the whole
+// document that a selector matches, instead of to one destination. It exists
+// for rules that are a property of the document rather than of one declaration,
+// for example "every property named deletedAt is a soft-delete property".
+//
+// A selector is Terraform-only. It is resolved by the consumer, against the
+// shared spec, in an earlier stage than exact customizations, so an exact
+// customization that writes the same node replaces the selector's write; see
+// the contract. A selector that matches no node is an error when applied.
+type OpenAPISelectorCustomization struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Selector *OpenAPISelector       `protobuf:"bytes,1,opt,name=selector,proto3" json:"selector,omitempty"`
+	// Key to write on each matched node. Must start with "x-" for a vendor
+	// extension; otherwise it is a standard schema keyword. Required when mode is
+	// SET; must be empty when mode is REMOVE.
+	Key string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	// JSON-encoded scalar value. Required when mode is SET; must be empty for
+	// REMOVE. Only a scalar replaces the existing value under standard Overlay
+	// update semantics, so objects and arrays are rejected.
+	ValueJson string `protobuf:"bytes,3,opt,name=value_json,json=valueJson,proto3" json:"value_json,omitempty"`
+	// SET writes key on each matched node, which must be an object. REMOVE
+	// deletes each matched node from its parent.
+	Mode OpenAPICustomizationMode `protobuf:"varint,4,opt,name=mode,proto3,enum=apigw.v1.OpenAPICustomizationMode" json:"mode,omitempty"`
+	// Must be unspecified or TERRAFORM: the shared document is not rewritten by a
+	// selector.
+	Scope         OpenAPICustomizationScope `protobuf:"varint,5,opt,name=scope,proto3,enum=apigw.v1.OpenAPICustomizationScope" json:"scope,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OpenAPISelectorCustomization) Reset() {
+	*x = OpenAPISelectorCustomization{}
+	mi := &file_apigw_v1_apigw_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OpenAPISelectorCustomization) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OpenAPISelectorCustomization) ProtoMessage() {}
+
+func (x *OpenAPISelectorCustomization) ProtoReflect() protoreflect.Message {
+	mi := &file_apigw_v1_apigw_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OpenAPISelectorCustomization.ProtoReflect.Descriptor instead.
+func (*OpenAPISelectorCustomization) Descriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *OpenAPISelectorCustomization) GetSelector() *OpenAPISelector {
+	if x != nil {
+		return x.Selector
+	}
+	return nil
+}
+
+func (x *OpenAPISelectorCustomization) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *OpenAPISelectorCustomization) GetValueJson() string {
+	if x != nil {
+		return x.ValueJson
+	}
+	return ""
+}
+
+func (x *OpenAPISelectorCustomization) GetMode() OpenAPICustomizationMode {
+	if x != nil {
+		return x.Mode
+	}
+	return OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_UNSPECIFIED
+}
+
+func (x *OpenAPISelectorCustomization) GetScope() OpenAPICustomizationScope {
+	if x != nil {
+		return x.Scope
+	}
+	return OpenAPICustomizationScope_OPEN_API_CUSTOMIZATION_SCOPE_UNSPECIFIED
+}
+
+// OpenAPISelector picks nodes of a document.
+type OpenAPISelector struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// An RFC 9535 JSONPath query, used verbatim as the target of the emitted
+	// OpenAPI Overlay action, for example "$..deletedAt" or
+	// "$..[?(@.additionalProperties == true)]". It must not select the document
+	// root.
+	JsonPath      string `protobuf:"bytes,1,opt,name=json_path,json=jsonPath,proto3" json:"json_path,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OpenAPISelector) Reset() {
+	*x = OpenAPISelector{}
+	mi := &file_apigw_v1_apigw_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OpenAPISelector) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OpenAPISelector) ProtoMessage() {}
+
+func (x *OpenAPISelector) ProtoReflect() protoreflect.Message {
+	mi := &file_apigw_v1_apigw_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OpenAPISelector.ProtoReflect.Descriptor instead.
+func (*OpenAPISelector) Descriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *OpenAPISelector) GetJsonPath() string {
+	if x != nil {
+		return x.JsonPath
+	}
+	return ""
+}
+
+// OpenAPIPropertyPatch adds or removes one property of a schema. It is the
+// structural counterpart of OpenAPISchemaPatch, which sets keywords of a node
+// but cannot add or remove a child of `properties`.
+type OpenAPIPropertyPatch struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Property name as emitted in the document (the JSON name).
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// JSON object holding the property's schema. Required when mode is SET, which
+	// adds the property and fails if it already exists; must be empty for REMOVE,
+	// which fails if the property is absent.
+	SchemaJson string                   `protobuf:"bytes,2,opt,name=schema_json,json=schemaJson,proto3" json:"schema_json,omitempty"`
+	Mode       OpenAPICustomizationMode `protobuf:"varint,3,opt,name=mode,proto3,enum=apigw.v1.OpenAPICustomizationMode" json:"mode,omitempty"`
+	// The schema whose properties change. SCHEMA (the default) is the annotated
+	// message's schema; JSON_POINTER addresses any schema node.
+	Target OpenAPICustomizationTarget `protobuf:"varint,4,opt,name=target,proto3,enum=apigw.v1.OpenAPICustomizationTarget" json:"target,omitempty"`
+	// Absolute JSON Pointer to the schema node, used with target JSON_POINTER.
+	JsonPointer string `protobuf:"bytes,5,opt,name=json_pointer,json=jsonPointer,proto3" json:"json_pointer,omitempty"`
+	// Must be unspecified or TERRAFORM.
+	Scope OpenAPICustomizationScope `protobuf:"varint,6,opt,name=scope,proto3,enum=apigw.v1.OpenAPICustomizationScope" json:"scope,omitempty"`
+	// Restricts the patch to the Terraform projection of the named entities.
+	Entities      []*OpenAPICustomizationEntity `protobuf:"bytes,7,rep,name=entities,proto3" json:"entities,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OpenAPIPropertyPatch) Reset() {
+	*x = OpenAPIPropertyPatch{}
+	mi := &file_apigw_v1_apigw_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OpenAPIPropertyPatch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OpenAPIPropertyPatch) ProtoMessage() {}
+
+func (x *OpenAPIPropertyPatch) ProtoReflect() protoreflect.Message {
+	mi := &file_apigw_v1_apigw_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OpenAPIPropertyPatch.ProtoReflect.Descriptor instead.
+func (*OpenAPIPropertyPatch) Descriptor() ([]byte, []int) {
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *OpenAPIPropertyPatch) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *OpenAPIPropertyPatch) GetSchemaJson() string {
+	if x != nil {
+		return x.SchemaJson
+	}
+	return ""
+}
+
+func (x *OpenAPIPropertyPatch) GetMode() OpenAPICustomizationMode {
+	if x != nil {
+		return x.Mode
+	}
+	return OpenAPICustomizationMode_OPEN_API_CUSTOMIZATION_MODE_UNSPECIFIED
+}
+
+func (x *OpenAPIPropertyPatch) GetTarget() OpenAPICustomizationTarget {
+	if x != nil {
+		return x.Target
+	}
+	return OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_UNSPECIFIED
+}
+
+func (x *OpenAPIPropertyPatch) GetJsonPointer() string {
+	if x != nil {
+		return x.JsonPointer
+	}
+	return ""
+}
+
+func (x *OpenAPIPropertyPatch) GetScope() OpenAPICustomizationScope {
+	if x != nil {
+		return x.Scope
+	}
+	return OpenAPICustomizationScope_OPEN_API_CUSTOMIZATION_SCOPE_UNSPECIFIED
+}
+
+func (x *OpenAPIPropertyPatch) GetEntities() []*OpenAPICustomizationEntity {
+	if x != nil {
+		return x.Entities
+	}
+	return nil
+}
+
 // OpenAPICustomizationEntity selects one Terraform entity, as named by
 // `x-speakeasy-entity`, so that an override applies only to the schema copies
 // that entity reaches rather than to every entity sharing the destination
@@ -2036,7 +2312,7 @@ type OpenAPICustomizationEntity struct {
 
 func (x *OpenAPICustomizationEntity) Reset() {
 	*x = OpenAPICustomizationEntity{}
-	mi := &file_apigw_v1_apigw_proto_msgTypes[19]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2048,7 +2324,7 @@ func (x *OpenAPICustomizationEntity) String() string {
 func (*OpenAPICustomizationEntity) ProtoMessage() {}
 
 func (x *OpenAPICustomizationEntity) ProtoReflect() protoreflect.Message {
-	mi := &file_apigw_v1_apigw_proto_msgTypes[19]
+	mi := &file_apigw_v1_apigw_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2061,7 +2337,7 @@ func (x *OpenAPICustomizationEntity) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OpenAPICustomizationEntity.ProtoReflect.Descriptor instead.
 func (*OpenAPICustomizationEntity) Descriptor() ([]byte, []int) {
-	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{19}
+	return file_apigw_v1_apigw_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *OpenAPICustomizationEntity) GetName() string {
@@ -2157,10 +2433,11 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\n" +
 	"\x14apigw/v1/apigw.proto\x12\bapigw.v1\x1a google/protobuf/descriptor.proto\"R\n" +
 	"\x0eMessageOptions\x12@\n" +
-	"\x0fmessage_options\x18\x01 \x03(\v2\x17.apigw.v1.MessageOptionR\x0emessageOptions\"\x9a\x01\n" +
+	"\x0fmessage_options\x18\x01 \x03(\v2\x17.apigw.v1.MessageOptionR\x0emessageOptions\"\xfb\x01\n" +
 	"\vFileOptions\x12F\n" +
 	"\x0ecustomizations\x18\x01 \x03(\v2\x1e.apigw.v1.OpenAPICustomizationR\x0ecustomizations\x12C\n" +
-	"\x0eschema_patches\x18\x02 \x03(\v2\x1c.apigw.v1.OpenAPISchemaPatchR\rschemaPatches\"\xf2\x02\n" +
+	"\x0eschema_patches\x18\x02 \x03(\v2\x1c.apigw.v1.OpenAPISchemaPatchR\rschemaPatches\x12_\n" +
+	"\x17selector_customizations\x18\x03 \x03(\v2&.apigw.v1.OpenAPISelectorCustomizationR\x16selectorCustomizations\"\xbd\x03\n" +
 	"\rMessageOption\x12D\n" +
 	"\x10terraform_entity\x18\x01 \x01(\v2\x19.apigw.v1.TerraformEntityR\x0fterraformEntity\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12!\n" +
@@ -2168,7 +2445,8 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\x14webhook_request_name\x18\x04 \x01(\tR\x12webhookRequestName\x12#\n" +
 	"\rname_override\x18\x05 \x01(\tR\fnameOverride\x12F\n" +
 	"\x0ecustomizations\x18\x06 \x03(\v2\x1e.apigw.v1.OpenAPICustomizationR\x0ecustomizations\x12C\n" +
-	"\x0eschema_patches\x18\a \x03(\v2\x1c.apigw.v1.OpenAPISchemaPatchR\rschemaPatches\"\xf8\x02\n" +
+	"\x0eschema_patches\x18\a \x03(\v2\x1c.apigw.v1.OpenAPISchemaPatchR\rschemaPatches\x12I\n" +
+	"\x10property_patches\x18\b \x03(\v2\x1e.apigw.v1.OpenAPIPropertyPatchR\x0fpropertyPatches\"\xf8\x02\n" +
 	"\vFieldOption\x12#\n" +
 	"\rrequired_spec\x18\x01 \x01(\bR\frequiredSpec\x12$\n" +
 	"\x0eread_only_spec\x18\x02 \x01(\bR\freadOnlySpec\x121\n" +
@@ -2194,14 +2472,15 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\vexfil_class\x18\x02 \x01(\x0e2\x12.apigw.v1.SeverityR\n" +
 	"exfilClass\"=\n" +
 	"\x0eServiceOptions\x12+\n" +
-	"\aservice\x18\x01 \x01(\v2\x11.apigw.v1.ServiceR\aservice\"\xc6\x02\n" +
+	"\aservice\x18\x01 \x01(\v2\x11.apigw.v1.ServiceR\aservice\"\xa7\x03\n" +
 	"\aService\x121\n" +
 	"\tstability\x18\x01 \x01(\x0e2\x13.apigw.v1.StabilityR\tstability\x12\x1b\n" +
 	"\tdocs_path\x18\x02 \x01(\tR\bdocsPath\x127\n" +
 	"\vdeprecation\x18\x03 \x01(\v2\x15.apigw.v1.DeprecationR\vdeprecation\x12%\n" +
 	"\x0egroup_override\x18\x04 \x01(\tR\rgroupOverride\x12F\n" +
 	"\x0ecustomizations\x18\x05 \x03(\v2\x1e.apigw.v1.OpenAPICustomizationR\x0ecustomizations\x12C\n" +
-	"\x0eschema_patches\x18\x06 \x03(\v2\x1c.apigw.v1.OpenAPISchemaPatchR\rschemaPatches\"\x80\x05\n" +
+	"\x0eschema_patches\x18\x06 \x03(\v2\x1c.apigw.v1.OpenAPISchemaPatchR\rschemaPatches\x12_\n" +
+	"\x17selector_customizations\x18\a \x03(\v2&.apigw.v1.OpenAPISelectorCustomizationR\x16selectorCustomizations\"\x80\x05\n" +
 	"\x0fTerraformEntity\x12G\n" +
 	"\x04type\x18\x01 \x01(\x0e23.apigw.v1.TerraformEntity.TerraformEntityMethodTypeR\x04type\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
@@ -2286,7 +2565,25 @@ const file_apigw_v1_apigw_proto_rawDesc = "" +
 	"\vremove_keys\x18\x04 \x03(\tR\n" +
 	"removeKeys\x129\n" +
 	"\x05scope\x18\x05 \x01(\x0e2#.apigw.v1.OpenAPICustomizationScopeR\x05scope\x12@\n" +
-	"\bentities\x18\x06 \x03(\v2$.apigw.v1.OpenAPICustomizationEntityR\bentities\"n\n" +
+	"\bentities\x18\x06 \x03(\v2$.apigw.v1.OpenAPICustomizationEntityR\bentities\"\xf9\x01\n" +
+	"\x1cOpenAPISelectorCustomization\x125\n" +
+	"\bselector\x18\x01 \x01(\v2\x19.apigw.v1.OpenAPISelectorR\bselector\x12\x10\n" +
+	"\x03key\x18\x02 \x01(\tR\x03key\x12\x1d\n" +
+	"\n" +
+	"value_json\x18\x03 \x01(\tR\tvalueJson\x126\n" +
+	"\x04mode\x18\x04 \x01(\x0e2\".apigw.v1.OpenAPICustomizationModeR\x04mode\x129\n" +
+	"\x05scope\x18\x05 \x01(\x0e2#.apigw.v1.OpenAPICustomizationScopeR\x05scope\".\n" +
+	"\x0fOpenAPISelector\x12\x1b\n" +
+	"\tjson_path\x18\x01 \x01(\tR\bjsonPath\"\xe1\x02\n" +
+	"\x14OpenAPIPropertyPatch\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1f\n" +
+	"\vschema_json\x18\x02 \x01(\tR\n" +
+	"schemaJson\x126\n" +
+	"\x04mode\x18\x03 \x01(\x0e2\".apigw.v1.OpenAPICustomizationModeR\x04mode\x12<\n" +
+	"\x06target\x18\x04 \x01(\x0e2$.apigw.v1.OpenAPICustomizationTargetR\x06target\x12!\n" +
+	"\fjson_pointer\x18\x05 \x01(\tR\vjsonPointer\x129\n" +
+	"\x05scope\x18\x06 \x01(\x0e2#.apigw.v1.OpenAPICustomizationScopeR\x05scope\x12@\n" +
+	"\bentities\x18\a \x03(\v2$.apigw.v1.OpenAPICustomizationEntityR\bentities\"n\n" +
 	"\x1aOpenAPICustomizationEntity\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12<\n" +
 	"\x04kind\x18\x02 \x01(\x0e2(.apigw.v1.OpenAPICustomizationEntityKindR\x04kind*z\n" +
@@ -2345,7 +2642,7 @@ func file_apigw_v1_apigw_proto_rawDescGZIP() []byte {
 }
 
 var file_apigw_v1_apigw_proto_enumTypes = make([]protoimpl.EnumInfo, 11)
-var file_apigw_v1_apigw_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_apigw_v1_apigw_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_apigw_v1_apigw_proto_goTypes = []any{
 	(Stability)(0),                                          // 0: apigw.v1.Stability
 	(Severity)(0),                                           // 1: apigw.v1.Severity
@@ -2377,74 +2674,87 @@ var file_apigw_v1_apigw_proto_goTypes = []any{
 	(*ResponseExample)(nil),                                 // 27: apigw.v1.ResponseExample
 	(*OpenAPICustomization)(nil),                            // 28: apigw.v1.OpenAPICustomization
 	(*OpenAPISchemaPatch)(nil),                              // 29: apigw.v1.OpenAPISchemaPatch
-	(*OpenAPICustomizationEntity)(nil),                      // 30: apigw.v1.OpenAPICustomizationEntity
-	nil,                                                     // 31: apigw.v1.Operation.QueryEntry
-	(*descriptorpb.ServiceOptions)(nil),                     // 32: google.protobuf.ServiceOptions
-	(*descriptorpb.MethodOptions)(nil),                      // 33: google.protobuf.MethodOptions
-	(*descriptorpb.FieldOptions)(nil),                       // 34: google.protobuf.FieldOptions
-	(*descriptorpb.MessageOptions)(nil),                     // 35: google.protobuf.MessageOptions
-	(*descriptorpb.FileOptions)(nil),                        // 36: google.protobuf.FileOptions
+	(*OpenAPISelectorCustomization)(nil),                    // 30: apigw.v1.OpenAPISelectorCustomization
+	(*OpenAPISelector)(nil),                                 // 31: apigw.v1.OpenAPISelector
+	(*OpenAPIPropertyPatch)(nil),                            // 32: apigw.v1.OpenAPIPropertyPatch
+	(*OpenAPICustomizationEntity)(nil),                      // 33: apigw.v1.OpenAPICustomizationEntity
+	nil,                                                     // 34: apigw.v1.Operation.QueryEntry
+	(*descriptorpb.ServiceOptions)(nil),                     // 35: google.protobuf.ServiceOptions
+	(*descriptorpb.MethodOptions)(nil),                      // 36: google.protobuf.MethodOptions
+	(*descriptorpb.FieldOptions)(nil),                       // 37: google.protobuf.FieldOptions
+	(*descriptorpb.MessageOptions)(nil),                     // 38: google.protobuf.MessageOptions
+	(*descriptorpb.FileOptions)(nil),                        // 39: google.protobuf.FileOptions
 }
 var file_apigw_v1_apigw_proto_depIdxs = []int32{
 	13, // 0: apigw.v1.MessageOptions.message_options:type_name -> apigw.v1.MessageOption
 	28, // 1: apigw.v1.FileOptions.customizations:type_name -> apigw.v1.OpenAPICustomization
 	29, // 2: apigw.v1.FileOptions.schema_patches:type_name -> apigw.v1.OpenAPISchemaPatch
-	21, // 3: apigw.v1.MessageOption.terraform_entity:type_name -> apigw.v1.TerraformEntity
-	28, // 4: apigw.v1.MessageOption.customizations:type_name -> apigw.v1.OpenAPICustomization
-	29, // 5: apigw.v1.MessageOption.schema_patches:type_name -> apigw.v1.OpenAPISchemaPatch
-	0,  // 6: apigw.v1.FieldOption.stability:type_name -> apigw.v1.Stability
-	16, // 7: apigw.v1.FieldOption.deprecation:type_name -> apigw.v1.Deprecation
-	28, // 8: apigw.v1.FieldOption.customizations:type_name -> apigw.v1.OpenAPICustomization
-	29, // 9: apigw.v1.FieldOption.schema_patches:type_name -> apigw.v1.OpenAPISchemaPatch
-	14, // 10: apigw.v1.FieldOptions.field_options:type_name -> apigw.v1.FieldOption
-	25, // 11: apigw.v1.MethodOptions.operations:type_name -> apigw.v1.Operation
-	18, // 12: apigw.v1.MethodOptions.delegation:type_name -> apigw.v1.DelegationMeta
-	1,  // 13: apigw.v1.DelegationMeta.privacy_class:type_name -> apigw.v1.Severity
-	1,  // 14: apigw.v1.DelegationMeta.exfil_class:type_name -> apigw.v1.Severity
-	20, // 15: apigw.v1.ServiceOptions.service:type_name -> apigw.v1.Service
-	0,  // 16: apigw.v1.Service.stability:type_name -> apigw.v1.Stability
-	16, // 17: apigw.v1.Service.deprecation:type_name -> apigw.v1.Deprecation
-	28, // 18: apigw.v1.Service.customizations:type_name -> apigw.v1.OpenAPICustomization
-	29, // 19: apigw.v1.Service.schema_patches:type_name -> apigw.v1.OpenAPISchemaPatch
-	6,  // 20: apigw.v1.TerraformEntity.type:type_name -> apigw.v1.TerraformEntity.TerraformEntityMethodType
-	7,  // 21: apigw.v1.TerraformEntity.optional_exclusion:type_name -> apigw.v1.TerraformEntity.OptionalExclusion
-	8,  // 22: apigw.v1.Pagination.type:type_name -> apigw.v1.Pagination.TerraformEntityPaginationType
-	23, // 23: apigw.v1.Pagination.inputs:type_name -> apigw.v1.PaginationInput
-	24, // 24: apigw.v1.Pagination.outputs:type_name -> apigw.v1.PaginationOutput
-	9,  // 25: apigw.v1.PaginationInput.in:type_name -> apigw.v1.PaginationInput.TerraformEntityPaginationInputIn
-	10, // 26: apigw.v1.PaginationInput.type:type_name -> apigw.v1.PaginationInput.TerraformEntityPaginationInputType
-	31, // 27: apigw.v1.Operation.query:type_name -> apigw.v1.Operation.QueryEntry
-	0,  // 28: apigw.v1.Operation.stability:type_name -> apigw.v1.Stability
-	26, // 29: apigw.v1.Operation.request_examples:type_name -> apigw.v1.RequestExample
-	27, // 30: apigw.v1.Operation.response_examples:type_name -> apigw.v1.ResponseExample
-	21, // 31: apigw.v1.Operation.terraform_entity:type_name -> apigw.v1.TerraformEntity
-	22, // 32: apigw.v1.Operation.pagination:type_name -> apigw.v1.Pagination
-	16, // 33: apigw.v1.Operation.deprecation:type_name -> apigw.v1.Deprecation
-	28, // 34: apigw.v1.Operation.customizations:type_name -> apigw.v1.OpenAPICustomization
-	29, // 35: apigw.v1.Operation.schema_patches:type_name -> apigw.v1.OpenAPISchemaPatch
-	3,  // 36: apigw.v1.OpenAPICustomization.target:type_name -> apigw.v1.OpenAPICustomizationTarget
-	4,  // 37: apigw.v1.OpenAPICustomization.scope:type_name -> apigw.v1.OpenAPICustomizationScope
-	5,  // 38: apigw.v1.OpenAPICustomization.mode:type_name -> apigw.v1.OpenAPICustomizationMode
-	30, // 39: apigw.v1.OpenAPICustomization.entities:type_name -> apigw.v1.OpenAPICustomizationEntity
-	3,  // 40: apigw.v1.OpenAPISchemaPatch.target:type_name -> apigw.v1.OpenAPICustomizationTarget
-	4,  // 41: apigw.v1.OpenAPISchemaPatch.scope:type_name -> apigw.v1.OpenAPICustomizationScope
-	30, // 42: apigw.v1.OpenAPISchemaPatch.entities:type_name -> apigw.v1.OpenAPICustomizationEntity
-	2,  // 43: apigw.v1.OpenAPICustomizationEntity.kind:type_name -> apigw.v1.OpenAPICustomizationEntityKind
-	32, // 44: apigw.v1.service:extendee -> google.protobuf.ServiceOptions
-	33, // 45: apigw.v1.method:extendee -> google.protobuf.MethodOptions
-	34, // 46: apigw.v1.field:extendee -> google.protobuf.FieldOptions
-	35, // 47: apigw.v1.message:extendee -> google.protobuf.MessageOptions
-	36, // 48: apigw.v1.file:extendee -> google.protobuf.FileOptions
-	19, // 49: apigw.v1.service:type_name -> apigw.v1.ServiceOptions
-	17, // 50: apigw.v1.method:type_name -> apigw.v1.MethodOptions
-	15, // 51: apigw.v1.field:type_name -> apigw.v1.FieldOptions
-	11, // 52: apigw.v1.message:type_name -> apigw.v1.MessageOptions
-	12, // 53: apigw.v1.file:type_name -> apigw.v1.FileOptions
-	54, // [54:54] is the sub-list for method output_type
-	54, // [54:54] is the sub-list for method input_type
-	49, // [49:54] is the sub-list for extension type_name
-	44, // [44:49] is the sub-list for extension extendee
-	0,  // [0:44] is the sub-list for field type_name
+	30, // 3: apigw.v1.FileOptions.selector_customizations:type_name -> apigw.v1.OpenAPISelectorCustomization
+	21, // 4: apigw.v1.MessageOption.terraform_entity:type_name -> apigw.v1.TerraformEntity
+	28, // 5: apigw.v1.MessageOption.customizations:type_name -> apigw.v1.OpenAPICustomization
+	29, // 6: apigw.v1.MessageOption.schema_patches:type_name -> apigw.v1.OpenAPISchemaPatch
+	32, // 7: apigw.v1.MessageOption.property_patches:type_name -> apigw.v1.OpenAPIPropertyPatch
+	0,  // 8: apigw.v1.FieldOption.stability:type_name -> apigw.v1.Stability
+	16, // 9: apigw.v1.FieldOption.deprecation:type_name -> apigw.v1.Deprecation
+	28, // 10: apigw.v1.FieldOption.customizations:type_name -> apigw.v1.OpenAPICustomization
+	29, // 11: apigw.v1.FieldOption.schema_patches:type_name -> apigw.v1.OpenAPISchemaPatch
+	14, // 12: apigw.v1.FieldOptions.field_options:type_name -> apigw.v1.FieldOption
+	25, // 13: apigw.v1.MethodOptions.operations:type_name -> apigw.v1.Operation
+	18, // 14: apigw.v1.MethodOptions.delegation:type_name -> apigw.v1.DelegationMeta
+	1,  // 15: apigw.v1.DelegationMeta.privacy_class:type_name -> apigw.v1.Severity
+	1,  // 16: apigw.v1.DelegationMeta.exfil_class:type_name -> apigw.v1.Severity
+	20, // 17: apigw.v1.ServiceOptions.service:type_name -> apigw.v1.Service
+	0,  // 18: apigw.v1.Service.stability:type_name -> apigw.v1.Stability
+	16, // 19: apigw.v1.Service.deprecation:type_name -> apigw.v1.Deprecation
+	28, // 20: apigw.v1.Service.customizations:type_name -> apigw.v1.OpenAPICustomization
+	29, // 21: apigw.v1.Service.schema_patches:type_name -> apigw.v1.OpenAPISchemaPatch
+	30, // 22: apigw.v1.Service.selector_customizations:type_name -> apigw.v1.OpenAPISelectorCustomization
+	6,  // 23: apigw.v1.TerraformEntity.type:type_name -> apigw.v1.TerraformEntity.TerraformEntityMethodType
+	7,  // 24: apigw.v1.TerraformEntity.optional_exclusion:type_name -> apigw.v1.TerraformEntity.OptionalExclusion
+	8,  // 25: apigw.v1.Pagination.type:type_name -> apigw.v1.Pagination.TerraformEntityPaginationType
+	23, // 26: apigw.v1.Pagination.inputs:type_name -> apigw.v1.PaginationInput
+	24, // 27: apigw.v1.Pagination.outputs:type_name -> apigw.v1.PaginationOutput
+	9,  // 28: apigw.v1.PaginationInput.in:type_name -> apigw.v1.PaginationInput.TerraformEntityPaginationInputIn
+	10, // 29: apigw.v1.PaginationInput.type:type_name -> apigw.v1.PaginationInput.TerraformEntityPaginationInputType
+	34, // 30: apigw.v1.Operation.query:type_name -> apigw.v1.Operation.QueryEntry
+	0,  // 31: apigw.v1.Operation.stability:type_name -> apigw.v1.Stability
+	26, // 32: apigw.v1.Operation.request_examples:type_name -> apigw.v1.RequestExample
+	27, // 33: apigw.v1.Operation.response_examples:type_name -> apigw.v1.ResponseExample
+	21, // 34: apigw.v1.Operation.terraform_entity:type_name -> apigw.v1.TerraformEntity
+	22, // 35: apigw.v1.Operation.pagination:type_name -> apigw.v1.Pagination
+	16, // 36: apigw.v1.Operation.deprecation:type_name -> apigw.v1.Deprecation
+	28, // 37: apigw.v1.Operation.customizations:type_name -> apigw.v1.OpenAPICustomization
+	29, // 38: apigw.v1.Operation.schema_patches:type_name -> apigw.v1.OpenAPISchemaPatch
+	3,  // 39: apigw.v1.OpenAPICustomization.target:type_name -> apigw.v1.OpenAPICustomizationTarget
+	4,  // 40: apigw.v1.OpenAPICustomization.scope:type_name -> apigw.v1.OpenAPICustomizationScope
+	5,  // 41: apigw.v1.OpenAPICustomization.mode:type_name -> apigw.v1.OpenAPICustomizationMode
+	33, // 42: apigw.v1.OpenAPICustomization.entities:type_name -> apigw.v1.OpenAPICustomizationEntity
+	3,  // 43: apigw.v1.OpenAPISchemaPatch.target:type_name -> apigw.v1.OpenAPICustomizationTarget
+	4,  // 44: apigw.v1.OpenAPISchemaPatch.scope:type_name -> apigw.v1.OpenAPICustomizationScope
+	33, // 45: apigw.v1.OpenAPISchemaPatch.entities:type_name -> apigw.v1.OpenAPICustomizationEntity
+	31, // 46: apigw.v1.OpenAPISelectorCustomization.selector:type_name -> apigw.v1.OpenAPISelector
+	5,  // 47: apigw.v1.OpenAPISelectorCustomization.mode:type_name -> apigw.v1.OpenAPICustomizationMode
+	4,  // 48: apigw.v1.OpenAPISelectorCustomization.scope:type_name -> apigw.v1.OpenAPICustomizationScope
+	5,  // 49: apigw.v1.OpenAPIPropertyPatch.mode:type_name -> apigw.v1.OpenAPICustomizationMode
+	3,  // 50: apigw.v1.OpenAPIPropertyPatch.target:type_name -> apigw.v1.OpenAPICustomizationTarget
+	4,  // 51: apigw.v1.OpenAPIPropertyPatch.scope:type_name -> apigw.v1.OpenAPICustomizationScope
+	33, // 52: apigw.v1.OpenAPIPropertyPatch.entities:type_name -> apigw.v1.OpenAPICustomizationEntity
+	2,  // 53: apigw.v1.OpenAPICustomizationEntity.kind:type_name -> apigw.v1.OpenAPICustomizationEntityKind
+	35, // 54: apigw.v1.service:extendee -> google.protobuf.ServiceOptions
+	36, // 55: apigw.v1.method:extendee -> google.protobuf.MethodOptions
+	37, // 56: apigw.v1.field:extendee -> google.protobuf.FieldOptions
+	38, // 57: apigw.v1.message:extendee -> google.protobuf.MessageOptions
+	39, // 58: apigw.v1.file:extendee -> google.protobuf.FileOptions
+	19, // 59: apigw.v1.service:type_name -> apigw.v1.ServiceOptions
+	17, // 60: apigw.v1.method:type_name -> apigw.v1.MethodOptions
+	15, // 61: apigw.v1.field:type_name -> apigw.v1.FieldOptions
+	11, // 62: apigw.v1.message:type_name -> apigw.v1.MessageOptions
+	12, // 63: apigw.v1.file:type_name -> apigw.v1.FileOptions
+	64, // [64:64] is the sub-list for method output_type
+	64, // [64:64] is the sub-list for method input_type
+	59, // [59:64] is the sub-list for extension type_name
+	54, // [54:59] is the sub-list for extension extendee
+	0,  // [0:54] is the sub-list for field type_name
 }
 
 func init() { file_apigw_v1_apigw_proto_init() }
@@ -2458,7 +2768,7 @@ func file_apigw_v1_apigw_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_apigw_v1_apigw_proto_rawDesc), len(file_apigw_v1_apigw_proto_rawDesc)),
 			NumEnums:      11,
-			NumMessages:   21,
+			NumMessages:   24,
 			NumExtensions: 5,
 			NumServices:   0,
 		},

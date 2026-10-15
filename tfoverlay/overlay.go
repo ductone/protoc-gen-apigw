@@ -42,6 +42,12 @@ const (
 	ChannelExtension Channel = "extension"
 	// ChannelSchema carries a standard OpenAPI/JSON Schema keyword.
 	ChannelSchema Channel = "schema"
+	// ChannelProperty adds or removes one child of a `properties` object. The
+	// operation's pointer addresses the `properties` object, its key is the
+	// property name, and a set carries the property's schema. A set fails if the
+	// property exists and a remove fails if it is absent, so a structural change
+	// is never silently a merge or a no-op.
+	ChannelProperty Channel = "property"
 )
 
 // Mode is how an operation is applied at its destination.
@@ -204,6 +210,9 @@ type Overlay struct {
 	Kind Kind
 	// Operations is kept sorted and deduplicated by Add.
 	Operations []Operation
+	// Selectors are document-wide operations resolved before Operations. See
+	// SelectorOperation.
+	Selectors []SelectorOperation
 }
 
 // Add records op, deduplicating an identical operation and rejecting a
@@ -373,7 +382,7 @@ func sortOperations(ops []Operation) {
 // Empty reports whether there is nothing to emit. An overlay with no
 // operations produces no artifact, so a repository that has not adopted the
 // annotations sees no change in generated output.
-func (o *Overlay) Empty() bool { return o == nil || len(o.Operations) == 0 }
+func (o *Overlay) Empty() bool { return o == nil || len(o.Operations) == 0 && len(o.Selectors) == 0 }
 
 // Merge combines overlays (for example the per-service overlays of a merged
 // document) into one. Identical operations deduplicate; contradictory and
@@ -410,6 +419,11 @@ func Merge(ovs ...*Overlay) (*Overlay, error) {
 			}
 			if len(merged.Operations) > before {
 				origin[opOriginKey(op)] = ov.Source
+			}
+		}
+		for _, sel := range ov.Selectors {
+			if err := merged.AddSelector(sel); err != nil {
+				return nil, fmt.Errorf("merging %s into %s: %w", ov.Source, merged.Source, err)
 			}
 		}
 	}
@@ -453,6 +467,13 @@ func validateOperation(op Operation) error {
 		if !strings.HasPrefix(op.Key, "x-") {
 			return newError(op, ownerLabel(op),
 				"channel %s requires an extension key starting with \"x-\", got %q", op.Channel, op.Key)
+		}
+	case ChannelProperty:
+		if op.Key == "" {
+			return newError(op, ownerLabel(op), "channel %s requires a property name", op.Channel)
+		}
+		if op.Mode == ModeSet && (op.Value == nil || op.Value.Kind != yaml.MappingNode) {
+			return newError(op, ownerLabel(op), "channel %s requires a schema object as the value of property %q", op.Channel, op.Key)
 		}
 	case ChannelSchema:
 		if op.Key == "" {
@@ -878,6 +899,10 @@ func setKey(node *yaml.Node, op Operation) error {
 			op.Key, pointerForDisplay(op.Pointer), nodeKind(node))
 	}
 	if idx := findKey(node, op.Key); idx >= 0 {
+		if op.Channel == ChannelProperty {
+			return newError(op, ownerLabel(op),
+				"cannot add property %q at %s: it already exists", op.Key, pointerForDisplay(op.Pointer))
+		}
 		node.Content[idx+1] = op.Value
 		return nil
 	}
