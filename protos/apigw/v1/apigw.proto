@@ -35,6 +35,8 @@ message MessageOptions {
 message FileOptions {
   repeated OpenAPICustomization customizations = 1;
   repeated OpenAPISchemaPatch schema_patches = 2;
+  // Document-wide selector customizations. See OpenAPISelectorCustomization.
+  repeated OpenAPISelectorCustomization selector_customizations = 3;
 }
 
 message MessageOption {
@@ -58,6 +60,9 @@ message MessageOption {
   // Generic standard OpenAPI/JSON Schema keyword patches for this message
   // schema. See OpenAPISchemaPatch.
   repeated OpenAPISchemaPatch schema_patches = 7;
+  // Adds or removes properties of this message's schema. See
+  // OpenAPIPropertyPatch.
+  repeated OpenAPIPropertyPatch property_patches = 8;
 }
 
 message FieldOption {
@@ -156,6 +161,8 @@ message Service {
   // Generic standard OpenAPI/JSON Schema keyword patches applied to this
   // service document's root. See OpenAPISchemaPatch.
   repeated OpenAPISchemaPatch schema_patches = 6;
+  // Document-wide selector customizations. See OpenAPISelectorCustomization.
+  repeated OpenAPISelectorCustomization selector_customizations = 7;
 }
 
 message TerraformEntity {
@@ -329,6 +336,74 @@ message OpenAPISchemaPatch {
   // Empty means every consumer of the destination. See
   // OpenAPICustomizationEntity.
   repeated OpenAPICustomizationEntity entities = 6;
+}
+
+// OpenAPISelectorCustomization applies one override to every node of the whole
+// document that a selector matches, instead of to one destination. It exists
+// for rules that are a property of the document rather than of one declaration,
+// for example "every property named deletedAt is a soft-delete property".
+//
+// A selector is Terraform-only. It is resolved by the consumer, against the
+// shared spec, in an earlier stage than exact customizations, so an exact
+// customization that writes the same node replaces the selector's write; see
+// the contract. A selector that matches no node is an error when applied.
+message OpenAPISelectorCustomization {
+  OpenAPISelector selector = 1;
+
+  // Key to write on each matched node. Must start with "x-" for a vendor
+  // extension; otherwise it is a standard schema keyword. Required when mode is
+  // SET; must be empty when mode is REMOVE.
+  string key = 2;
+
+  // JSON-encoded scalar value. Required when mode is SET; must be empty for
+  // REMOVE. Only a scalar replaces the existing value under standard Overlay
+  // update semantics, so objects and arrays are rejected.
+  string value_json = 3;
+
+  // SET writes key on each matched node, which must be an object. REMOVE
+  // deletes each matched node from its parent.
+  OpenAPICustomizationMode mode = 4;
+
+  // Must be unspecified or TERRAFORM: the shared document is not rewritten by a
+  // selector.
+  OpenAPICustomizationScope scope = 5;
+}
+
+// OpenAPISelector picks nodes of a document.
+message OpenAPISelector {
+  // An RFC 9535 JSONPath query, used verbatim as the target of the emitted
+  // OpenAPI Overlay action, for example "$..deletedAt" or
+  // "$..[?(@.additionalProperties == true)]". It must not select the document
+  // root.
+  string json_path = 1;
+}
+
+// OpenAPIPropertyPatch adds or removes one property of a schema. It is the
+// structural counterpart of OpenAPISchemaPatch, which sets keywords of a node
+// but cannot add or remove a child of `properties`.
+message OpenAPIPropertyPatch {
+  // Property name as emitted in the document (the JSON name).
+  string name = 1;
+
+  // JSON object holding the property's schema. Required when mode is SET, which
+  // adds the property and fails if it already exists; must be empty for REMOVE,
+  // which fails if the property is absent.
+  string schema_json = 2;
+
+  OpenAPICustomizationMode mode = 3;
+
+  // The schema whose properties change. SCHEMA (the default) is the annotated
+  // message's schema; JSON_POINTER addresses any schema node.
+  OpenAPICustomizationTarget target = 4;
+
+  // Absolute JSON Pointer to the schema node, used with target JSON_POINTER.
+  string json_pointer = 5;
+
+  // Must be unspecified or TERRAFORM.
+  OpenAPICustomizationScope scope = 6;
+
+  // Restricts the patch to the Terraform projection of the named entities.
+  repeated OpenAPICustomizationEntity entities = 7;
 }
 
 // OpenAPICustomizationEntity selects one Terraform entity, as named by

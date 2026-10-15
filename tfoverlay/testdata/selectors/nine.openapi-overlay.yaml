@@ -1,0 +1,37 @@
+overlay: 1.0.0
+info:
+  title: Cycle 3 class (c) actions
+  version: 0.0.0
+actions:
+  - target: $..[?(@.additionalProperties == true)]
+    update:
+      additionalProperties: false
+  - target: $["components"]["schemas"]["c1.api.app.v1.Connector"]["properties"]["config"]
+    update:
+      additionalProperties: true
+  - target: $["components"]["schemas"]["c1.api.app.v1.ConnectorServiceCreateRequestInput"]["properties"]["config"]
+    update:
+      additionalProperties: true
+  - target: $..\@type
+    remove: true
+  - target: $["components"]["schemas"]["c1.api.app.v1.ConnectorServiceCreateRequestInput"]["properties"]["config"]["properties"]
+    update:
+      '@type':
+        description: The type of the serialized message.
+        type: string
+  - target: $["components"]["schemas"]["c1.api.app.v1.Connector"]["properties"]["config"]["properties"]
+    update:
+      '@type':
+        description: The type of the serialized message.
+        type: string
+  - target: $..deletedAt
+    update:
+      x-speakeasy-soft-delete-property: true
+  - target: $["components"]["schemas"]["c1.api.automations.v1.Automation"]["properties"]
+    update:
+      webhookHmacSecret:
+        description: If we create a new trigger with an HMAC secret we return the HMAC on this field
+        readOnly: false
+        type: string
+  - target: $["components"]["schemas"]["c1.api.form.v1.Field"]["properties"]["stringSliceField"]
+    remove: true
