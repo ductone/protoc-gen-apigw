@@ -132,7 +132,7 @@ func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) (
 			return false, err
 		}
 		m.AddGeneratorFile(oasName, oasBuf.String())
-		if err := m.addOverlayFile(f, service.Name().LowerSnakeCase().String(), overlay, oasBuf.Bytes()); err != nil {
+		if err := m.addOverlayFiles(f, service.Name().LowerSnakeCase().String(), overlay, oasBuf.Bytes()); err != nil {
 			return false, err
 		}
 	}
@@ -179,21 +179,33 @@ func (m *Module) renderForcedMessages(ctx pgsgo.Context, f pgs.File) error {
 		return nil
 	}
 	m.AddGeneratorFile(forcedMessageOpenAPIFilename, oasBuf.String())
-	return m.addOverlayFile(f, f.Package().ProtoName().LowerSnakeCase().String(), overlay, oasBuf.Bytes())
+	return m.addOverlayFiles(f, f.Package().ProtoName().LowerSnakeCase().String(), overlay, oasBuf.Bytes())
 }
 
-// addOverlayFile emits the Terraform overlay for one OpenAPI document, an
-// OpenAPI Overlay rendered against that document. An overlay with nothing in
-// it is not emitted.
-func (m *Module) addOverlayFile(f pgs.File, owner string, ov *tfoverlay.Overlay, doc []byte) error {
+// addOverlayFiles emits the Terraform overlay parts for one OpenAPI document:
+// the global part, which standard Overlay tooling applies, and the
+// entity-scoped part, which only tfoverlay applies. A part with nothing in it
+// is not emitted.
+func (m *Module) addOverlayFiles(f pgs.File, owner string, ov *tfoverlay.Overlay, doc []byte) error {
 	if ov.Empty() {
 		return nil
 	}
-	data, err := ov.Render(doc)
+	rendered, err := ov.Render(doc)
 	if err != nil {
 		return err
 	}
-	name := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.%s", owner, tfoverlay.ArtifactSuffix)).String()
-	m.AddGeneratorFile(name, string(data))
+	for _, part := range []struct {
+		suffix string
+		data   []byte
+	}{
+		{tfoverlay.ArtifactSuffix, rendered.Global},
+		{tfoverlay.EntityArtifactSuffix, rendered.Entities},
+	} {
+		if part.data == nil {
+			continue
+		}
+		name := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.%s", owner, part.suffix)).String()
+		m.AddGeneratorFile(name, string(part.data))
+	}
 	return nil
 }

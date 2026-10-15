@@ -1,0 +1,16 @@
+overlay: 1.1.0
+info:
+  title: c1.api.app.v1.AppEntitlements Terraform customizations (entity-scoped; apply with tfoverlay only)
+  version: 0.0.0
+actions:
+  - target: $['components']['schemas']['c1.api.app.v1.AppEntitlement']['properties']['provisionerPolicy']
+    update:
+      x-speakeasy-name-override: provisionPolicy
+    x-apigw-entity:
+      kind: resource
+      name: Custom App Entitlement
+    x-apigw-provenance: field c1.api.app.v1.AppEntitlement.provisioner_policy
+x-apigw-terraform:
+  kind: service
+  part: entities
+  source: c1.api.app.v1.AppEntitlements

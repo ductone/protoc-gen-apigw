@@ -138,6 +138,9 @@ type tfDecl struct {
 	patchSet    []patchField
 	patchRemove []string
 	jsonPointer string
+	// entities restricts the declaration to the Terraform projection of each
+	// named entity. Empty means every consumer of the destination.
+	entities []*tfoverlay.EntityScope
 	// applied records the first pointer the declaration was applied at, which
 	// is only needed for the unconsumed-annotation diagnostic.
 	applied bool
@@ -146,6 +149,22 @@ type tfDecl struct {
 // opsFor expands a declaration into overlay operations at pointer. Every
 // operation carries the declaration's descriptor identity as provenance.
 func (d *tfDecl) opsFor(pointer string) []tfoverlay.Operation {
+	base := d.baseOpsFor(pointer)
+	if len(d.entities) == 0 {
+		return base
+	}
+	scoped := make([]tfoverlay.Operation, 0, len(base)*len(d.entities))
+	for _, entity := range d.entities {
+		for _, op := range base {
+			e := *entity
+			op.Entity = &e
+			scoped = append(scoped, op)
+		}
+	}
+	return scoped
+}
+
+func (d *tfDecl) baseOpsFor(pointer string) []tfoverlay.Operation {
 	if d.patchSet != nil || d.patchRemove != nil {
 		ops := make([]tfoverlay.Operation, 0, len(d.patchSet)+len(d.patchRemove))
 		for _, f := range d.patchSet {
@@ -307,6 +326,13 @@ func (c *tfCollector) emit(decls []*tfDecl, places map[apigw_v1.OpenAPICustomiza
 		if registered.target == apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER {
 			pointer = registered.jsonPointer
 		}
+		if len(registered.entities) > 0 && !inComponentSchemas(pointer) {
+			// The same schema can also be emitted as an HTTP parameter, which is
+			// not an entity-addressable component. The component emission
+			// carries the override; verify fails if there is none.
+			c.blockReason(registered.id, "an entity-scoped annotation needs a destination under /components/schemas, and this document emits the field only as a parameter")
+			continue
+		}
 		for _, op := range registered.opsFor(pointer) {
 			if err := c.active.add(op, registered.scope); err != nil {
 				c.failf("%s: %v", registered.describe, err)
@@ -314,6 +340,13 @@ func (c *tfCollector) emit(decls []*tfDecl, places map[apigw_v1.OpenAPICustomiza
 		}
 		registered.applied = true
 	}
+}
+
+// inComponentSchemas reports whether pointer addresses a node inside a
+// component schema, the only place an entity-scoped override can land.
+func inComponentSchemas(pointer string) bool {
+	tokens, err := tfoverlay.ParsePointer(pointer)
+	return err == nil && len(tokens) >= 3 && tokens[0] == "components" && tokens[1] == "schemas"
 }
 
 // blocked records why a declaration has not been applied anywhere yet.
@@ -406,7 +439,58 @@ func (c *tfCollector) parseCustomization(descriptor string, k tfOwnerKind, base 
 	if _, err := tfoverlay.ParsePointer(d.jsonPointer); err != nil {
 		c.failf("%s: %v", d.describe, err)
 	}
+	d.entities = c.parseEntities(d, cust.GetEntities())
 	return d
+}
+
+// parseEntities validates the entity selector of a declaration. An entity-scoped
+// override is Terraform-only and must land in a component schema, because the
+// projection copies component schemas; anything else has no per-entity copy to
+// land in. apigw does not check that the entity exists: the emitted document may
+// not contain the entity's operations, so the consumer resolves it.
+func (c *tfCollector) parseEntities(d *tfDecl, entities []*apigw_v1.OpenAPICustomizationEntity) []*tfoverlay.EntityScope {
+	if len(entities) == 0 {
+		return nil
+	}
+	if d.scope == apigw_v1.OpenAPICustomizationScope_OPEN_API_CUSTOMIZATION_SCOPE_SHARED {
+		c.failf("%s: entities requires the Terraform scope; the shared document has no entities", d.describe)
+	}
+	switch d.target {
+	case apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_SCHEMA,
+		apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_ARRAY_ITEMS,
+		apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_MAP_VALUES:
+	case apigw_v1.OpenAPICustomizationTarget_OPEN_API_CUSTOMIZATION_TARGET_JSON_POINTER:
+		if !inComponentSchemas(d.jsonPointer) {
+			c.failf("%s: an entity-scoped json_pointer must address a node under /components/schemas/<name>", d.describe)
+		}
+	default:
+		c.failf("%s: target %s cannot be entity-scoped; only component schema destinations can", d.describe, d.target)
+	}
+	scopes := make([]*tfoverlay.EntityScope, 0, len(entities))
+	seen := map[tfoverlay.EntityScope]bool{}
+	for _, entity := range entities {
+		if entity.GetName() == "" {
+			c.failf("%s: an entity selector needs a name", d.describe)
+		}
+		var kind tfoverlay.EntityKind
+		switch entity.GetKind() {
+		case apigw_v1.OpenAPICustomizationEntityKind_OPEN_API_CUSTOMIZATION_ENTITY_KIND_UNSPECIFIED:
+			kind = tfoverlay.EntityKindAny
+		case apigw_v1.OpenAPICustomizationEntityKind_OPEN_API_CUSTOMIZATION_ENTITY_KIND_RESOURCE:
+			kind = tfoverlay.EntityKindResource
+		case apigw_v1.OpenAPICustomizationEntityKind_OPEN_API_CUSTOMIZATION_ENTITY_KIND_DATA_SOURCE:
+			kind = tfoverlay.EntityKindDataSource
+		default:
+			c.failf("%s: entity %q has unknown kind %v", d.describe, entity.GetName(), entity.GetKind())
+		}
+		scope := tfoverlay.EntityScope{Name: entity.GetName(), Kind: kind}
+		if seen[scope] {
+			c.failf("%s: duplicate entity selector %s", d.describe, scope.String())
+		}
+		seen[scope] = true
+		scopes = append(scopes, &scope)
+	}
+	return scopes
 }
 
 func (c *tfCollector) parsePatch(descriptor string, k tfOwnerKind, base string, index int, patch *apigw_v1.OpenAPISchemaPatch) *tfDecl {
@@ -468,6 +552,7 @@ func (c *tfCollector) parsePatch(descriptor string, k tfOwnerKind, base string, 
 	if len(d.patchSet) == 0 && len(d.patchRemove) == 0 {
 		c.failf("%s: a schema patch needs patch_json or remove_keys", d.describe)
 	}
+	d.entities = c.parseEntities(d, patch.GetEntities())
 	return d
 }
 

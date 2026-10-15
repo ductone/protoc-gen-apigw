@@ -1,0 +1,149 @@
+openapi: 3.1.0
+info:
+  title: Reduced IGA-4347 Terraform input
+  version: 0.0.0
+paths:
+  /api/v1/apps/{app_id}/entitlements:
+    post:
+      operationId: c1.api.app.v1.AppEntitlements.Create
+      x-speakeasy-entity-operation: Custom App Entitlement#create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/c1.api.app.v1.CreateAppEntitlementRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/c1.api.app.v1.CreateAppEntitlementResponse'
+  /api/v1/apps/{app_id}/entitlements/{id}:
+    get:
+      operationId: c1.api.app.v1.AppEntitlements.Get
+      x-speakeasy-entity-operation:
+        terraform-datasource: null
+        terraform-resource: Custom App Entitlement#read
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/c1.api.app.v1.GetAppEntitlementResponse'
+    post:
+      operationId: c1.api.app.v1.AppEntitlements.Update
+      x-speakeasy-entity-operation: Custom App Entitlement#update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/c1.api.app.v1.UpdateAppEntitlementRequestInput'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/c1.api.app.v1.UpdateAppEntitlementResponse'
+    delete:
+      operationId: c1.api.app.v1.AppEntitlements.Delete
+      x-speakeasy-entity-operation: Custom App Entitlement#delete
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/search/entitlements:
+    post:
+      operationId: c1.api.attribute.v1.Search.SearchEntitlements
+      x-speakeasy-entity-operation: App Entitlement#read
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/c1.api.app.v1.SearchAppEntitlementsResponse'
+components:
+  schemas:
+    c1.api.policy.v1.ProvisionPolicy:
+      type: object
+      properties:
+        action:
+          type: string
+    c1.api.app.v1.AppEntitlement:
+      type: object
+      title: App Entitlement
+      x-speakeasy-entity:
+        - App Entitlement
+        - Custom App Entitlement
+      x-speakeasy-name-override: AppEntitlement
+      properties:
+        id:
+          type: string
+        appResourceId:
+          type: string
+          x-speakeasy-param-force-new: true
+        provisionerPolicy:
+          oneOf:
+            - $ref: '#/components/schemas/c1.api.policy.v1.ProvisionPolicy'
+            - type: 'null'
+        deprovisionerPolicy:
+          allOf:
+            - $ref: '#/components/schemas/c1.api.policy.v1.ProvisionPolicy'
+            - x-speakeasy-name-override: deprovisionerPolicy
+    c1.api.app.v1.AppEntitlementView:
+      type: object
+      properties:
+        appEntitlement:
+          oneOf:
+            - $ref: '#/components/schemas/c1.api.app.v1.AppEntitlement'
+            - type: 'null'
+    c1.api.app.v1.CreateAppEntitlementRequest:
+      type: object
+      properties:
+        provisionPolicy:
+          oneOf:
+            - $ref: '#/components/schemas/c1.api.policy.v1.ProvisionPolicy'
+            - type: 'null'
+    c1.api.app.v1.CreateAppEntitlementResponse:
+      type: object
+      properties:
+        appEntitlementView:
+          oneOf:
+            - $ref: '#/components/schemas/c1.api.app.v1.AppEntitlementView'
+            - type: 'null'
+    c1.api.app.v1.GetAppEntitlementResponse:
+      type: object
+      properties:
+        appEntitlementView:
+          oneOf:
+            - $ref: '#/components/schemas/c1.api.app.v1.AppEntitlementView'
+            - type: 'null'
+    c1.api.app.v1.UpdateAppEntitlementResponse:
+      type: object
+      properties:
+        appEntitlementView:
+          oneOf:
+            - $ref: '#/components/schemas/c1.api.app.v1.AppEntitlementView'
+            - type: 'null'
+    c1.api.app.v1.UpdateAppEntitlementRequestInput:
+      type: object
+      properties:
+        entitlement:
+          oneOf:
+            - $ref: '#/components/schemas/c1.api.app.v1.AppEntitlement'
+            - type: 'null'
+    c1.api.app.v1.SearchAppEntitlementsResponse:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/c1.api.app.v1.AppEntitlementView'
+    c1.api.requestcatalog.v1.RequestCatalog:
+      type: object
+      properties:
+        entitlements:
+          type: array
+          items:
+            $ref: '#/components/schemas/c1.api.app.v1.AppEntitlement'

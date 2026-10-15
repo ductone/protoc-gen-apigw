@@ -17,13 +17,14 @@ into the shared document would rename public SDK symbols, so Terraform-scoped
 overrides travel beside the document instead:
 
 ```
-proto annotations ──▶ protoc-gen-apigw ──┬──▶ <pkg>.<service>.oas31.yaml             (shared, unchanged)
-                                         └──▶ <pkg>.<service>.terraform_overlay.yaml (Terraform only)
+proto annotations ──▶ protoc-gen-apigw ──┬──▶ <pkg>.<service>.oas31.yaml                     (shared, unchanged)
+                                         ├──▶ <pkg>.<service>.terraform_overlay.yaml         (Terraform only)
+                                         └──▶ <pkg>.<service>.terraform_entity_overlay.yaml  (Terraform only, per entity)
 ```
 
-The companion artifact is an [OpenAPI Overlay 1.1.0](https://spec.openapis.org/overlay/v1.1.0.html)
-document. A consumer (a spec aggregation step, then the provider-generation
-pipeline) applies it to the merged OpenAPI document immediately before
+Both artifacts are [OpenAPI Overlay 1.1.0](https://spec.openapis.org/overlay/v1.1.0.html)
+documents. A consumer (a spec aggregation step, then the provider-generation
+pipeline) applies them to the merged OpenAPI document immediately before
 invoking the Terraform generator, and not to the document it publishes.
 
 ## Proto surface
@@ -46,6 +47,9 @@ Five annotation owner kinds, each carrying the same two lists:
 | message | `(apigw.v1.message).message_options[]` | `customizations` (6), `schema_patches` (7) |
 | field | `(apigw.v1.field).field_options[]` | `customizations` (6), `schema_patches` (7) |
 
+Both lists accept an optional `entities` selector that restricts an override to
+one Terraform entity; see [Entity scope](#entity-scope).
+
 Note that `operations[]` is a repeated field but the generator emits only
 `operations[0]` today. An annotation on `operations[1..]` is therefore a
 generation error, not a silent drop, until the generator emits every operation.
@@ -63,6 +67,7 @@ message OpenAPICustomization {
   string json_pointer = 4;           // RFC 6901, absolute in the emitted document
   OpenAPICustomizationScope scope = 5;
   OpenAPICustomizationMode mode = 6;
+  repeated OpenAPICustomizationEntity entities = 7;  // empty = every consumer
 }
 ```
 
@@ -75,6 +80,7 @@ message OpenAPISchemaPatch {
   string patch_json = 3;             // JSON object of schema keywords to set
   repeated string remove_keys = 4;   // schema keywords to remove
   OpenAPICustomizationScope scope = 5;
+  repeated OpenAPICustomizationEntity entities = 6;  // empty = every consumer
 }
 ```
 
@@ -107,6 +113,24 @@ message Book {
     }
   }];
 
+  // A rename that applies to one Terraform entity only. The Book component is
+  // also the schema of a second entity, "Archived Book". Without `entities`
+  // the same annotation would rename the property in every entity that reaches
+  // the Book component through $ref, including entities whose attribute must
+  // not change. The value is data: the contract guarantees it reaches the
+  // overlay at this property's pointer, not that the pinned generator derives
+  // a particular attribute name from it.
+  string author = 2 [(apigw.v1.field).field_options = {
+    customizations: {
+      key: "x-speakeasy-name-override"
+      value_json: "\"writer\""
+      entities: {
+        name: "Archived Book"
+        kind: OPEN_API_CUSTOMIZATION_ENTITY_KIND_RESOURCE
+      }
+    }
+  }];
+
   // Standard schema keywords go through the patch channel.
   repeated string quotes = 3 [(apigw.v1.field).field_options = {
     schema_patches: {
@@ -116,9 +140,9 @@ message Book {
 }
 ```
 
-An `x-speakeasy-name-override` on a shared message's field renames that
-property for every entity that reaches the component. That is a global change
-by construction.
+An *unscoped* `x-speakeasy-name-override` on a shared message's field renames
+that property for every entity that reaches the component. That is a global
+change by construction; use `entities` when only one entity should change.
 
 ## Value model
 
@@ -261,21 +285,28 @@ identical output.
 
 ## Overlay artifact
 
-For each emitted OpenAPI document, `protoc-gen-apigw` emits one companion
-artifact beside it:
+For each emitted OpenAPI document, `protoc-gen-apigw` emits up to two companion
+artifacts beside it. A part with nothing in it is not emitted.
 
-| OpenAPI artifact | Overlay artifact |
-| --- | --- |
-| `<dir>/<base>.<service>.oas31.yaml` | `<dir>/<base>.<service>.terraform_overlay.yaml` |
-| `<dir>/<base>.<package>.oas31.yaml` | `<dir>/<base>.<package>.terraform_overlay.yaml` |
+| OpenAPI artifact | Global part | Entity part |
+| --- | --- | --- |
+| `<dir>/<base>.<service>.oas31.yaml` | `<dir>/<base>.<service>.terraform_overlay.yaml` | `<dir>/<base>.<service>.terraform_entity_overlay.yaml` |
+| `<dir>/<base>.<package>.oas31.yaml` | `<dir>/<base>.<package>.terraform_overlay.yaml` | `<dir>/<base>.<package>.terraform_entity_overlay.yaml` |
 
-It is an **[OpenAPI Overlay 1.1.0](https://spec.openapis.org/overlay/v1.1.0.html)
-document** whose targets are [RFC 9535](https://www.rfc-editor.org/rfc/rfc9535)
-JSONPath queries. Standard tooling, for example `speakeasy overlay apply` or the
-[`speakeasy-api/openapi` overlay package](https://github.com/speakeasy-api/openapi/tree/main/overlay),
-applies it directly, and gets exactly the document `tfoverlay` computes:
-`VerifyStandard` checks that equality against the document the overlay is
-applied to.
+Both are **[OpenAPI Overlay 1.1.0](https://spec.openapis.org/overlay/v1.1.0.html)
+documents** whose targets are [RFC 9535](https://www.rfc-editor.org/rfc/rfc9535)
+JSONPath queries.
+
+- The **global part** holds global operations. Standard tooling,
+  for example `speakeasy overlay apply` or the
+  [`speakeasy-api/openapi` overlay package](https://github.com/speakeasy-api/openapi/tree/main/overlay),
+  applies it directly, and gets exactly the document `tfoverlay` computes:
+  `VerifyStandard` checks that equality against the document the overlay is
+  applied to.
+- The **entity part** holds entity-scoped operations. A generic Overlay tool would
+  apply them to every entity that reaches the component, so only `ApplyTerraform`
+  may consume it. Its title says so, and `x-apigw-terraform.part: entities`
+  marks it.
 
 No artifact is emitted for a document that has no operations, so a repository
 that has not adopted the annotations sees no new files.
@@ -305,6 +336,7 @@ actions:
     x-apigw-provenance: method bookstore.v1.BookstoreService.GetBook
 x-apigw-terraform:
   kind: service
+  part: global
   source: bookstore.v1.BookstoreService
 ```
 
@@ -326,8 +358,10 @@ How an operation is spelled:
 - Operations are written in canonical order `(pointer, channel, key)`.
 - `x-apigw-provenance` is the descriptor identity of the annotation that produced
   the action. It is advisory metadata, never interpreted.
-- `x-apigw-terraform` records the owning `source` and its `kind` (`service` or
-  `package`).
+- `x-apigw-entity` (entity part only) restricts the action to one Terraform entity.
+  See [Entity scope](#entity-scope).
+- `x-apigw-terraform` records the owning `source`, its `kind` (`service` or
+  `package`) and the `part`.
 
 Rendering needs the document the overlay applies to, because whether a set needs
 its `remove` depends on what the destination holds. Two runs over identical input
@@ -337,15 +371,19 @@ produce identical bytes.
 
 The format is read and written through the importable Go package
 `github.com/ductone/protoc-gen-apigw/tfoverlay`, which also holds the checks
-the Overlay Specification does not define (conflicts and overlaps):
+the Overlay Specification does not define (conflicts, overlaps and entity
+projection):
 
 | Function | Contract |
 | --- | --- |
-| `Parse([]byte) (*Overlay, error)` | Read an artifact. Strict: an action shape `Render` does not produce (a `copy`, an update of several keys, an exact target that is not a normalized path, an unknown extension), a duplicate mapping key, a wrong Overlay version and a trailing second YAML document are all errors. Parsed operations go through the same validation as generated ones, so a duplicate, contradictory or overlapping set is rejected here. |
+| `Parse([]byte) (*Overlay, error)` | Read either part. Strict: an action shape `Render` does not produce (a `copy`, an update of several keys, an exact target that is not a normalized path, an unknown extension), a duplicate mapping key, a wrong Overlay version and a trailing second YAML document are all errors. Parsed operations go through the same validation as generated ones, so a duplicate, contradictory or overlapping set is rejected here. |
 | `Merge(...*Overlay) (*Overlay, error)` | Combine the per-service overlays of a merged document. Identical operations deduplicate; contradictory and overlapping ones fail with **both** contributing sources named, never only the incoming one. |
-| `(*Overlay).Render(doc []byte) ([]byte, error)` | Write the artifact, spelled against `doc`. |
-| `VerifyStandard(doc []byte, ov *Overlay) error` | Apply the rendered artifact to `doc` with the Speakeasy Overlay implementation in strict mode and require the same document as `Apply`. A consumer runs it on the merged document. |
-| `Apply(doc []byte, ops []Operation) ([]byte, error)` | Validate the list as a whole, then apply **its canonical deduplicated form**. Both entrypoints operate on that same list, so two identical `remove` operations are accepted by both and remove the key once. A list that is internally contradictory or overlapping fails, so a caller cannot get an order-dependent result by forgetting `Merge`. A pointer that does not resolve, a destination that is not an object, or a `remove` of an absent key is an error. |
+| `(*Overlay).Render(doc []byte) (*Rendered, error)` | Write the global and entity parts, spelled against `doc`. |
+| `VerifyStandard(doc []byte, ov *Overlay) error` | Apply the rendered global part to `doc` with the Speakeasy Overlay implementation in strict mode and require the same document as `Apply`. A consumer runs it on the merged document. |
+| `ApplyTerraform(doc []byte, ops []Operation) ([]byte, *ProjectionReport, error)` | Apply a list that may hold entity-scoped operations: global operations first, then each entity's operations on that entity's projection. See [Entity scope](#entity-scope). |
+| `ProjectionOverlay(title string, before, after []byte) ([]byte, error)` | Express a projection (or any change) as a standard Overlay generated by the Speakeasy comparison, checked to reproduce `after` from `before`. |
+| `ValidateTerraform(doc []byte, ops []Operation) error` | `Validate` for global operations; for scoped operations, checks that the destination resolves to an object. Reachability from the entity is decided by `ApplyTerraform`. |
+| `Apply(doc []byte, ops []Operation) ([]byte, error)` | Validate the list as a whole, then apply **its canonical deduplicated form**. Both entrypoints operate on that same list, so two identical `remove` operations are accepted by both and remove the key once. A list that is internally contradictory or overlapping fails, so a caller cannot get an order-dependent result by forgetting `Merge`. An entity-scoped operation is rejected ("use ApplyTerraform") so a scoped override can never be applied globally by accident. A pointer that does not resolve, a destination that is not an object, or a `remove` of an absent key is an error. |
 | `Validate(doc []byte, ops []Operation) error` | The same checks on the same canonical list, without modifying the document: whole-list consistency and an object destination. A list `Validate` accepts is a list `Apply` can perform. |
 
 Validating one list and applying another is the bug class this rules out:
@@ -372,6 +410,143 @@ absolute in the service document and stay valid in the merged document because
 `apigw` derives component names and paths itself and the merger concatenates
 both `/paths` and `/components/schemas`; two services that contribute the same
 pointer and key must therefore agree, which `Merge` enforces.
+
+## Entity scope
+
+An override addressed at a schema component lands in every entity that reaches
+the component through `$ref`. `entities` restricts it to one entity's
+projection of the document. Scope and entity scope are independent dimensions
+of every customization: `scope` says *which output*, `entities` says *which
+consumers within the Terraform output*.
+
+```proto
+message OpenAPICustomizationEntity {
+  string name = 1;                            // exact x-speakeasy-entity name
+  OpenAPICustomizationEntityKind kind = 2;    // unspecified | resource | data source
+}
+```
+
+Generation-time rules (a violation is a generation error):
+
+- A non-empty `entities` requires the Terraform scope. The shared document has
+  no entities.
+- The destination must be inside `/components/schemas/<name>`: a field `SCHEMA`,
+  `ARRAY_ITEMS` or `MAP_VALUES`, a message `SCHEMA`, or a `JSON_POINTER` below
+  `/components/schemas/<name>`. Operation, parameter and document-root targets
+  are rejected, because an operation already belongs to specific entities.
+- `name` must be non-empty, `kind` must be known, and a `(name, kind)` pair may
+  appear once per annotation.
+- apigw does **not** check that the entity exists: one emitted document may not
+  contain the entity's operations. The consumer resolves the entity.
+- A field emitted only as an HTTP parameter in a document carries no scoped
+  operation there; generation fails if no document applies the annotation.
+
+Each entity selector produces one action in the **entity part**, which carries
+an `x-apigw-entity` mapping (`kind` is omitted when it addresses both the
+resource and the data source):
+
+```yaml
+overlay: 1.1.0
+info:
+  title: bookstore.v1.BookstoreService Terraform customizations (entity-scoped; apply with tfoverlay only)
+  version: 0.0.0
+actions:
+  - target: $['components']['schemas']['bookstore.v1.Book']['properties']['author']
+    update:
+      x-speakeasy-name-override: writer
+    x-apigw-entity:
+      kind: resource
+      name: Archived Book
+    x-apigw-provenance: field bookstore.v1.Book.author
+x-apigw-terraform:
+  kind: service
+  part: entities
+  source: bookstore.v1.BookstoreService
+```
+
+Global and entity actions never share a file, so a consumer that applies the
+global part with standard tooling cannot apply a scoped override to every
+entity by accident. `Parse` rejects an entity action in the global part and a
+global action in the entity part.
+
+### Conflicts
+
+Conflict and overlap detection is per entity scope:
+
+| Case | Rule |
+| --- | --- |
+| Two global operations | Unchanged. |
+| Global and scoped at the same destination and key | Allowed. Global operations apply first, the entity's copy inherits them, and the scoped operation replaces the value on that copy only. |
+| Two scoped operations, same entity, same destination and key | Identical values deduplicate; different values are an error naming both owners. |
+| Scoped operations, same entity, overlapping destinations | Error, by the same token-aware rule, evaluated per entity. |
+| Scoped operations for different entities at one destination | Never a conflict. They land on different copies. |
+| An unspecified-kind selector and a kind selector of one entity | Treated as the same entity: differing values are an error. |
+| A resource and a data source of one entity that share operations and receive differing operations | An error in `ApplyTerraform`. They cannot be customized differently yet. |
+
+### Projection: `ApplyTerraform`
+
+`ApplyTerraform` runs on the final Terraform input document, after every
+provider-side overlay, and before the Terraform generator. It builds the minimal
+projection of each entity named by a scoped operation:
+
+1. Apply the global operations, so every copy inherits them.
+2. Find the entity's operations: those whose `x-speakeasy-entity-operation`
+   names it. The scalar and list forms bind the resource, and the data source
+   too when they include `read`; the object form binds each construct
+   separately, and `null` suppresses one. A kind selector with an operation that
+   also serves the other kind is an error ("cannot split resource and data
+   source that share operation"); give the operation an explicit
+   `terraform-resource` or `terraform-datasource` of `null`, or scope the
+   override to the whole entity.
+3. Find the entity's root schema: exactly one component whose
+   `x-speakeasy-entity` contains the name.
+4. Find the spine: the components on a path from the entity's request and
+   successful response schemas to a destination component. A destination the
+   entity cannot reach is an error, because the override would do nothing.
+5. Copy on write. A spine component is edited in place only when every referrer
+   is the entity's operations or another in-place spine component; otherwise it
+   is copied, and a cycle containing an externally referenced member is copied
+   whole. Components below the destination stay shared.
+   A copy is named `<key>.tf.<EntityName>` (for example
+   `bookstore.v1.Book.tf.ArchivedBook`) and gets
+   `x-speakeasy-name-override: <existing override or short name><EntityName>`. A
+   collision with an existing key or override is an error.
+6. Rewrite the `$ref`s and discriminator mappings of spine components and of the
+   entity's operations to the copies.
+7. Move the entity binding. The copy of the root schema carries
+   `x-speakeasy-entity: <name>`; the name is removed from the original, and a
+   one-element list collapses to a string.
+8. Apply the entity's operations at the copies' pointers.
+
+The returned `ProjectionReport` lists, per entity, the operations, the copies,
+the in-place components, the rebinding and the pointer rewrites, so CI can
+compare a projection with an expectation.
+
+The result is a pure function of the document and the operation set: entities
+are processed in name order and components in key order, and permuting the
+operations cannot change the output. Applying the same operations to a
+projection's own output fails, because the destination is no longer reachable
+from the entity's operations; apply once, to the unprojected document.
+
+**A projection changes generated SDK types.** The entity's operations are
+re-pointed at the copies, so the generator emits new types for them and the
+types those operations used before no longer apply to them. A hand-written
+caller that shares those operations with the projected entity (for example a
+resource listed in `.genignore` that calls the same SDK operations) stops
+compiling or changes behavior and must be updated alongside the projection. The
+projection never changes any other operation or any other entity's schema.
+
+The `cmd/tfoverlay` command wraps these functions for builds and CI:
+
+```
+tfoverlay merge    -spec openapi.yaml -o merged.yaml -entities merged.entities.yaml a.terraform_overlay.yaml b.terraform_entity_overlay.yaml
+tfoverlay validate -spec openapi.yaml merged.yaml merged.entities.yaml
+tfoverlay apply    -spec openapi.yaml -o terraform.yaml -report report.json -projection-overlay projection.yaml merged.yaml merged.entities.yaml
+```
+
+`merge` and `validate` run `VerifyStandard` on the global part. `apply
+-projection-overlay` writes the change from the spec to the output as a standard
+Overlay, so the projection can be reviewed and applied with standard tooling.
 
 ## Scope
 
@@ -406,11 +581,19 @@ document.
 | Canonical ordering; standard Overlay rendering, replace pairs, normalized paths and round trip; Speakeasy application equals `Apply` | `tfoverlay.TestOverlayNormalizeIsOrderIndependent`, `tfoverlay.TestRenderMatchesStandardApplication`, `tfoverlay.TestNormalizedPathRoundTrip` |
 | Operation validation (keys, channels, modes, pointers) | `tfoverlay.TestOverlayValidateOperation` |
 | Cross-document merge, root conflicts, schema conflicts, both-source diagnostics | `tfoverlay.TestMerge`, `tfoverlay.TestMergeNamesBothSources` |
-| Artifact strictness: shapes `Render` does not produce, unknown extensions, versions, duplicate keys, trailing documents | `tfoverlay.TestParseRejectsShapesRenderDoesNotProduce` |
+| Artifact strictness: shapes `Render` does not produce, unknown extensions, versions, duplicate keys, trailing documents | `tfoverlay.TestParseRejectsShapesRenderDoesNotProduce`, `tfoverlay.TestEntityPartFormat` |
 | Entrypoints reject inconsistent lists and non-object destinations | `tfoverlay.TestApplyAndValidateRejectInconsistentLists`, `tfoverlay.TestValidateRequiresObjectDestination` |
 | Structured errors and per-operation provenance | `tfoverlay.TestErrorsAreStructured` |
 | Duplicate operations behave identically through every entrypoint | `tfoverlay.TestDuplicateOperationsHaveEntrypointParity` |
 | Apply and validate against a document, order independence | `tfoverlay.TestApply`, `tfoverlay.TestValidate` |
+| Entity selector validation and scoped operation emission | `apigw.TestEntitySelectorValidation`, `apigw.TestEntityScopedAnnotationEmitsScopedOperations`, `apigw.TestEntityScopedAnnotationAtAParameterIsNotApplied`, `apigw.TestEntityScopedAndSharedOperationsAtOneDestinationCoexist`, `apigw.TestFinishDocumentChecksScopedDestinations` |
+| Entity part format, separation from the global part, committed artifacts round-trip | `tfoverlay.TestEntityPartFormat`, `tfoverlay.TestVerifyStandardRejectsEntityOperations` |
+| Per-entity conflicts and merge | `tfoverlay.TestEntityScopedConflicts` |
+| Projection equals the hand-written reference overlay applied by Speakeasy when two entities share a component, and is expressible as a generated standard overlay; other entities untouched | `tfoverlay.TestApplyTerraformMatchesTheReferenceProjection` |
+| Determinism under every operation order, precedence, inheritance, cycles, discriminators | `tfoverlay.TestApplyTerraformIsDeterministic`, `tfoverlay.TestApplyTerraformPrecedenceAndInheritance`, `tfoverlay.TestApplyTerraformScopedRemoveOfGlobalKey`, `tfoverlay.TestApplyTerraformClonesAWholeCycle` |
+| Projection errors: unknown entity, split kinds, unreachable or unresolved destination, collisions | `tfoverlay.TestApplyTerraformProjectionErrors`, `tfoverlay.TestApplyTerraformCollidingCloneIsAnError`, `tfoverlay.TestApplyTerraformReapplicationIsRejected` |
+| `Apply` and `Validate` reject scoped operations | `tfoverlay.TestApplyAndValidateRejectScopedOperations` |
+| Command line | `cmd/tfoverlay` tests |
 | Declaration validation: keys, values, pointers, owner/target legality | `apigw.TestCustomizationDeclarationValidation`, `apigw.TestSchemaPatchDeclarationValidation` |
 | Unapplied annotations fail, with a reason | `apigw.TestUnappliedAnnotationsFailGeneration`, `apigw.TestUnappliedAnnotationReportsReason` |
 | Every documented destination, and the full emitted operation list | `apigw.TestAnnotationTransportOverlay` |

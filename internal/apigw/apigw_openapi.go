@@ -726,14 +726,14 @@ func documentRootPlaces() map[apigw_v1.OpenAPICustomizationTarget]string {
 // proves every Terraform-scoped destination resolves in it.
 //
 // A Terraform-scoped operation is never applied here: the consumer applies it
-// to the merged document with tfoverlay.Apply, so the document this function
+// to the merged document with tfoverlay.ApplyTerraform, so the document this function
 // returns for a Terraform-scoped annotation is the one the consumer will apply
 // the overlay to.
 func (module *Module) finishDocument(spec []byte, ov *docOverlay) ([]byte, error) {
 	if ov == nil {
 		return spec, nil
 	}
-	if err := tfoverlay.Validate(spec, ov.terraform.Operations); err != nil {
+	if err := tfoverlay.ValidateTerraform(spec, ov.terraform.Operations); err != nil {
 		return nil, fmt.Errorf("apigw: terraform customization does not resolve: %w", err)
 	}
 	if ov.shared.Empty() {

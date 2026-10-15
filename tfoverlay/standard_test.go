@@ -65,7 +65,7 @@ func TestRenderMatchesStandardApplication(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	text := string(rendered)
+	text := string(rendered.Global)
 	if got := strings.Count(text, "x-apigw-replace: true"); got != 3 {
 		t.Errorf("replace pairs = %d, want 3 (array, object, type change):\n%s", got, text)
 	}
@@ -79,7 +79,7 @@ func TestRenderMatchesStandardApplication(t *testing.T) {
 		}
 	}
 
-	parsed, err := Parse(rendered)
+	parsed, err := Parse(rendered.Global)
 	if err != nil {
 		t.Fatalf("Parse: %v\n%s", err, text)
 	}
@@ -87,8 +87,8 @@ func TestRenderMatchesStandardApplication(t *testing.T) {
 		t.Fatalf("parsed %d operations, want %d", len(parsed.Operations), len(ops))
 	}
 	again, err := parsed.Render([]byte(standardDocument))
-	if err != nil || string(again) != text {
-		t.Fatalf("round trip differs (%v):\n%s\n---\n%s", err, text, again)
+	if err != nil || string(again.Global) != text {
+		t.Fatalf("round trip differs (%v):\n%s\n---\n%s", err, text, again.Global)
 	}
 }
 
@@ -127,14 +127,15 @@ func TestParseRejectsShapesRenderDoesNotProduce(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	valid := string(rendered)
+	valid := string(rendered.Global)
 	if _, err := Parse([]byte(valid)); err != nil {
 		t.Fatalf("Parse(valid): %v", err)
 	}
 	for name, mutate := range map[string]func(string) string{
 		"overlay 1.0.0":          func(s string) string { return strings.Replace(s, "overlay: 1.1.0", "overlay: 1.0.0", 1) },
 		"legacy JSONPath":        func(s string) string { return s + "x-speakeasy-jsonpath: legacy\n" },
-		"unknown metadata field": func(s string) string { return strings.Replace(s, "kind: service", "kind: service\n  other: x", 1) },
+		"unknown metadata field": func(s string) string { return strings.Replace(s, "part: global", "part: global\n  other: x", 1) },
+		"unknown part":           func(s string) string { return strings.Replace(s, "part: global", "part: both", 1) },
 		"unknown kind":           func(s string) string { return strings.Replace(s, "kind: service", "kind: table", 1) },
 		"copy action": func(s string) string {
 			return strings.Replace(s, "actions:\n", "actions:\n  - target: $['a']\n    copy: $['b']\n", 1)
@@ -156,5 +157,20 @@ func TestParseRejectsShapesRenderDoesNotProduce(t *testing.T) {
 		if _, err := Parse([]byte(mutate(valid))); err == nil {
 			t.Errorf("%s: Parse accepted the artifact", name)
 		}
+	}
+}
+
+func TestVerifyStandardRejectsEntityOperations(t *testing.T) {
+	ov := &Overlay{}
+	scoped := op(t, "/components/schemas/Thing", "x-a", ModeSet, `1`)
+	scoped.Entity = &EntityScope{Name: "Thing"}
+	if err := ov.Add(scoped); err != nil {
+		t.Fatal(err)
+	}
+	if err := VerifyStandard([]byte(standardDocument), ov); err == nil {
+		t.Fatal("VerifyStandard accepted an entity-scoped operation")
+	}
+	if got := ov.Global(); len(got.Operations) != 0 {
+		t.Fatalf("Global kept %d entity-scoped operations", len(got.Operations))
 	}
 }

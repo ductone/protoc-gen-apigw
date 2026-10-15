@@ -1,0 +1,55 @@
+# The reduced IGA-4347 projection, written by hand as an OpenAPI Overlay in the
+# shape of the gate G1 projection. Applying it to spec.yaml must give a document
+# semantically equal to ApplyTerraform(spec.yaml, scoped.overlay.yaml).
+overlay: 1.0.0
+info:
+  title: Reduced IGA-4347 projection
+  version: 0.0.0
+actions:
+  - target: $["components"]["schemas"]["c1.api.app.v1.AppEntitlement"]["x-speakeasy-entity"]
+    remove: true
+  - target: $["components"]["schemas"]["c1.api.app.v1.AppEntitlement"]
+    update:
+      x-speakeasy-entity: App Entitlement
+  - target: $["components"]["schemas"]
+    update:
+      c1.api.app.v1.AppEntitlement.tf.CustomAppEntitlement:
+        type: object
+        title: App Entitlement
+        x-speakeasy-entity: Custom App Entitlement
+        x-speakeasy-name-override: AppEntitlementCustomAppEntitlement
+        properties:
+          id:
+            type: string
+          appResourceId:
+            type: string
+            x-speakeasy-param-force-new: true
+          provisionerPolicy:
+            oneOf:
+              - $ref: '#/components/schemas/c1.api.policy.v1.ProvisionPolicy'
+              - type: 'null'
+            x-speakeasy-name-override: provisionPolicy
+          deprovisionerPolicy:
+            allOf:
+              - $ref: '#/components/schemas/c1.api.policy.v1.ProvisionPolicy'
+              - x-speakeasy-name-override: deprovisionerPolicy
+      c1.api.app.v1.AppEntitlementView.tf.CustomAppEntitlement:
+        type: object
+        x-speakeasy-name-override: AppEntitlementViewCustomAppEntitlement
+        properties:
+          appEntitlement:
+            oneOf:
+              - $ref: '#/components/schemas/c1.api.app.v1.AppEntitlement.tf.CustomAppEntitlement'
+              - type: 'null'
+  - target: $["components"]["schemas"]["c1.api.app.v1.GetAppEntitlementResponse"]["properties"]["appEntitlementView"]["oneOf"][0]
+    update:
+      $ref: '#/components/schemas/c1.api.app.v1.AppEntitlementView.tf.CustomAppEntitlement'
+  - target: $["components"]["schemas"]["c1.api.app.v1.CreateAppEntitlementResponse"]["properties"]["appEntitlementView"]["oneOf"][0]
+    update:
+      $ref: '#/components/schemas/c1.api.app.v1.AppEntitlementView.tf.CustomAppEntitlement'
+  - target: $["components"]["schemas"]["c1.api.app.v1.UpdateAppEntitlementResponse"]["properties"]["appEntitlementView"]["oneOf"][0]
+    update:
+      $ref: '#/components/schemas/c1.api.app.v1.AppEntitlementView.tf.CustomAppEntitlement'
+  - target: $["components"]["schemas"]["c1.api.app.v1.UpdateAppEntitlementRequestInput"]["properties"]["entitlement"]["oneOf"][0]
+    update:
+      $ref: '#/components/schemas/c1.api.app.v1.AppEntitlement.tf.CustomAppEntitlement'
