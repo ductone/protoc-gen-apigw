@@ -1,0 +1,196 @@
+overlay: 1.1.0
+info:
+  title: tfcustomize.v1.CustomizeService Terraform customizations
+  version: 0.0.0
+actions:
+  - target: $
+    update:
+      x-speakeasy-globals:
+        parameters:
+          - in: query
+            name: tenant
+    x-apigw-provenance: service tfcustomize.v1.CustomizeService
+  - target: $
+    update:
+      x-speakeasy-max-method-params: 7
+    x-apigw-provenance: service tfcustomize.v1.CustomizeService
+  - target: $
+    update:
+      x-speakeasy-model-namespace: tfcustomize
+    x-apigw-provenance: file tfcustomize.v1
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']
+    update:
+      x-future-decimal: 1.50
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']
+    update:
+      x-future-empty-array: []
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']
+    update:
+      x-future-empty-object: {}
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']
+    update:
+      x-future-empty-string: ""
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']
+    update:
+      x-future-false: false
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']
+    update:
+      x-future-int: 9007199254740993
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']
+    update:
+      x-future-multiline: |-
+        line one
+        line two
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']
+    update:
+      x-future-null: null
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']
+    update:
+      x-future-thing:
+        nested:
+          list:
+            - 1
+            - 2.50
+            - null
+            - false
+            - x
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']
+    update:
+      x-speakeasy-entity-description: A **thing** resource.
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']
+    update:
+      required:
+        - id
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['title']
+    remove: true
+    x-apigw-provenance: message tfcustomize.v1.Thing
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['child']
+    update:
+      x-speakeasy-name-override: child_thing
+    x-apigw-provenance: field tfcustomize.v1.Thing.child
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['createdAt']
+    update:
+      x-speakeasy-param-computed: false
+    x-apigw-provenance: field tfcustomize.v1.Thing.created_at
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['createdAt']['format']
+    remove: true
+    x-apigw-provenance: field tfcustomize.v1.Thing.created_at
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['escaped']
+    update:
+      x-speakeasy-docs:
+        go: Escaped pointer target.
+    x-apigw-provenance: field tfcustomize.v1.Thing.escaped
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['escaped']
+    update:
+      x-speakeasy-param-source:
+        kind: config
+        path:
+          - a/b
+          - c~d
+    x-apigw-provenance: field tfcustomize.v1.Thing.escaped
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['id']
+    update:
+      x-speakeasy-name-override: thing_identifier
+    x-apigw-provenance: field tfcustomize.v1.Thing.id
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['id']
+    update:
+      x-speakeasy-param-readonly: true
+    x-apigw-provenance: field tfcustomize.v1.Thing.id
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['id']
+    update:
+      default: unknown
+    x-apigw-provenance: field tfcustomize.v1.Thing.id
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['id']
+    update:
+      minLength: 1
+    x-apigw-provenance: field tfcustomize.v1.Thing.id
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['labels']['additionalProperties']
+    update:
+      x-speakeasy-type-override: any
+    x-apigw-provenance: field tfcustomize.v1.Thing.labels
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['manualPolicy']
+    update:
+      x-speakeasy-param-force-new: false
+    x-apigw-provenance: field tfcustomize.v1.Thing.manual_policy
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['odd/name']
+    update:
+      x-speakeasy-deprecation-message: use id
+    x-apigw-provenance: field tfcustomize.v1.Thing.odd_name
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['status']
+    update:
+      x-speakeasy-unknown-values: disallow
+    x-apigw-provenance: field tfcustomize.v1.Thing.status
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['tags']
+    update:
+      x-speakeasy-terraform-ignore: false
+    x-apigw-provenance: field tfcustomize.v1.Thing.tags
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['tags']
+    update:
+      default: []
+    x-apigw-provenance: field tfcustomize.v1.Thing.tags
+  - target: $['components']['schemas']['tfcustomize.v1.Thing']['properties']['tags']['items']
+    update:
+      x-speakeasy-response-filter: true
+    x-apigw-provenance: field tfcustomize.v1.Thing.tags
+  - target: $['paths']['/things']['get']
+    update:
+      x-speakeasy-pagination:
+        inputs: []
+        outputs: {}
+        type: cursor
+    x-apigw-provenance: operation tfcustomize.v1.CustomizeService.ListThings
+  - target: $['paths']['/things']['post']
+    update:
+      x-speakeasy-ignore: false
+    x-apigw-provenance: operation tfcustomize.v1.CustomizeService.CreateThing
+  - target: $['paths']['/things']['post']
+    update:
+      x-speakeasy-polling:
+        - intervalSeconds: 10
+          limitCount: 5
+          name: wait
+    x-apigw-provenance: operation tfcustomize.v1.CustomizeService.CreateThing
+  - target: $['paths']['/things/{thing_id}']['get']['x-speakeasy-entity-missing-codes']
+    remove: true
+    x-apigw-replace: true
+  - target: $['paths']['/things/{thing_id}']['get']
+    update:
+      x-speakeasy-entity-missing-codes:
+        - 403
+        - 410
+    x-apigw-provenance: operation tfcustomize.v1.CustomizeService.GetThing
+  - target: $['paths']['/things/{thing_id}']['get']['x-speakeasy-entity-operation']
+    remove: true
+    x-apigw-replace: true
+  - target: $['paths']['/things/{thing_id}']['get']
+    update:
+      x-speakeasy-entity-operation:
+        terraform-datasource: null
+        terraform-resource: Thing#read
+    x-apigw-provenance: operation tfcustomize.v1.CustomizeService.GetThing
+  - target: $['paths']['/things/{thing_id}']['get']['parameters'][0]
+    update:
+      x-speakeasy-match: id
+    x-apigw-provenance: field tfcustomize.v1.GetThingRequest.thing_id
+  - target: $['paths']['/things/{thing_id}']['get']['parameters'][0]['schema']
+    update:
+      x-speakeasy-param-readonly: false
+    x-apigw-provenance: field tfcustomize.v1.GetThingRequest.thing_id
+  - target: $['paths']['/things/{thing_id}']['get']['parameters'][1]
+    update:
+      x-speakeasy-match: flavor
+    x-apigw-provenance: field tfcustomize.v1.GetThingRequest.flavor
+x-apigw-terraform:
+  kind: service
+  source: tfcustomize.v1.CustomizeService

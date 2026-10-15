@@ -1,0 +1,208 @@
+---
+components:
+  schemas:
+    tfcustomize.v1.CreateThingRequest:
+      description: The CreateThingRequest message.
+      properties:
+        thing:
+          oneOf:
+            - $ref: '#/components/schemas/tfcustomize.v1.Thing'
+            - type: "null"
+      title: Create Thing Request
+      type: object
+      x-speakeasy-name-override: CreateThingRequest
+    tfcustomize.v1.CreateThingResponse:
+      description: The CreateThingResponse message.
+      properties:
+        thing:
+          oneOf:
+            - $ref: '#/components/schemas/tfcustomize.v1.Thing'
+            - type: "null"
+      title: Create Thing Response
+      type: object
+      x-speakeasy-name-override: CreateThingResponse
+    tfcustomize.v1.GetThingResponse:
+      description: The GetThingResponse message.
+      properties:
+        thing:
+          oneOf:
+            - $ref: '#/components/schemas/tfcustomize.v1.Thing'
+            - type: "null"
+      title: Get Thing Response
+      type: object
+      x-speakeasy-name-override: GetThingResponse
+    tfcustomize.v1.ListThingsResponse:
+      description: The ListThingsResponse message.
+      properties:
+        things:
+          description: The things field.
+          items:
+            $ref: '#/components/schemas/tfcustomize.v1.Thing'
+          type:
+            - array
+            - "null"
+      title: List Things Response
+      type: object
+      x-speakeasy-name-override: ListThingsResponse
+    tfcustomize.v1.Thing:
+      description: |
+        A thing resource.
+
+        This message contains a oneof named policy. Only a single field of the following list may be set at a time:
+          - manualPolicy
+          - multiStepPolicy
+      properties:
+        child:
+          oneOf:
+            - $ref: '#/components/schemas/tfcustomize.v1.Thing'
+            - type: "null"
+          x-stability-level: stable
+        createdAt:
+          format: date-time
+          type:
+            - string
+            - "null"
+          x-stability-level: stable
+        escaped:
+          description: |-
+            The JSON Pointer escape hatch, on a field: the destination node need not
+             be reachable by any enumerated target.
+          type: string
+        id:
+          description: The id field.
+          type: string
+          x-stability-level: stable
+        labels:
+          additionalProperties:
+            type: string
+          description: The labels field.
+          type: object
+        manualPolicy:
+          description: |-
+            The manualPolicy field.
+            This field is part of the `policy` oneof.
+            See the documentation for `tfcustomize.v1.Thing` for more details.
+          type:
+            - string
+            - "null"
+        multiStepPolicy:
+          description: |-
+            The multiStepPolicy field.
+            This field is part of the `policy` oneof.
+            See the documentation for `tfcustomize.v1.Thing` for more details.
+          type:
+            - string
+            - "null"
+        odd/name:
+          description: |-
+            The property name contains a "/" so the emitted pointer has to escape the
+             reference token.
+          type: string
+        status:
+          description: The status field.
+          enum:
+            - STATUS_UNSPECIFIED
+            - STATUS_ACTIVE
+          type: string
+          x-speakeasy-enum-format: union
+          x-speakeasy-unknown-values: allow
+        tags:
+          description: The tags field.
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+      title: Thing
+      type: object
+      x-speakeasy-entity: Thing
+      x-speakeasy-name-override: Thing
+info:
+  description: |
+    This is an auto-generated API for tfcustomize.v1.CustomizeService.
+  title: API For tfcustomize.v1.CustomizeService
+  version: 0.0.1
+  x-stability-level: stable
+openapi: 3.1.0
+paths:
+  /things:
+    get:
+      description: Invokes the tfcustomize.v1.CustomizeService.ListThings method.
+      operationId: tfcustomize.v1.CustomizeService.ListThings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/tfcustomize.v1.ListThingsResponse'
+          description: Successful response
+      summary: List Things
+      tags:
+        - Customize
+      x-speakeasy-entity-missing-codes:
+        - 404
+      x-speakeasy-entity-operation:
+        terraform-datasource: Things#read
+        terraform-resource:
+      x-speakeasy-group: Customize
+      x-speakeasy-name-override: ListThings
+    post:
+      description: Invokes the tfcustomize.v1.CustomizeService.CreateThing method.
+      operationId: tfcustomize.v1.CustomizeService.CreateThing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/tfcustomize.v1.CreateThingRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/tfcustomize.v1.CreateThingResponse'
+          description: Successful response
+      summary: Create Thing
+      tags:
+        - Customize
+      x-speakeasy-entity-missing-codes:
+        - 404
+      x-speakeasy-entity-operation:
+        terraform-resource: Thing#create
+      x-speakeasy-group: Customize
+      x-speakeasy-name-override: CreateThing
+  /things/{thing_id}:
+    get:
+      description: A read operation that also carries the value-shape matrix.
+      operationId: tfcustomize.v1.CustomizeService.GetThing
+      parameters:
+        - in: path
+          name: thing_id
+          required: true
+          schema:
+            description: The thingId field.
+            type: string
+        - in: query
+          name: flavor
+          schema:
+            description: The flavor field.
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/tfcustomize.v1.GetThingResponse'
+          description: Successful response
+      summary: Get Thing
+      tags:
+        - Customize
+      x-speakeasy-entity-missing-codes:
+        - 404
+      x-speakeasy-entity-operation:
+        terraform-datasource: Thing#read
+        terraform-resource: Thing#read
+      x-speakeasy-group: Customize
+      x-speakeasy-name-override: GetThing
+servers:
+  - description: The server for tfcustomize.v1.CustomizeService.
+    url: /
