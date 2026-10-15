@@ -28,22 +28,46 @@ const (
 type Author_Gender int32
 
 const (
-	Author_GENDER_UNSPECIFIED Author_Gender = 0
-	Author_GENDER_MALE        Author_Gender = 1
-	Author_GENDER_FEMALE      Author_Gender = 2
+	Author_GENDER_UNSPECIFIED       Author_Gender = 0
+	Author_GENDER_MALE              Author_Gender = 1
+	Author_GENDER_FEMALE            Author_Gender = 2
+	Author_GENDER_NON_BINARY        Author_Gender = 3
+	Author_GENDER_GENDERQUEER       Author_Gender = 4
+	Author_GENDER_GENDERFLUID       Author_Gender = 5
+	Author_GENDER_AGENDER           Author_Gender = 6
+	Author_GENDER_BIGENDER          Author_Gender = 7
+	Author_GENDER_INTERSEX          Author_Gender = 8
+	Author_GENDER_OTHER             Author_Gender = 9
+	Author_GENDER_PREFER_NOT_TO_SAY Author_Gender = 10
 )
 
 // Enum value maps for Author_Gender.
 var (
 	Author_Gender_name = map[int32]string{
-		0: "GENDER_UNSPECIFIED",
-		1: "GENDER_MALE",
-		2: "GENDER_FEMALE",
+		0:  "GENDER_UNSPECIFIED",
+		1:  "GENDER_MALE",
+		2:  "GENDER_FEMALE",
+		3:  "GENDER_NON_BINARY",
+		4:  "GENDER_GENDERQUEER",
+		5:  "GENDER_GENDERFLUID",
+		6:  "GENDER_AGENDER",
+		7:  "GENDER_BIGENDER",
+		8:  "GENDER_INTERSEX",
+		9:  "GENDER_OTHER",
+		10: "GENDER_PREFER_NOT_TO_SAY",
 	}
 	Author_Gender_value = map[string]int32{
-		"GENDER_UNSPECIFIED": 0,
-		"GENDER_MALE":        1,
-		"GENDER_FEMALE":      2,
+		"GENDER_UNSPECIFIED":       0,
+		"GENDER_MALE":              1,
+		"GENDER_FEMALE":            2,
+		"GENDER_NON_BINARY":        3,
+		"GENDER_GENDERQUEER":       4,
+		"GENDER_GENDERFLUID":       5,
+		"GENDER_AGENDER":           6,
+		"GENDER_BIGENDER":          7,
+		"GENDER_INTERSEX":          8,
+		"GENDER_OTHER":             9,
+		"GENDER_PREFER_NOT_TO_SAY": 10,
 	}
 )
 
@@ -1916,7 +1940,7 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01:\x0e\xaa\xde\x03\n" +
 	"\n" +
 	"\b\n" +
-	"\x06\x12\x04Book\"\xb4\x03\n" +
+	"\x06\x12\x04Book\"\xea\x04\n" +
 	"\x06Author\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x123\n" +
 	"\x06gender\x18\x02 \x01(\x0e2\x1b.bookstore.v1.Author.GenderR\x06gender\x125\n" +
@@ -1934,11 +1958,20 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"\x05books\x18\a \x03(\v2\x14.google.protobuf.AnyB\x14\xa2\xde\x03\x10\n" +
 	"\x0e\"\f\n" +
 	"\n" +
-	"2025-08-15R\x05books\"D\n" +
+	"2025-08-15R\x05books\"\xf9\x01\n" +
 	"\x06Gender\x12\x16\n" +
 	"\x12GENDER_UNSPECIFIED\x10\x00\x12\x0f\n" +
 	"\vGENDER_MALE\x10\x01\x12\x11\n" +
-	"\rGENDER_FEMALE\x10\x02\"t\n" +
+	"\rGENDER_FEMALE\x10\x02\x12\x15\n" +
+	"\x11GENDER_NON_BINARY\x10\x03\x12\x16\n" +
+	"\x12GENDER_GENDERQUEER\x10\x04\x12\x16\n" +
+	"\x12GENDER_GENDERFLUID\x10\x05\x12\x12\n" +
+	"\x0eGENDER_AGENDER\x10\x06\x12\x13\n" +
+	"\x0fGENDER_BIGENDER\x10\a\x12\x13\n" +
+	"\x0fGENDER_INTERSEX\x10\b\x12\x10\n" +
+	"\fGENDER_OTHER\x10\t\x12\x1c\n" +
+	"\x18GENDER_PREFER_NOT_TO_SAY\x10\n" +
+	"\"t\n" +
 	"\x13ListShelvesResponse\x12-\n" +
 	"\ashelves\x18\x01 \x03(\v2\x13.bookstore.v1.ShelfR\ashelves\x12.\n" +
 	"\x04mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\x04mask\"?\n" +
