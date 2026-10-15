@@ -291,6 +291,11 @@ message OpenAPICustomization {
 
   // Whether the key is set/replaced or removed at the destination.
   OpenAPICustomizationMode mode = 6;
+
+  // Restricts the override to the Terraform projection of the named entities.
+  // Empty means every consumer of the destination, which is the behavior
+  // without this field. See OpenAPICustomizationEntity.
+  repeated OpenAPICustomizationEntity entities = 7;
 }
 
 // OpenAPISchemaPatch applies standard OpenAPI / JSON Schema keywords (for
@@ -319,6 +324,39 @@ message OpenAPISchemaPatch {
 
   // Which output the patch is written to. Defaults to Terraform-only.
   OpenAPICustomizationScope scope = 5;
+
+  // Restricts the patch to the Terraform projection of the named entities.
+  // Empty means every consumer of the destination. See
+  // OpenAPICustomizationEntity.
+  repeated OpenAPICustomizationEntity entities = 6;
+}
+
+// OpenAPICustomizationEntity selects one Terraform entity, as named by
+// `x-speakeasy-entity`, so that an override applies only to the schema copies
+// that entity reaches rather than to every entity sharing the destination
+// component.
+//
+// An entity-scoped override is Terraform-only: it requires the Terraform scope
+// and a destination under /components/schemas. apigw does not check that the
+// entity exists, because one emitted document may not contain the entity's
+// operations; the consumer resolves the entity when it applies the overlay with
+// tfoverlay.ApplyTerraform.
+message OpenAPICustomizationEntity {
+  // Exact `x-speakeasy-entity` name, for example "Custom App Entitlement".
+  string name = 1;
+
+  // Which Terraform construct of the entity is selected.
+  OpenAPICustomizationEntityKind kind = 2;
+}
+
+// Which construct of a Terraform entity an entity selector addresses.
+enum OpenAPICustomizationEntityKind {
+  // The resource and the data source of the named entity.
+  OPEN_API_CUSTOMIZATION_ENTITY_KIND_UNSPECIFIED = 0;
+  // Only the resource.
+  OPEN_API_CUSTOMIZATION_ENTITY_KIND_RESOURCE = 1;
+  // Only the data source.
+  OPEN_API_CUSTOMIZATION_ENTITY_KIND_DATA_SOURCE = 2;
 }
 
 // Where an OpenAPICustomization or OpenAPISchemaPatch lands. The annotated

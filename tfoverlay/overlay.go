@@ -62,6 +62,69 @@ const (
 	KindPackage Kind = "package"
 )
 
+// EntityKind selects which Terraform construct of an entity a scope addresses.
+type EntityKind string
+
+const (
+	// EntityKindAny addresses the resource and the data source of the entity.
+	// It is spelled by omitting "kind" in the artifact.
+	EntityKindAny EntityKind = ""
+	// EntityKindResource addresses only the resource.
+	EntityKindResource EntityKind = "resource"
+	// EntityKindDataSource addresses only the data source.
+	EntityKindDataSource EntityKind = "data_source"
+)
+
+// EntityScope restricts an operation to the Terraform projection of one
+// entity, named as in `x-speakeasy-entity`. A nil scope is global.
+type EntityScope struct {
+	Name string
+	Kind EntityKind
+}
+
+func (e *EntityScope) String() string {
+	if e == nil {
+		return ""
+	}
+	if e.Kind == EntityKindAny {
+		return e.Name
+	}
+	return e.Name + " (" + string(e.Kind) + ")"
+}
+
+func (e *EntityScope) equal(o *EntityScope) bool {
+	if e == nil || o == nil {
+		return e == nil && o == nil
+	}
+	return *e == *o
+}
+
+// sameFamily reports whether two scopes can address the same entity
+// construct, so that their operations must agree. Global operations and
+// operations of different entities never share a family; an any-kind scope
+// overlaps both kinds of its entity.
+func (e *EntityScope) sameFamily(o *EntityScope) bool {
+	if e == nil || o == nil {
+		return e == nil && o == nil
+	}
+	return e.Name == o.Name && (e.Kind == o.Kind || e.Kind == EntityKindAny || o.Kind == EntityKindAny)
+}
+
+func validateEntity(e *EntityScope) error {
+	if e == nil {
+		return nil
+	}
+	if e.Name == "" {
+		return fmt.Errorf("entity scope requires a name")
+	}
+	switch e.Kind {
+	case EntityKindAny, EntityKindResource, EntityKindDataSource:
+		return nil
+	default:
+		return fmt.Errorf("entity %q has unknown kind %q", e.Name, e.Kind)
+	}
+}
+
 // Operation is one customization applied at one destination.
 type Operation struct {
 	// Pointer is an RFC 6901 JSON Pointer, absolute in the emitted document.
@@ -81,6 +144,10 @@ type Operation struct {
 	// It is empty for an operation that was not generated from a proto
 	// annotation.
 	Provenance string `yaml:"provenance,omitempty"`
+	// Entity restricts the operation to the projection of one Terraform entity.
+	// Nil means every consumer of the destination. Render writes a scoped
+	// operation to the entity part, which only ApplyTerraform applies.
+	Entity *EntityScope `yaml:"entity,omitempty"`
 }
 
 // Error is a structured failure: which destination was involved, what key, and
@@ -95,6 +162,8 @@ type Error struct {
 	// Owners names the annotations that contributed to the failure, in the
 	// order they were seen. It is empty when the failure has no known owner.
 	Owners []string
+	// Entity is the entity scope of the failing operation, nil when global.
+	Entity *EntityScope
 	// Message is the human-readable detail.
 	Message string
 }
@@ -115,6 +184,7 @@ func newError(op Operation, owners []string, format string, args ...interface{})
 		Channel: op.Channel,
 		Key:     op.Key,
 		Owners:  owners,
+		Entity:  op.Entity,
 		Message: fmt.Sprintf(format, args...),
 	}
 }
@@ -163,20 +233,33 @@ func (o *Overlay) Add(op Operation) error {
 	}
 	for i := range o.Operations {
 		existing := &o.Operations[i]
+		// Conflicts are judged per entity scope. A global operation and a scoped
+		// one never conflict: the global one is applied first and the scoped one
+		// then replaces it on that entity's copy only. Different entities land on
+		// different copies.
+		if !existing.Entity.sameFamily(op.Entity) {
+			continue
+		}
 		if existing.Pointer == op.Pointer && existing.Key == op.Key {
 			if existing.Channel == op.Channel && existing.Mode == op.Mode && nodesEqual(existing.Value, op.Value) {
-				return nil
+				if existing.Entity.equal(op.Entity) {
+					return nil
+				}
+				// Two selector kinds of one entity that agree are both kept; whether
+				// they may be applied separately is decided against the document.
+				continue
 			}
 			return newError(op, append(ownerLabel(*existing), ownerLabel(op)...),
-				"conflicting assignments at %s for %s: mode %s value %s vs mode %s value %s",
-				pointerForDisplay(op.Pointer), op.Key,
+				"conflicting assignments%s at %s for %s: mode %s value %s vs mode %s value %s",
+				entitySuffix(op.Entity), pointerForDisplay(op.Pointer), op.Key,
 				existing.Mode, displayValue(existing.Value),
 				op.Mode, displayValue(op.Value),
 			)
 		}
 		if pathsOverlap(operationPath(*existing), operationPath(op)) {
 			return newError(op, append(ownerLabel(*existing), ownerLabel(op)...),
-				"overlapping destinations: %s at %s contains or is contained by %s at %s",
+				"overlapping destinations%s: %s at %s contains or is contained by %s at %s",
+				entitySuffix(op.Entity),
 				existing.Key, pointerForDisplay(existing.Pointer),
 				op.Key, pointerForDisplay(op.Pointer),
 			)
@@ -184,6 +267,13 @@ func (o *Overlay) Add(op Operation) error {
 	}
 	o.Operations = append(o.Operations, op)
 	return nil
+}
+
+func entitySuffix(e *EntityScope) string {
+	if e == nil {
+		return ""
+	}
+	return " for entity " + strconv.Quote(e.String())
 }
 
 // operationPath is the token path a write touches: the destination pointer's
@@ -203,6 +293,9 @@ func operationPath(op Operation) []string {
 // callers that keep operations in separate lists (for example per scope) use
 // this to reject them together.
 func Overlaps(a, b Operation) bool {
+	if !a.Entity.sameFamily(b.Entity) {
+		return false
+	}
 	if a.Pointer == b.Pointer && a.Key == b.Key {
 		return true
 	}
@@ -237,7 +330,7 @@ func (o *Overlay) Normalize() {
 		if len(out) > 0 {
 			last := out[len(out)-1]
 			cur := o.Operations[i]
-			if last.Pointer == cur.Pointer && last.Channel == cur.Channel &&
+			if last.Entity.equal(cur.Entity) && last.Pointer == cur.Pointer && last.Channel == cur.Channel &&
 				last.Key == cur.Key && last.Mode == cur.Mode && nodesEqual(last.Value, cur.Value) {
 				continue
 			}
@@ -247,9 +340,20 @@ func (o *Overlay) Normalize() {
 	o.Operations = out
 }
 
+// entitySortKey orders global operations first, then by entity name and kind.
+func entitySortKey(e *EntityScope) string {
+	if e == nil {
+		return ""
+	}
+	return "1\x00" + e.Name + "\x00" + string(e.Kind)
+}
+
 func sortOperations(ops []Operation) {
 	sort.SliceStable(ops, func(i, j int) bool {
 		a, b := ops[i], ops[j]
+		if ea, eb := entitySortKey(a.Entity), entitySortKey(b.Entity); ea != eb {
+			return ea < eb
+		}
 		if a.Pointer != b.Pointer {
 			return a.Pointer < b.Pointer
 		}
@@ -313,7 +417,11 @@ func Merge(ovs ...*Overlay) (*Overlay, error) {
 }
 
 func opOriginKey(op Operation) string {
-	return op.Pointer + "|" + string(op.Channel) + "|" + op.Key
+	entity := ""
+	if op.Entity != nil {
+		entity = op.Entity.Name + "#" + string(op.Entity.Kind)
+	}
+	return entity + "|" + op.Pointer + "|" + string(op.Channel) + "|" + op.Key
 }
 
 func nodeKind(node *yaml.Node) string {
@@ -334,6 +442,9 @@ func nodeKind(node *yaml.Node) string {
 }
 
 func validateOperation(op Operation) error {
+	if err := validateEntity(op.Entity); err != nil {
+		return newError(op, ownerLabel(op), "%s", err)
+	}
 	if _, err := ParsePointer(op.Pointer); err != nil {
 		return newError(op, ownerLabel(op), "%s", err)
 	}
@@ -655,6 +766,13 @@ func ApplyToNode(root *yaml.Node, ops []Operation) error {
 // then fail — the first removes the key, the second finds it gone — even though
 // the contract says identical operations deduplicate.
 func normalizeOperationSet(ops []Operation) ([]Operation, error) {
+	for i := range ops {
+		if ops[i].Entity != nil {
+			return nil, newError(ops[i], ownerLabel(ops[i]),
+				"entity-scoped operation for %s at %s cannot be applied globally; use ApplyTerraform",
+				ops[i].Entity, pointerForDisplay(ops[i].Pointer))
+		}
+	}
 	check := &Overlay{}
 	for i := range ops {
 		if err := check.Add(ops[i]); err != nil {

@@ -24,28 +24,50 @@ import (
 // already holds a value that a plain update would not replace as a remove of
 // that key followed by an update. The remove carries extensionReplace so Parse
 // folds the pair back into one set.
-
+//
+// Entity-scoped operations are rendered into a separate document. A generic
+// Overlay tool would apply them to every entity, so only ApplyTerraform may
+// consume that part.
 const (
 	// StandardOverlayVersion is the Overlay Specification version Render emits.
 	StandardOverlayVersion = "1.1.0"
 
-	// ArtifactSuffix names the rendered artifact beside an OpenAPI document:
-	// <base>.<owner>.<suffix>.
-	ArtifactSuffix = "terraform_overlay.yaml"
+	// ArtifactSuffix and EntityArtifactSuffix name the two rendered parts beside
+	// an OpenAPI document: <base>.<owner>.<suffix>.
+	ArtifactSuffix       = "terraform_overlay.yaml"
+	EntityArtifactSuffix = "terraform_entity_overlay.yaml"
 
 	extensionMetadata   = "x-apigw-terraform"
 	extensionProvenance = "x-apigw-provenance"
+	extensionEntity     = "x-apigw-entity"
 	extensionReplace    = "x-apigw-replace"
 )
+
+// Part says which rendered document an overlay artifact is.
+type Part string
+
+const (
+	// PartGlobal holds global operations. It is a standard
+	// Overlay any tool can apply.
+	PartGlobal Part = "global"
+	// PartEntities holds entity-scoped operations, for ApplyTerraform only.
+	PartEntities Part = "entities"
+)
+
+// Rendered is the pair of artifacts Render produces. A part with nothing to
+// apply is nil and is not emitted.
+type Rendered struct {
+	Global   []byte
+	Entities []byte
+}
 
 // Render serializes the overlay against doc, the document it applies to. The
 // document decides how a set is spelled: an update alone when the key is
 // absent or holds a scalar of the same type, otherwise a remove followed by an
-// update. Rendering does not modify the receiver or doc. An overlay with no
-// operations renders as nil: there is no artifact to emit.
+// update. Rendering does not modify the receiver or doc.
 //
 // Use VerifyStandard on the document the overlay is finally applied to.
-func (o *Overlay) Render(doc []byte) ([]byte, error) {
+func (o *Overlay) Render(doc []byte) (*Rendered, error) {
 	root := &yaml.Node{}
 	if err := yaml.Unmarshal(doc, root); err != nil {
 		return nil, fmt.Errorf("parsing document: %w", err)
@@ -59,31 +81,58 @@ func (o *Overlay) Render(doc []byte) ([]byte, error) {
 	copy(ops, o.Operations)
 	sortOperations(ops)
 
-	var actions []overlay.Action
+	out := &Rendered{}
+	var global, scoped []overlay.Action
 	// Simulate the global part so each set is spelled against the value its
 	// destination holds when the action runs.
 	for _, op := range ops {
-		spelled, err := operationActions(target, op)
+		if op.Entity != nil {
+			continue
+		}
+		actions, err := operationActions(target, op)
 		if err != nil {
 			return nil, err
 		}
-		actions = append(actions, spelled...)
+		global = append(global, actions...)
 		if err := applyOne(target, op); err != nil {
 			return nil, err
 		}
 	}
-	if len(actions) == 0 {
-		return nil, nil
+	// Entity operations apply to copies of the document the global part
+	// produced, so they are spelled against it too.
+	for _, op := range ops {
+		if op.Entity == nil {
+			continue
+		}
+		actions, err := operationActions(target, op)
+		if err != nil {
+			return nil, err
+		}
+		scoped = append(scoped, actions...)
 	}
-	return o.encodeStandard(actions)
+	var err error
+	if len(global) > 0 {
+		if out.Global, err = o.encodeStandard(PartGlobal, global); err != nil {
+			return nil, err
+		}
+	}
+	if len(scoped) > 0 {
+		if out.Entities, err = o.encodeStandard(PartEntities, scoped); err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
 }
 
-func (o *Overlay) encodeStandard(actions []overlay.Action) ([]byte, error) {
+func (o *Overlay) encodeStandard(part Part, actions []overlay.Action) ([]byte, error) {
 	title := "Terraform customizations"
 	if o.Source != "" {
 		title = o.Source + " Terraform customizations"
 	}
-	meta := map[string]any{}
+	if part == PartEntities {
+		title += " (entity-scoped; apply with tfoverlay only)"
+	}
+	meta := map[string]any{"part": string(part)}
 	if o.Source != "" {
 		meta["source"] = o.Source
 	}
@@ -118,13 +167,24 @@ func operationActions(target *yaml.Node, op Operation) ([]overlay.Action, error)
 	if op.Provenance != "" {
 		ext[extensionProvenance] = op.Provenance
 	}
+	if op.Entity != nil {
+		entity := map[string]any{"name": op.Entity.Name}
+		if op.Entity.Kind != EntityKindAny {
+			entity["kind"] = string(op.Entity.Kind)
+		}
+		ext[extensionEntity] = entity
+	}
 	keyPath := path + "[" + quoteMember(op.Key) + "]"
 	if op.Mode == ModeRemove {
 		return []overlay.Action{{Target: keyPath, Remove: true, Extensions: ext}}, nil
 	}
 	var actions []overlay.Action
 	if idx := findKey(node, op.Key); idx >= 0 && !replacesInPlace(node.Content[idx+1], op.Value) {
-		actions = append(actions, overlay.Action{Target: keyPath, Remove: true, Extensions: overlay.Extensions{extensionReplace: true}})
+		replace := overlay.Extensions{extensionReplace: true}
+		if op.Entity != nil {
+			replace[extensionEntity] = ext[extensionEntity]
+		}
+		actions = append(actions, overlay.Action{Target: keyPath, Remove: true, Extensions: replace})
 	}
 	return append(actions, overlay.Action{Target: path, Update: mapping(op.Key, op.Value), Extensions: ext}), nil
 }
@@ -254,7 +314,7 @@ func pathTokens(path string) ([]string, error) {
 	return tokens, nil
 }
 
-// Parse reads an artifact written by Render. It is strict: an
+// Parse reads an artifact written by Render, either part. It is strict: an
 // action whose shape Render does not produce, an unknown extension, a
 // duplicate key or a trailing YAML document is an error, because the producer
 // and the consumer then disagree. Parsed operations go through Add, so a
@@ -283,11 +343,12 @@ func Parse(data []byte) (*Overlay, error) {
 		return nil, fmt.Errorf("parsing overlay: unexpected x-speakeasy-jsonpath; Overlay %s uses RFC 9535", StandardOverlayVersion)
 	}
 	ov := &Overlay{}
-	if err := parseMetadata(doc.Extensions, ov); err != nil {
+	part, err := parseMetadata(doc.Extensions, ov)
+	if err != nil {
 		return nil, err
 	}
 	for i, a := range doc.Actions {
-		if err := parseAction(ov, a); err != nil {
+		if err := parseAction(ov, part, a); err != nil {
 			return nil, fmt.Errorf("parsing overlay: action %d (%s): %w", i, a.Target, err)
 		}
 	}
@@ -295,22 +356,25 @@ func Parse(data []byte) (*Overlay, error) {
 	return ov, nil
 }
 
-func parseMetadata(ext overlay.Extensions, ov *Overlay) error {
+func parseMetadata(ext overlay.Extensions, ov *Overlay) (Part, error) {
 	for key := range ext {
 		if key != extensionMetadata {
-			return fmt.Errorf("parsing overlay: unknown extension %q", key)
+			return "", fmt.Errorf("parsing overlay: unknown extension %q", key)
 		}
 	}
 	meta, ok := ext[extensionMetadata].(map[string]any)
 	if !ok {
-		return fmt.Errorf("parsing overlay: %s is required and must be a mapping", extensionMetadata)
+		return "", fmt.Errorf("parsing overlay: %s is required and must be a mapping", extensionMetadata)
 	}
+	var part Part
 	for key, value := range meta {
 		text, ok := value.(string)
 		if !ok {
-			return fmt.Errorf("parsing overlay: %s.%s must be a string", extensionMetadata, key)
+			return "", fmt.Errorf("parsing overlay: %s.%s must be a string", extensionMetadata, key)
 		}
 		switch key {
+		case "part":
+			part = Part(text)
 		case "source":
 			ov.Source = text
 		case "kind":
@@ -318,16 +382,19 @@ func parseMetadata(ext overlay.Extensions, ov *Overlay) error {
 			case KindService, KindPackage:
 				ov.Kind = Kind(text)
 			default:
-				return fmt.Errorf("parsing overlay: unknown kind %q", text)
+				return "", fmt.Errorf("parsing overlay: unknown kind %q", text)
 			}
 		default:
-			return fmt.Errorf("parsing overlay: unknown field %s.%s", extensionMetadata, key)
+			return "", fmt.Errorf("parsing overlay: unknown field %s.%s", extensionMetadata, key)
 		}
 	}
-	return nil
+	if part != PartGlobal && part != PartEntities {
+		return "", fmt.Errorf("parsing overlay: %s.part must be %q or %q", extensionMetadata, PartGlobal, PartEntities)
+	}
+	return part, nil
 }
 
-func parseAction(ov *Overlay, a overlay.Action) error {
+func parseAction(ov *Overlay, part Part, a overlay.Action) error {
 	if a.Copy != "" || a.Description != "" {
 		return fmt.Errorf("copy and description are not produced by Render")
 	}
@@ -335,6 +402,7 @@ func parseAction(ov *Overlay, a overlay.Action) error {
 		return fmt.Errorf("an action is either an update or a remove")
 	}
 	var provenance string
+	var entity *EntityScope
 	replace := false
 	for key, value := range a.Extensions {
 		switch key {
@@ -350,9 +418,18 @@ func parseAction(ov *Overlay, a overlay.Action) error {
 				return fmt.Errorf("%s must be true when present", key)
 			}
 			replace = true
+		case extensionEntity:
+			e, err := parseEntityExtension(value)
+			if err != nil {
+				return err
+			}
+			entity = e
 		default:
 			return fmt.Errorf("unknown extension %q", key)
 		}
+	}
+	if (entity != nil) != (part == PartEntities) {
+		return fmt.Errorf("entity-scoped actions belong in the %s part, and only there", PartEntities)
 	}
 	if replace {
 		// The remove half of a set; the update that follows carries the set.
@@ -366,7 +443,7 @@ func parseAction(ov *Overlay, a overlay.Action) error {
 	if err != nil {
 		return err
 	}
-	op := Operation{Provenance: provenance}
+	op := Operation{Provenance: provenance, Entity: entity}
 	if a.Remove {
 		if len(tokens) == 0 {
 			return fmt.Errorf("a remove cannot target the document root")
@@ -397,6 +474,36 @@ func singleEntry(update *yaml.Node) (string, *yaml.Node, error) {
 	return update.Content[0].Value, update.Content[1], nil
 }
 
+func parseEntityExtension(value any) (*EntityScope, error) {
+	fields, ok := value.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("%s must be a mapping", extensionEntity)
+	}
+	e := &EntityScope{}
+	for key, raw := range fields {
+		text, ok := raw.(string)
+		if !ok {
+			return nil, fmt.Errorf("%s.%s must be a string", extensionEntity, key)
+		}
+		switch key {
+		case "name":
+			e.Name = text
+		case "kind":
+			e.Kind = EntityKind(text)
+			if e.Kind == EntityKindAny {
+				return nil, fmt.Errorf("%s.kind must be %q or %q; omit it to address both",
+					extensionEntity, EntityKindResource, EntityKindDataSource)
+			}
+		default:
+			return nil, fmt.Errorf("unknown field %s.%s", extensionEntity, key)
+		}
+	}
+	if err := validateEntity(e); err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
 // rejectDuplicateKeys fails on a mapping that repeats a key. Decoding into a
 // yaml.Node accepts one, and a duplicate must not silently take the last value.
 func rejectDuplicateKeys(node *yaml.Node) error {
@@ -418,11 +525,17 @@ func rejectDuplicateKeys(node *yaml.Node) error {
 	return nil
 }
 
-// VerifyStandard applies the rendered artifact to doc with the Speakeasy
+// VerifyStandard applies the rendered global part to doc with the Speakeasy
 // Overlay implementation in strict mode and checks that the result equals
 // Apply's. It proves that a consumer applying the artifact with standard
-// tooling gets the document this package computes.
+// tooling gets the document this package computes. The overlay must not hold
+// entity-scoped operations.
 func VerifyStandard(doc []byte, ov *Overlay) error {
+	for _, op := range ov.Operations {
+		if op.Entity != nil {
+			return fmt.Errorf("verify: entity-scoped operations have no standard form")
+		}
+	}
 	want, err := Apply(doc, ov.Operations)
 	if err != nil {
 		return err
@@ -435,8 +548,8 @@ func VerifyStandard(doc []byte, ov *Overlay) error {
 	if err := yaml.Unmarshal(doc, root); err != nil {
 		return fmt.Errorf("parsing document: %w", err)
 	}
-	if rendered != nil {
-		standard, err := overlay.ParseReader(bytes.NewReader(rendered))
+	if rendered.Global != nil {
+		standard, err := overlay.ParseReader(bytes.NewReader(rendered.Global))
 		if err != nil {
 			return fmt.Errorf("verify: %w", err)
 		}
@@ -471,4 +584,58 @@ func applyOne(target *yaml.Node, op Operation) error {
 		return removeKey(node, op)
 	}
 	return setKey(node, op)
+}
+
+// Global returns a copy of the overlay without its entity-scoped operations:
+// the part standard tooling can apply.
+func (o *Overlay) Global() *Overlay {
+	out := &Overlay{Source: o.Source, Kind: o.Kind}
+	for _, op := range o.Operations {
+		if op.Entity == nil {
+			out.Operations = append(out.Operations, op)
+		}
+	}
+	return out
+}
+
+// ProjectionOverlay expresses the change from before to after — for example
+// from a spec to ApplyTerraform's projection of it — as a standard Overlay
+// document (the Speakeasy comparison emits Overlay 1.0.0 with RFC 9535
+// JSONPath), and checks that applying it to before yields after.
+func ProjectionOverlay(title string, before, after []byte) ([]byte, error) {
+	var from, to yaml.Node
+	if err := yaml.Unmarshal(before, &from); err != nil {
+		return nil, fmt.Errorf("parsing document: %w", err)
+	}
+	if err := yaml.Unmarshal(after, &to); err != nil {
+		return nil, fmt.Errorf("parsing projected document: %w", err)
+	}
+	diff, err := overlay.Compare(title, documentRoot(&from), *documentRoot(&to))
+	if err != nil {
+		return nil, fmt.Errorf("comparing documents: %w", err)
+	}
+	text, err := diff.ToString()
+	if err != nil {
+		return nil, err
+	}
+	check := &yaml.Node{}
+	if err := yaml.Unmarshal(before, check); err != nil {
+		return nil, err
+	}
+	if len(diff.Actions) > 0 {
+		if _, err := diff.ApplyToStrict(check); err != nil {
+			return nil, fmt.Errorf("projection overlay does not apply: %w", err)
+		}
+	}
+	var got, want any
+	if err := check.Decode(&got); err != nil {
+		return nil, err
+	}
+	if err := to.Decode(&want); err != nil {
+		return nil, err
+	}
+	if !reflect.DeepEqual(got, want) {
+		return nil, fmt.Errorf("projection overlay does not reproduce the projected document")
+	}
+	return []byte(text), nil
 }

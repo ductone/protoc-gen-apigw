@@ -354,7 +354,7 @@ func TestOverlayNormalizeIsOrderIndependent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Render: %v", err)
 	}
-	if string(first) != string(second) {
+	if string(first.Global) != string(second.Global) {
 		t.Fatalf("normalized rendering differs by insertion order:\n%s\n%s", first, second)
 	}
 }
@@ -755,7 +755,7 @@ func TestErrorsAreStructured(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Render: %v", err)
 		}
-		data := rendered
+		data := rendered.Global
 		if !strings.Contains(string(data), "x-apigw-provenance: message test.Thing") {
 			t.Fatalf("rendered artifact lost provenance:\n%s", data)
 		}
