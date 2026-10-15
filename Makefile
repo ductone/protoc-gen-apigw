@@ -14,10 +14,17 @@ generate:
 test:
 	go test -v ./... ./example/...
 
+# Regenerate the descriptor fixture the generator tests drive the plugin from.
+# Requires buf; normal test runs read the committed fixture instead.
+.PHONY: testdata
+testdata:
+	go test -v ./internal/apigw -run TestRegenerateDescriptorFixture -update-descriptors
+
 .PHONY: example
 example: build
 	buf --debug generate --template buf.example.gen.yaml --path example/bookstore
 	buf --debug generate --template buf.example.gen.yaml --path example/webhooks
+	buf --debug generate --template buf.example.gen.yaml --path example/tfcustomize
 
 .PHONY: example_oas_lint
 example_oas_lint:

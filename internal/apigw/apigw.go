@@ -11,6 +11,8 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+
+	"github.com/ductone/protoc-gen-apigw/tfoverlay"
 )
 
 func New() pgs.Module {
@@ -31,6 +33,11 @@ type Module struct {
 	// that way overlapping routes can be detected if the param names are different
 	// ex key = /v1/thing/{0}/other_static_path/{1}
 	canonicalRouteMapper map[string]*canonicalRoute
+
+	// tf collects the customization annotations declared in the file currently
+	// being processed. Execute processes targets sequentially, and the
+	// collector is replaced at the start of every file.
+	tf *tfCollector
 }
 
 type canonicalRoute struct {
@@ -57,11 +64,37 @@ func (m *Module) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Packag
 }
 
 func (m *Module) processFile(ctx pgsgo.Context, f pgs.File) {
+	m.tf = newTFCollector()
+	m.tf.declareFileEntities(f)
+
+	// The emitter has no error return on every path a customization can be
+	// reached from, so it reports a bad annotation by panicking with a
+	// tfError. Convert that into a normal generator failure here, so a bad
+	// annotation produces a clean diagnostic rather than a Go stack trace.
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+		if te, ok := r.(tfError); ok {
+			m.Fail(te.msg)
+			return
+		}
+		panic(r)
+	}()
+
 	out := bytes.Buffer{}
 	rendered, err := m.applyTemplate(ctx, &out, f)
 	if err != nil {
 		m.Logf("couldn't apply template: %s", err)
 		m.Fail("code generation failed")
+		return
+	}
+	// Verify after every document has been built: an annotation that no emitted
+	// document applied is a bug in the annotation, and failing the build is the
+	// only way to keep it from silently changing nothing.
+	if err := m.tf.verify(); err != nil {
+		m.Fail(err.Error())
 		return
 	}
 	// We didn't find anything to render so skip writing the file
@@ -94,11 +127,14 @@ func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) (
 			return false, err
 		}
 		oasBuf := &bytes.Buffer{}
-		err = m.renderOpenAPI(ctx, oasBuf, service)
+		overlay, err := m.renderOpenAPI(ctx, oasBuf, service)
 		if err != nil {
 			return false, err
 		}
 		m.AddGeneratorFile(oasName, oasBuf.String())
+		if err := m.addOverlayFile(f, service.Name().LowerSnakeCase().String(), overlay, oasBuf.Bytes()); err != nil {
+			return false, err
+		}
 	}
 
 	err := m.renderForcedMessages(ctx, f)
@@ -135,7 +171,7 @@ func (m *Module) applyTemplate(ctx pgsgo.Context, w *bytes.Buffer, f pgs.File) (
 func (m *Module) renderForcedMessages(ctx pgsgo.Context, f pgs.File) error {
 	forcedMessageOpenAPIFilename := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.oas31.yaml", f.Package().ProtoName().LowerSnakeCase())).String()
 	oasBuf := &bytes.Buffer{}
-	rendered, err := m.renderOpenAPIWithoutService(ctx, oasBuf, f)
+	overlay, rendered, err := m.renderOpenAPIWithoutService(ctx, oasBuf, f)
 	if err != nil {
 		return err
 	}
@@ -143,5 +179,21 @@ func (m *Module) renderForcedMessages(ctx pgsgo.Context, f pgs.File) error {
 		return nil
 	}
 	m.AddGeneratorFile(forcedMessageOpenAPIFilename, oasBuf.String())
+	return m.addOverlayFile(f, f.Package().ProtoName().LowerSnakeCase().String(), overlay, oasBuf.Bytes())
+}
+
+// addOverlayFile emits the Terraform overlay for one OpenAPI document, an
+// OpenAPI Overlay rendered against that document. An overlay with nothing in
+// it is not emitted.
+func (m *Module) addOverlayFile(f pgs.File, owner string, ov *tfoverlay.Overlay, doc []byte) error {
+	if ov.Empty() {
+		return nil
+	}
+	data, err := ov.Render(doc)
+	if err != nil {
+		return err
+	}
+	name := m.ctx.OutputPath(f).SetExt(fmt.Sprintf(".%s.%s", owner, tfoverlay.ArtifactSuffix)).String()
+	m.AddGeneratorFile(name, string(data))
 	return nil
 }
