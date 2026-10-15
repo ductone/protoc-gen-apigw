@@ -193,4 +193,5 @@ actions:
     x-apigw-provenance: field tfcustomize.v1.GetThingRequest.flavor
 x-apigw-terraform:
   kind: service
+  part: global
   source: tfcustomize.v1.CustomizeService
