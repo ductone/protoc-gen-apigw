@@ -117,7 +117,6 @@ func fixedImportName(name pgs.Name) bool {
 }
 
 func (ix *importTracker) allocatePackageName(pkgName pgs.Name, importName pgs.FilePath) pgs.Name {
-
 	for {
 		if fixedImportName(pkgName) {
 			pkgName += "x"

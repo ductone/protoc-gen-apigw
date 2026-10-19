@@ -40,13 +40,27 @@ func testEnumQueryGenerated(t *testing.T, enumPackage string) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = os.RemoveAll(dir) })
-	run := func(args ...string) {
+	command := func(tool string, args ...string) *exec.Cmd {
 		t.Helper()
-		cmd := exec.Command(args[0], args[1:]...)
+		var cmd *exec.Cmd
+		switch tool {
+		case "go":
+			cmd = exec.Command("go", args...)
+		case "protoc":
+			cmd = exec.Command("protoc", args...)
+		default:
+			t.Fatalf("unsupported fixture tool %q", tool)
+			return nil
+		}
 		cmd.Dir = root
 		cmd.Env = append(os.Environ(), "DEBUG_PROTOC_INPUT=false", "DEBUG_PROTOC_USE_FILE=")
+		return cmd
+	}
+	run := func(tool string, args ...string) {
+		t.Helper()
+		cmd := command(tool, args...)
 		output, err := cmd.CombinedOutput()
-		t.Logf("%v\n%s", args, output)
+		t.Logf("%s %v\n%s", tool, args, output)
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -100,10 +114,9 @@ func testEnumQueryGenerated(t *testing.T, enumPackage string) {
 			if err := os.WriteFile(filepath.Join(inputDir, "query.proto"), []byte(modified), 0600); err != nil {
 				t.Fatal(err)
 			}
-			cmd := exec.Command("protoc", "-I"+inputDir, "-I"+fixture, "-I"+filepath.Join(root, "protos"),
+			cmd := command("protoc", "-I"+inputDir, "-I"+fixture, "-I"+filepath.Join(root, "protos"),
 				"--plugin=protoc-gen-apigw="+plugin, "--apigw_out="+dir,
 				"--apigw_opt=paths=source_relative", "query.proto")
-			cmd.Env = append(os.Environ(), "DEBUG_PROTOC_INPUT=false", "DEBUG_PROTOC_USE_FILE=")
 			output, err := cmd.CombinedOutput()
 			if err == nil || !strings.Contains(string(output), tt.want) {
 				t.Fatalf("expected unsupported query target (%s), got %v:\n%s", tt.want, err, output)
