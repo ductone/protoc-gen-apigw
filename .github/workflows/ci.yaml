@@ -11,10 +11,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Run linters
-        uses: golangci/golangci-lint-action@v5
-        with:
-          version: latest
-          args: --timeout=3m
+        run: make lint-go
   go-test:
     strategy:
       matrix:

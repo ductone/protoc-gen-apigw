@@ -32,6 +32,10 @@ fmt:
 lint:
 	buf lint ./protos
 
+.PHONY: lint-go
+lint-go:
+	bash tools/lint-go.sh
+
 GOMOD_DIRS := . ./example ./apigw ./routers/ginapi
 ADDDEP_TARGET := $(addprefix adddep_, $(GOMOD_DIRS))
 UPDATEDEP_TARGET := $(addprefix updatedep_, $(GOMOD_DIRS))
