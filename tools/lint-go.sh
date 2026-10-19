@@ -2,42 +2,26 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/protoc-gen-apigw-lint.XXXXXX")
-# Downloaded Go modules are read-only. Only this invocation's directory is removed.
-trap 'chmod -R u+w "$work"; rm -rf "$work"' EXIT
-mkdir "$work/bin"
-
-# Official rc.17 release assets; hashes are from its published checksum file.
-case "$(go env GOHOSTOS)/$(go env GOHOSTARCH)" in
-  linux/amd64) platform=linux-amd64; extension=tar.gz; digest=1a9365eef0d89fca6474a18566c0d263aa0f05407e26adc4b2f92ac880dee226 ;;
-  linux/arm64) platform=linux-arm64; extension=tar.gz; digest=bfcb96d7b2d1f3dee171c55faafcd05f87ea4141f191356f50ba6a536b16758f ;;
-  darwin/amd64) platform=darwin-amd64; extension=zip; digest=73743b952d6db82768265538e4c614b011dedde3c93e605af149d7316ea32f7f ;;
-  darwin/arm64) platform=darwin-arm64; extension=zip; digest=0e1a894ac0924adf3ae71ff3bd00c0c8ad2aad05a8f2b820bcd7301fd1e07287 ;;
-  *) echo 'Go lint supports Linux/macOS amd64/arm64' >&2; exit 1 ;;
-esac
-archive="$work/plaid.$extension"
-curl --fail --location --output "$archive" \
-  "https://github.com/ConductorOne/plaid-lint/releases/download/v1.0.0-rc.17/plaid-lint-v1.0.0-rc.17-$platform.$extension"
-printf '%s  %s\n' "$digest" "$archive" > "$work/checksum"
-if command -v sha256sum >/dev/null; then
-  sha256sum --check "$work/checksum"
-else
-  shasum -a 256 --check "$work/checksum"
+[[ $# == 0 || ( $# == 1 && $1 == --clean-tools ) ]] || {
+  echo 'Usage: lint-go.sh [--clean-tools]' >&2; exit 1;
+}
+source tools/lint-tools.sh
+trap lint_cache_cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+lint_cache_begin
+# The per-bundle lock also protects running checks from an explicit cache clean.
+if [[ ${1:-} == --clean-tools ]]; then
+  rm -rf -- "$lint_tools"
+  echo "Cleared only pinned lint tool bundle: $lint_key"
+  exit 0
 fi
-if [[ $extension == zip ]]; then
-  unzip -q "$archive" -d "$work/bin"
-else
-  tar -xzf "$archive" -C "$work/bin"
-fi
-
-# Match the companion versions used by golangci-lint v1.64.8. Go 1.24.1
-# builds tools only; package loading and analysis still use the caller's Go.
-for tool in golang.org/x/tools/cmd/goimports@v0.31.0 \
-  github.com/sivchari/tenv/cmd/tenv@v1.12.1; do
-  env GOTOOLCHAIN=go1.24.1 GOMODCACHE="$work/modules" GOBIN="$work/bin" \
-    GOPROXY=https://proxy.golang.org GOSUMDB=sum.golang.org GONOSUMDB= GOPRIVATE= \
-    go install "$tool"
-done
+lint_prepare_tools
+work=$lint_work
+bin="$lint_tools/bin"
+workspace=$(printf '%s' "$(pwd -P)" | lint_hash)
+analysis="$lint_cache/analysis/plaid-v1.0.0-rc.17/$workspace/$(go env GOVERSION)-$lint_platform"
+mkdir -p "$analysis"
 
 # Use Go's package selection, not a recursive walk into vendor/testdata.
 go list -f '{{.Dir}}' ./... > "$work/packages"
@@ -65,13 +49,16 @@ printf 'Go lint: %s packages, %s files including tests, %s non-generated formatt
 go version
 
 status=0
-PLAID_CACHE_DIR="$work/plaid-cache" "$work/bin/plaid-lint" run --config .golangci.yml --timeout=3m ./... || status=1
+echo 'Running plaid-lint'
+PLAID_CACHE_DIR="$analysis" "$bin/plaid-lint" run --config .golangci.yml --timeout=3m ./... || status=1
 # goimports -l returns zero for formatting differences; both channels must gate.
-if imports=$("$work/bin/goimports" -l "${import_files[@]}"); then
+echo 'Running goimports'
+if imports=$("$bin/goimports" -l "${import_files[@]}"); then
   if [[ -n $imports ]]; then printf 'goimports changes required:\n%s\n' "$imports"; status=1; fi
 else
   status=1
 fi
-go vet -vettool="$work/bin/tenv" -tenv.all=true ./... || status=1
+echo 'Running tenv (all test helpers and compiler checks)'
+go vet -vettool="$bin/tenv" -tenv.all=true ./... || status=1
 
 exit "$status"

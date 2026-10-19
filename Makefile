@@ -36,6 +36,10 @@ lint:
 lint-go:
 	bash tools/lint-go.sh
 
+.PHONY: clean-lint-tools
+clean-lint-tools:
+	bash tools/lint-go.sh --clean-tools
+
 GOMOD_DIRS := . ./example ./apigw ./routers/ginapi
 ADDDEP_TARGET := $(addprefix adddep_, $(GOMOD_DIRS))
 UPDATEDEP_TARGET := $(addprefix updatedep_, $(GOMOD_DIRS))
