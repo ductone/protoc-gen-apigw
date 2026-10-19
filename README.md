@@ -21,17 +21,20 @@ An omitted or empty value defaults to zero. Invalid names, non-integers and
 out-of-range numbers return `InvalidArgument` without reflecting the input.
 
 Only singular, top-level query fields are supported; nested enum declarations
-and enum types imported from other protobuf packages are supported. Repeated
+and enum types imported from other protobuf packages are supported. Imported Go
+package names that match gateway imports (for example, `status` or `context`)
+are assigned nonconflicting aliases. Repeated
 query fields and nested query field paths remain unsupported. Route parameters,
 body decoding and other scalar conversions are unchanged.
 
 The compiled generator regression can be run with
-`go test -mod=vendor ./internal/apigw -run '^TestEnumQueryGenerated$' -v`.
+`go test -mod=vendor ./internal/apigw -run '^TestEnumQuery' -v`.
 It requires `protoc`, `protoc-gen-go` and `protoc-gen-go-grpc` on `PATH`, as does
 example generation, and explicitly skips when these tools are unavailable.
 It builds the plugin, generates temporary Go/gRPC/gateway
 and OpenAPI output, and executes the actual generated decoder against every
-advertised enum name and numeric/error boundary cases.
+advertised enum name and numeric/error boundary cases, including imported Go
+packages named `status`, `codes`, `context` and `strconv`.
 
 ## License
 

@@ -12,6 +12,19 @@ import (
 // checking template text. Like make example, it requires protoc and the Go
 // protobuf and gRPC plugins on PATH. All generated files are temporary.
 func TestEnumQueryGenerated(t *testing.T) {
+	testEnumQueryGenerated(t, "enumtypes")
+}
+
+func TestEnumQueryImportCollisions(t *testing.T) {
+	for _, name := range []string{"status", "codes", "context", "strconv"} {
+		t.Run(name, func(t *testing.T) {
+			testEnumQueryGenerated(t, name)
+		})
+	}
+}
+
+func testEnumQueryGenerated(t *testing.T, enumPackage string) {
+	t.Helper()
 	for _, tool := range []string{"go", "protoc", "protoc-gen-go", "protoc-gen-go-grpc"} {
 		if _, err := exec.LookPath(tool); err != nil {
 			t.Skipf("generated decoder test requires %s on PATH: %v", tool, err)
@@ -51,6 +64,9 @@ func TestEnumQueryGenerated(t *testing.T) {
 			t.Fatal(err)
 		}
 		data = []byte(strings.ReplaceAll(string(data), "github.com/ductone/protoc-gen-apigw/internal/apigw/enumquery", pkg))
+		if name == "types.proto" {
+			data = []byte(strings.Replace(string(data), ";enumtypes", ";"+enumPackage, 1))
+		}
 		if err := os.WriteFile(filepath.Join(inputDir, name), data, 0600); err != nil {
 			t.Fatal(err)
 		}
