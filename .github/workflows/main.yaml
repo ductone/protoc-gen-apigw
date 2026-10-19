@@ -6,8 +6,6 @@ on:
 jobs:
   go-lint:
     runs-on: ubuntu-latest
-    env:
-      APIGW_LINT_CACHE_HOME: ${{ runner.temp }}
     steps:
       - name: Install Go
         uses: actions/setup-go@v4
@@ -21,8 +19,12 @@ jobs:
           path: ${{ runner.temp }}/protoc-gen-apigw/lint
           key: protoc-gen-apigw-lint-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/lint-tools.sh') }}
       - name: Run linters
+        env:
+          APIGW_LINT_CACHE_HOME: ${{ runner.temp }}
         run: make lint-go
       - name: Test lint cache
+        env:
+          APIGW_LINT_CACHE_HOME: ${{ runner.temp }}
         run: bash tools/lint-cache_test.sh
   go-test:
     strategy:
