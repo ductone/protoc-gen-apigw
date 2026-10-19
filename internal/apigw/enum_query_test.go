@@ -98,6 +98,23 @@ func testEnumQueryGenerated(t *testing.T, enumPackage string) {
 		t.Fatal(err)
 	}
 	run("go", "test", "-mod=vendor", "-count=1", "-v", "./"+filepath.Base(dir))
+	gateway, err := os.ReadFile(filepath.Join(dir, "query.pb.apigw.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, imports, found := strings.Cut(string(gateway), "import (\n")
+	if !found {
+		t.Fatal("generated gateway has no import block")
+	}
+	imports, _, found = strings.Cut(imports, ")\n")
+	if !found {
+		t.Fatal("generated gateway import block is not closed")
+	}
+	// Preserve the established standard-library group and separate embed import.
+	const standardImports = "\t\"context\"\n\t\"net/http\"\n\t\"strconv\"\n\n\t_ \"embed\"\n"
+	if !strings.HasPrefix(imports, standardImports) {
+		t.Fatalf("generated standard import grouping changed:\n%s", imports)
+	}
 	source, err := os.ReadFile(filepath.Join(fixture, "query.proto"))
 	if err != nil {
 		t.Fatal(err)

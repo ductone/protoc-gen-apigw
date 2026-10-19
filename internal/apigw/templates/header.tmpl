@@ -2,10 +2,10 @@
 package {{.PackageName}}
 
 import (
-"context"
 {{ if .Imports.Bytes }} "bytes" {{ end }}
 {{ if .Imports.Fmt }} "fmt" {{ end }}
 {{ if .Imports.Io }} "io" {{ end }}
+"context"
 {{ if .Imports.NetHTTP }} "net/http" {{ end }}
 {{ if .Imports.Strconv }} "strconv" {{ end }}
 {{ if .Imports.Strings }} "strings" {{ end }}
