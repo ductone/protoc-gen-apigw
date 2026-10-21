@@ -4,6 +4,8 @@ jobs:
   go-lint:
     runs-on: ubuntu-latest
     steps:
+      # The v1 golangci-lint (config uses removed v1-only settings) cannot read Go 1.27 export data, so the
+      # lint job stays on the Go it was already using; tests and releases run on 1.27.3.
       - name: Install Go
         uses: actions/setup-go@v4
         with:
@@ -18,7 +20,7 @@ jobs:
   go-test:
     strategy:
       matrix:
-        go-version: [1.22.x]
+        go-version: [1.27.3]
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
     steps:
