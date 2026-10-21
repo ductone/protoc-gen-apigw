@@ -1,0 +1,51 @@
+syntax = "proto3";
+package enumquery;
+
+import "apigw/v1/apigw.proto";
+import "types.proto";
+
+option go_package = "github.com/ductone/protoc-gen-apigw/internal/apigw/enumquery;enumquery";
+
+enum ExampleFormat {
+  option allow_alias = true;
+  EXAMPLE_FORMAT_UNSPECIFIED = 0;
+  EXAMPLE_FORMAT_JSON = 1;
+  EXAMPLE_FORMAT_TEXT = 2;
+  EXAMPLE_FORMAT_PLAIN = 2;
+}
+
+message Request {
+  ExampleFormat format = 1;
+  enum Detail {
+    DETAIL_UNSPECIFIED = 0;
+    DETAIL_FULL = 1;
+  }
+  Detail detail = 2;
+  enumtypes.ExampleMode mode = 3;
+  message Child {
+    ExampleFormat format = 1;
+  }
+  Child child = 4;
+}
+message Response {}
+
+service ExampleService {
+  rpc List(Request) returns (Response) {
+    option (apigw.v1.method).operations = {
+      method: "GET"
+      route: "/examples"
+      query: {
+        key: "format"
+        value: "format"
+      }
+      query: {
+        key: "detail"
+        value: "detail"
+      }
+      query: {
+        key: "mode"
+        value: "mode"
+      }
+    };
+  }
+}

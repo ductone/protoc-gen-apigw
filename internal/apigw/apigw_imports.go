@@ -101,8 +101,27 @@ func (ix *importTracker) importablePackageName(f pgs.Entity, containingEntity pg
 		niceName := importName.Dir().Base()
 		pkgName = pgs.Name(fmt.Sprintf("%s_%s", niceName, pkgName.String()))
 	}
+	return pgsgo.TypeName(ix.allocatePackageName(pkgName, importName))
+}
 
+// Reserve every fixed header import even if its flag has not been enabled yet:
+// another method in the same file can enable it after a proto alias is chosen.
+func fixedImportName(name pgs.Name) bool {
+	switch name {
+	case "apigw_v1", "bytes", "codes", "context", "fmt", "grpc", "http", "io",
+		"proto", "protojson", "protopack", "protowire", "status", "strconv", "strings", "time":
+		return true
+	default:
+		return false
+	}
+}
+
+func (ix *importTracker) allocatePackageName(pkgName pgs.Name, importName pgs.FilePath) pgs.Name {
 	for {
+		if fixedImportName(pkgName) {
+			pkgName += "x"
+			continue
+		}
 		to, ok := ix.typeMapper[pkgName]
 		if !ok {
 			ix.typeMapper[pkgName] = importName
@@ -113,7 +132,7 @@ func (ix *importTracker) importablePackageName(f pgs.Entity, containingEntity pg
 		}
 		pkgName += "x"
 	}
-	return pgsgo.TypeName(pkgName)
+	return pkgName
 }
 
 func (c *importTracker) elType(ft pgs.FieldType) pgsgo.TypeName {
