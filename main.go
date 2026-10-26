@@ -13,9 +13,12 @@ import (
 )
 
 func main() {
-	// Signal proto3 optional support to protoc.
+	// Signal proto3 optional and Protobuf Editions support to protoc.
 	// See: https://github.com/protocolbuffers/protobuf/blob/v3.17.0/docs/implementing_proto3_presence.md
-	supportedFeatures := uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
+	supportedFeatures := uint64(
+		pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL |
+			pluginpb.CodeGeneratorResponse_FEATURE_SUPPORTS_EDITIONS,
+	)
 
 	options := []pgs.InitOption{
 		pgs.DebugEnv("DEBUG_PROTOC_GEN_APIGW"),
