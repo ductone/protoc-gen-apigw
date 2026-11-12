@@ -81,6 +81,10 @@ func Handler(srv interface{}, method *apigw_v1.MethodDesc, interceptor grpc.Unar
 			interceptor,
 		)
 		if err != nil {
+			// grpc-go sends headers set with grpc.SetHeader on error responses
+			// too. Callers rely on that for headers such as Retry-After on a
+			// rate-limited (429) response.
+			stream.addHeaders()
 			ErrorResponse(c, err)
 			return
 		}
@@ -116,10 +120,11 @@ func Handler(srv interface{}, method *apigw_v1.MethodDesc, interceptor grpc.Unar
 }
 
 type ginTransportStream struct {
-	ctx      *gin.Context
-	method   *apigw_v1.MethodDesc
-	headers  metadata.MD
-	trailers metadata.MD
+	ctx         *gin.Context
+	method      *apigw_v1.MethodDesc
+	headers     metadata.MD
+	trailers    metadata.MD
+	headersSent bool
 }
 
 func newGinTransportStream(ctx *gin.Context, method *apigw_v1.MethodDesc) *ginTransportStream {
@@ -150,13 +155,24 @@ func (g *ginTransportStream) SendHeader(md metadata.MD) error {
 }
 
 func (g *ginTransportStream) writeHeader() error {
+	g.addHeaders()
+	g.ctx.Writer.WriteHeader(http.StatusOK)
+	return nil
+}
+
+// addHeaders copies the headers set so far onto the response without writing
+// its status, so both success and error responses carry them. It runs at most
+// once per request.
+func (g *ginTransportStream) addHeaders() {
+	if g.headersSent {
+		return
+	}
+	g.headersSent = true
 	for k, v := range g.headers {
 		for _, vv := range v {
 			g.ctx.Writer.Header().Add(k, vv)
 		}
 	}
-	g.ctx.Writer.WriteHeader(http.StatusOK)
-	return nil
 }
 
 func (g *ginTransportStream) SetTrailer(md metadata.MD) error {
