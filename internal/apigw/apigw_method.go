@@ -289,6 +289,25 @@ func (module *Module) generateFieldConverter(method pgs.Method, edgeNumber proto
 		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is repeated '%s'", method.FullyQualifiedName())
 	case edgeField.Type().IsMap():
 		return nil, fmt.Errorf("apigw: methodContext: operation.Route invalid: target field is map '%s'", method.FullyQualifiedName())
+	case isQuery && edgeField.Type().ProtoType() == pgs.EnumT:
+		ix.Strconv = true
+		ix.GRPCStatus = true
+		ix.GRPCCodes = true
+		converter, err := templateExecToString("field_enum.tmpl", &enumFieldContext{
+			FieldName:    jsonName(edgeField),
+			Getter:       valueGetter,
+			InputName:    inputName,
+			OutputName:   outputName,
+			Tag:          edgeNumber,
+			EnumValueMap: ix.importableTypeName(edgeField, edgeField.Type().Enum()).String() + "_value",
+		})
+		if err != nil {
+			panic(err)
+		}
+		return &paramContext{
+			ConverterOutputName: outputName,
+			Converter:           converter,
+		}, nil
 	case isInt(edgeField.Type().ProtoType()):
 		ix.Strconv = true
 		ix.GRPCStatus = true
@@ -457,6 +476,15 @@ type intFieldContext struct {
 	OutputName string
 	InputName  string
 	Tag        protopack.Number
+}
+
+type enumFieldContext struct {
+	FieldName    string
+	Getter       string
+	OutputName   string
+	InputName    string
+	Tag          protopack.Number
+	EnumValueMap string
 }
 
 type uintFieldContext struct {

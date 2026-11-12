@@ -1,0 +1,9 @@
+syntax = "proto3";
+package enumtypes;
+
+option go_package = "github.com/ductone/protoc-gen-apigw/internal/apigw/enumquery/types;enumtypes";
+
+enum ExampleMode {
+  EXAMPLE_MODE_UNSPECIFIED = 0;
+  EXAMPLE_MODE_FAST = 1;
+}

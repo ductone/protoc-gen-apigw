@@ -1,8 +1,18 @@
 {{ .Getter }}
 
-{{.OutputName}}tmp, ok := {{.EnumValueMap}}[{{.InputVar}}]
+if {{.InputName}} == "" {
+    {{.InputName}} = "0"
+}
+
+{{.OutputName}}tmp, ok := {{.EnumValueMap}}[{{.InputName}}]
 if !ok {
-    return status.Error(codes.InvalidArgument, "{{.InputName}} is not valid. Must be one of "+ apigw_v1.EnumValuesAsString({{.EnumValueMap}}))
+    // Preserve decimal enum values, including unknown values for application
+    // validation, but reject overflow rather than truncating to the enum's int32.
+    n, err := strconv.ParseInt({{.InputName}}, 10, 32)
+    if err != nil {
+        return status.Error(codes.InvalidArgument, "{{.FieldName}} is not a valid enum value")
+    }
+    {{.OutputName}}tmp = int32(n)
 }
 
 {{.OutputName}} := protopack.Message{
